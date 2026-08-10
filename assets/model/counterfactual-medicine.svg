@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+  <title id="title">Counterfactual medicine</title><desc id="desc">A current state branches into simulated interventions and predicted outcomes.</desc>
+  <defs><style>.t{font-family:Inter,Arial,sans-serif;fill:#15324b}.h{font-size:27px;font-weight:700}.m{font-size:20px;font-weight:600}.s{font-size:17px}.line{stroke:#77aeb5;stroke-width:4;fill:none}</style></defs>
+  <rect width="1200" height="430" rx="28" fill="#f7faf9"/>
+  <text x="600" y="52" text-anchor="middle" class="t h">Simulate before acting</text>
+  <rect x="55" y="168" width="230" height="96" rx="22" fill="#15324b"/><text x="170" y="207" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="700" fill="#fff">Current biological state</text><text x="170" y="238" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="17" fill="#cfe9e8">with uncertainty</text>
+  <path class="line" d="M285 216C350 216 355 105 430 105M285 216H430M285 216C350 216 355 327 430 327"/>
+  <g class="t m" text-anchor="middle"><rect x="430" y="70" width="210" height="70" rx="17" fill="#fff" stroke="#8bbbc2" stroke-width="2"/><text x="535" y="113">Intervention A</text><rect x="430" y="181" width="210" height="70" rx="17" fill="#fff" stroke="#8bbbc2" stroke-width="2"/><text x="535" y="224">Intervention B</text><rect x="430" y="292" width="210" height="70" rx="17" fill="#fff" stroke="#8bbbc2" stroke-width="2"/><text x="535" y="335">No intervention</text></g>
+  <path class="line" d="M640 105H785M640 216H785M640 327H785"/>
+  <g class="t s" text-anchor="middle"><rect x="785" y="70" width="210" height="70" rx="17" fill="#e7f5f3" stroke="#178f91" stroke-width="3"/><text x="890" y="113">Predicted outcome A</text><rect x="785" y="181" width="210" height="70" rx="17" fill="#fff0eb" stroke="#e6795e" stroke-width="3"/><text x="890" y="224">Predicted outcome B</text><rect x="785" y="292" width="210" height="70" rx="17" fill="#fff" stroke="#8bbbc2" stroke-width="2"/><text x="890" y="335">Baseline trajectory</text></g>
+  <path d="M995 105C1050 105 1050 216 1100 216M995 216H1100M995 327C1050 327 1050 216 1100 216" class="line"/><circle cx="1110" cy="216" r="34" fill="#178f91"/><path d="M1094 216l11 11 22-27" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

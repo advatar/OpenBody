@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Continuous calibration</title><desc id="desc">Measurements continuously update a digital twin and its predictions.</desc>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L9 3L0 6Z" fill="#178f91"/></marker><style>.t{font-family:Inter,Arial,sans-serif;fill:#15324b}.h{font-size:27px;font-weight:700}.s{font-size:18px}.line{stroke:#178f91;stroke-width:4;fill:none;marker-end:url(#a)}</style></defs>
+  <rect width="1200" height="420" rx="28" fill="#f7faf9"/>
+  <text x="600" y="52" text-anchor="middle" class="t h">From snapshots to a continuously calibrated state</text>
+  <g class="t s" text-anchor="middle">
+    <rect x="55" y="110" width="235" height="62" rx="15" fill="#fff" stroke="#8bbbc2" stroke-width="2"/><text x="172" y="148">Wearables + sensors</text>
+    <rect x="55" y="190" width="235" height="62" rx="15" fill="#fff" stroke="#8bbbc2" stroke-width="2"/><text x="172" y="228">Imaging + laboratory</text>
+    <rect x="55" y="270" width="235" height="62" rx="15" fill="#fff" stroke="#8bbbc2" stroke-width="2"/><text x="172" y="308">Multi-omics</text>
+    <rect x="430" y="118" width="340" height="205" rx="26" fill="#15324b"/><text x="600" y="174" font-size="25" font-weight="700" fill="#fff">Living state estimate</text><text x="600" y="218" fill="#cfe9e8">evidence · uncertainty</text><text x="600" y="250" fill="#cfe9e8">provenance · dependencies</text><text x="600" y="282" fill="#cfe9e8">change over time</text>
+    <rect x="910" y="110" width="235" height="62" rx="15" fill="#e7f5f3" stroke="#178f91" stroke-width="3"/><text x="1027" y="148">Current state</text>
+    <rect x="910" y="190" width="235" height="62" rx="15" fill="#e7f5f3" stroke="#178f91" stroke-width="3"/><text x="1027" y="228">Future trajectories</text>
+    <rect x="910" y="270" width="235" height="62" rx="15" fill="#fff0eb" stroke="#e6795e" stroke-width="3"/><text x="1027" y="308">Intervention effects</text>
+  </g>
+  <path class="line" d="M290 141C355 141 365 175 430 175M290 221H430M290 301C355 301 365 265 430 265M770 175C835 175 845 141 910 141M770 221H910M770 265C835 265 845 301 910 301"/>
+</svg>
