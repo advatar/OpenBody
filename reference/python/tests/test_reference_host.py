@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import httpx
 from fastapi.testclient import TestClient
 
 from openbody_ref.client import OpenBodyClient
 from openbody_ref.host import ROOT, create_app
+
+
+def _fixture() -> dict:
+    return json.loads((ROOT / "examples" / "post-meal-walk.scenario.json").read_text())
 
 
 def test_reference_host_serves_valid_state_and_simulation() -> None:
@@ -18,26 +21,48 @@ def test_reference_host_serves_valid_state_and_simulation() -> None:
     assert state.status_code == 200
     assert state.json()["kind"] == "BodyState"
 
-    fixture = json.loads((ROOT / "examples" / "post-meal-walk.scenario.json").read_text())
-    scenario_id = fixture["id"]
-    scenario = test_client.get(f"/v1/simulations/{scenario_id}")
+    fixture = _fixture()
+    scenario = test_client.get(f"/v1/simulations/{fixture['id']}")
     assert scenario.status_code == 200
     assert scenario.json()["disposition"] == "simulated"
 
 
-def test_reference_client_validates_server_objects() -> None:
+def test_reference_client_executes_supported_counterfactual() -> None:
     app = create_app()
-    transport = httpx.ASGITransport(app=app)
-    # ASGITransport is async-only in httpx 0.28, so exercise the sync client with MockTransport.
     test_client = TestClient(app)
 
     def handler(request: httpx.Request) -> httpx.Response:
-        response = test_client.request(request.method, request.url.raw_path.decode(), content=request.content)
+        response = test_client.request(
+            request.method,
+            request.url.raw_path.decode(),
+            content=request.content,
+            headers={"content-type": request.headers.get("content-type", "application/json")},
+        )
         return httpx.Response(response.status_code, headers=response.headers, content=response.content)
 
+    fixture = _fixture()
     with OpenBodyClient("http://openbody.test", transport=httpx.MockTransport(handler)) as client:
-        assert "state.read" in client.capabilities()["capabilities"]
-        assert client.state()["kind"] == "BodyState"
+        assert "simulation.execute" in client.capabilities()["capabilities"]
+        state = client.state()
+        result = client.simulate(state, fixture["perturbation"], horizon_seconds=7_200)
+        assert result["kind"] == "CounterfactualScenario"
+        assert result["disposition"] == "simulated"
+        assert result["subject"] == state["subject"]
+        assert result["model_receipts"]
+
+
+def test_unsupported_counterfactual_abstains_without_effects() -> None:
+    fixture = _fixture()
+    request = {
+        "state": fixture["baseline"]["states"][0],
+        "perturbation": fixture["perturbation"] | {"id": "unsupported_experiment"},
+        "horizon_seconds": 7_200,
+    }
+    response = TestClient(create_app()).post("/v1/simulations", json=request)
+    assert response.status_code == 200
+    result = response.json()
+    assert result["kind"] == "Abstention"
+    assert result["reason_code"] == "insufficient_evidence"
 
 
 def test_host_rejects_invalid_outcome() -> None:
