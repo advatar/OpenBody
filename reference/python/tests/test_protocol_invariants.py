@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from openbody_ref.client import OpenBodyClient
 from openbody_ref.host import ROOT, create_app
 from openbody_ref.store import InMemoryTwinStore
-from openbody_ref.validation import semantic_validate
+from openbody_ref.validation import scenario_evidence_references, semantic_validate
 
 
 def fixture() -> dict:
@@ -45,6 +45,21 @@ class TestSubjectClosure:
         assert response.status_code == 200
         assert response.json()["reason_code"] == "insufficient_evidence"
 
+    def test_nested_cross_subject_undigested_evidence_is_rejected(self) -> None:
+        scenario = fixture()
+        scenario["counterfactual"]["states"][0]["evidence"].append(
+            {
+                "id": "nested-hostile-evidence",
+                "scheme": "openbody",
+                "canonical_ref": "openbody:evidence:nested-hostile",
+                "source_provenance": {"source": "hostile-provider"},
+                "authorization_ref": None,
+                "subject": "subject:other",
+            }
+        )
+        with pytest.raises(ValueError, match="evidence"):
+            semantic_validate(scenario)
+
 
 class TestScopeClosure:
     def test_scenario_evidence_cannot_add_unrequested_scope(self) -> None:
@@ -68,6 +83,25 @@ class TestTemporalClosure:
         )
         assert response.status_code == 200
         assert response.json()["reason_code"] == "stale_evidence"
+
+    def test_baseline_cannot_start_after_perturbation(self) -> None:
+        scenario = fixture()
+        baseline = scenario["baseline"]["states"][0]
+        baseline["state_time"] = "2026-08-10T19:00:00Z"
+        baseline["valid_until"] = "2026-08-10T21:00:00Z"
+        response = TestClient(create_app(injected_store(scenario))).post(
+            "/v1/simulations", json=simulation_request(scenario)
+        )
+        assert response.status_code == 200
+        assert response.json()["reason_code"] == "stale_evidence"
+
+    def test_baseline_instant_comparison_normalizes_offsets(self) -> None:
+        scenario = fixture()
+        baseline = scenario["baseline"]["states"][0]
+        baseline["state_time"] = "2026-08-10T20:05:00+02:00"
+        baseline["valid_until"] = "2026-08-10T20:15:00+02:00"
+        scenario["perturbation"]["starts_at"] = "2026-08-10T18:05:00Z"
+        semantic_validate(scenario)
 
     def test_impossible_state_validity_interval_is_rejected(self) -> None:
         state = deepcopy(fixture()["counterfactual"]["states"][0])
@@ -115,6 +149,29 @@ class TestReceiptModelClosure:
         assert response.status_code == 200
         assert response.json()["reason_code"] == "insufficient_validation"
 
+    def test_scope_less_nested_producer_fails_closed(self, tmp_path) -> None:
+        scenario = fixture()
+        state = scenario["counterfactual"]["states"][0]
+        receipt = deepcopy(scenario["model_receipts"][0])
+        receipt["model_id"] = "scope-less-counterfactual-producer"
+        receipt["execution_id"] = "exec-scope-less-counterfactual"
+        state["subsystems"] = []
+        state["couplings"] = []
+        state["model_receipts"] = [receipt]
+        scenario["evidence"][0]["model_refs"].append(receipt["model_id"])
+        path = tmp_path / "scope-less-producer.json"
+        path.write_text(json.dumps(scenario))
+        with pytest.raises(ValueError, match="scope"):
+            InMemoryTwinStore.from_fixture(path)
+
+    def test_wrong_scope_descriptor_for_nested_producer_fails_closed(self) -> None:
+        scenario = fixture()
+        store = injected_store(scenario)
+        store.models["twin-state-metabolic"]["scopes"] = ["ob://human/cardiovascular/heart"]
+        response = TestClient(create_app(store)).post("/v1/simulations", json=simulation_request(scenario))
+        assert response.status_code == 200
+        assert response.json()["reason_code"] == "unsupported_scope"
+
 
 class TestEvidenceClosure:
     def test_short_digest_is_rejected(self) -> None:
@@ -130,7 +187,8 @@ class TestRequestResponseClosure:
         response_scenario = deepcopy(request_scenario)
         response_scenario["subject"] = "subject:other"
         response_scenario["applicability"]["subject"] = "subject:other"
-        response_scenario["evidence"][0]["subject"] = "subject:other"
+        for reference in scenario_evidence_references(response_scenario):
+            reference["subject"] = "subject:other"
         for trajectory_name in ("baseline", "counterfactual"):
             for state in response_scenario[trajectory_name]["states"]:
                 state["subject"] = "subject:other"
@@ -140,6 +198,35 @@ class TestRequestResponseClosure:
 
         with OpenBodyClient("http://openbody.test", transport=httpx.MockTransport(handler)) as client:
             with pytest.raises(ValueError, match="response subject"):
+                client.simulate(
+                    request_scenario["baseline"]["states"][0],
+                    request_scenario["perturbation"],
+                    request_scenario["applicability"]["horizon_seconds"],
+                    request_scenario["applicability"]["scopes"],
+                )
+
+    @pytest.mark.parametrize("mutation", ["subsystem", "state_vector", "uncertainty", "evidence", "model_receipt"])
+    def test_returned_baseline_must_equal_requested_state(self, mutation: str) -> None:
+        request_scenario = fixture()
+        response_scenario = deepcopy(request_scenario)
+        baseline = response_scenario["baseline"]["states"][0]
+        if mutation == "subsystem":
+            subsystem = deepcopy(baseline["subsystems"][0])
+            baseline["subsystems"].append(subsystem)
+        elif mutation == "state_vector":
+            baseline["subsystems"][0]["state_vector"]["glucose_recovery_minutes"] += 1
+        elif mutation == "uncertainty":
+            baseline["uncertainty"]["epistemic"] = 0.21
+        elif mutation == "evidence":
+            baseline["evidence"].append(deepcopy(baseline["subsystems"][0]["evidence"][0]))
+        else:
+            baseline["subsystems"][0]["model_receipt"]["execution_id"] = "exec-altered-baseline"
+
+        def handler(_: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=response_scenario)
+
+        with OpenBodyClient("http://openbody.test", transport=httpx.MockTransport(handler)) as client:
+            with pytest.raises(ValueError, match="baseline"):
                 client.simulate(
                     request_scenario["baseline"]["states"][0],
                     request_scenario["perturbation"],
@@ -204,3 +291,33 @@ class TestOutcomeCalibrationLineageClosure:
             "within_predicted_interval": {"unrelated_metric": True},
         }
         assert client.post("/v1/calibrations", json=calibration).status_code == 422
+
+    def test_calibration_revalidates_stored_outcome_window(self) -> None:
+        scenario = fixture()
+        store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")
+        outcome = {
+            "schema_version": "0.1",
+            "kind": "ObservedOutcome",
+            "id": "outcome-poisoned-calibration-window",
+            "subject": scenario["subject"],
+            "perturbation_id": scenario["perturbation"]["id"],
+            "started_at": scenario["perturbation"]["starts_at"],
+            "ended_at": scenario["perturbation"]["ends_at"],
+            "observed_effects": [scenario["expected_effects"][0]],
+            "evidence": [],
+        }
+        store.put_outcome(outcome)
+        store.outcomes[outcome["id"]]["started_at"] = "2099-01-01T00:00:00Z"
+        store.outcomes[outcome["id"]]["ended_at"] = "2099-01-01T01:00:00Z"
+        calibration = {
+            "schema_version": "0.1",
+            "kind": "CalibrationEvent",
+            "id": "calibration-poisoned-outcome-window",
+            "scenario_id": scenario["id"],
+            "outcome_id": outcome["id"],
+            "generated_at": "2099-01-01T02:00:00Z",
+            "absolute_errors": {scenario["expected_effects"][0]["metric"]: 1.0},
+            "within_predicted_interval": {scenario["expected_effects"][0]["metric"]: True},
+        }
+        response = TestClient(create_app(store)).post("/v1/calibrations", json=calibration)
+        assert response.status_code == 422

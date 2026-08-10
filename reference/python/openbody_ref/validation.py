@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
@@ -34,6 +35,45 @@ def validate_definition(name: str, value: Any) -> None:
 
 def parse_timestamp(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def canonical_digest(value: Any) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def scenario_evidence_bindings(value: dict[str, Any]) -> list[tuple[dict[str, Any], set[str]]]:
+    output_scopes = set(value["applicability"]["scopes"])
+    bindings = [(reference, output_scopes) for reference in value.get("evidence", [])]
+    for trajectory_name in ("baseline", "counterfactual"):
+        trajectory = value.get(trajectory_name)
+        if trajectory is None:
+            continue
+        trajectory_scopes = {
+            subsystem["coordinate"] for state in trajectory["states"] for subsystem in state["subsystems"]
+        }
+        trajectory_scopes.update(
+            coordinate
+            for state in trajectory["states"]
+            for coupling in state["couplings"]
+            for coordinate in (coupling["source"], coupling["target"])
+        )
+        bindings.extend((reference, trajectory_scopes) for reference in trajectory.get("evidence", []))
+        for state in trajectory["states"]:
+            state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}
+            state_scopes.update(
+                coordinate for coupling in state["couplings"] for coordinate in (coupling["source"], coupling["target"])
+            )
+            bindings.extend((reference, state_scopes) for reference in state["evidence"])
+            for subsystem in state["subsystems"]:
+                bindings.extend(
+                    (reference, {subsystem["coordinate"]}) for reference in subsystem["evidence"]
+                )
+    return bindings
+
+
+def scenario_evidence_references(value: dict[str, Any]) -> list[dict[str, Any]]:
+    return [reference for reference, _ in scenario_evidence_bindings(value)]
 
 
 def scenario_horizon_seconds(value: dict[str, Any]) -> int:
@@ -100,7 +140,8 @@ def semantic_validate(value: dict[str, Any]) -> None:
                 raise ValueError("scenario applicability scopes must equal all counterfactual output scopes")
             if applicability["horizon_seconds"] != scenario_horizon_seconds(value):
                 raise ValueError("scenario applicability horizon does not match returned trajectory")
-            evidence = value["evidence"]
+            evidence_bindings = scenario_evidence_bindings(value)
+            evidence = [reference for reference, _ in evidence_bindings]
             if not evidence:
                 raise ValueError("simulated scenarios require actual evidence references")
             for reference in evidence:
@@ -115,16 +156,20 @@ def semantic_validate(value: dict[str, Any]) -> None:
                 ):
                     raise ValueError("simulated scenario evidence must be digest-addressed and explicitly bound")
             evidence_scopes = {scope for reference in evidence for scope in reference["scopes"]}
+            receipt_model_ids = _receipt_model_ids(value)
             evidence_models = {model_id for reference in evidence for model_id in reference["model_refs"]}
-            evidence_claims = {claim_id for reference in evidence for claim_id in reference["claim_refs"]}
             if any(reference["subject"] != value["subject"] for reference in evidence):
                 raise ValueError("simulated scenario evidence subject must match scenario subject")
+            if any(not set(reference["scopes"]).issubset(scopes) for reference, scopes in evidence_bindings):
+                raise ValueError("simulated scenario evidence scopes must match their placement")
+            if any(not set(reference["model_refs"]).issubset(receipt_model_ids) for reference in evidence):
+                raise ValueError("simulated scenario evidence references an unknown producing model")
+            if any(value["id"] not in reference["claim_refs"] for reference in evidence):
+                raise ValueError("simulated scenario evidence is not bound to the scenario claim")
             if not output_scopes.issubset(evidence_scopes):
                 raise ValueError("simulated scenario evidence does not cover every output scope")
-            if not _receipt_model_ids(value).issubset(evidence_models):
+            if not receipt_model_ids.issubset(evidence_models):
                 raise ValueError("simulated scenario evidence does not cover every producing model")
-            if value["id"] not in evidence_claims:
-                raise ValueError("simulated scenario evidence is not bound to the scenario claim")
         else:
             if receipts or effects or counterfactual is not None:
                 raise ValueError("non-simulated scenarios must not invent effects, receipts, or counterfactual trajectory")
@@ -153,10 +198,19 @@ def semantic_validate(value: dict[str, Any]) -> None:
                 raise ValueError("trajectory states must be time ordered")
             for state in trajectory["states"]:
                 validate_state_validity(state)
+                state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}
+                state_scopes.update(
+                    coordinate
+                    for coupling in state["couplings"]
+                    for coordinate in (coupling["source"], coupling["target"])
+                )
+                if state["model_receipts"] and not state_scopes:
+                    raise ValueError("producing model receipt placement requires non-empty biological scope")
         perturbation_start = parse_timestamp(value["perturbation"]["starts_at"])
+        if any(parse_timestamp(state["state_time"]) > perturbation_start for state in value["baseline"]["states"]):
+            raise ValueError("baseline BodyState begins after perturbation start")
         if any(
-            state.get("valid_until") is not None
-            and parse_timestamp(state["valid_until"]) < perturbation_start
+            state.get("valid_until") is not None and parse_timestamp(state["valid_until"]) < perturbation_start
             for state in value["baseline"]["states"]
         ):
             raise ValueError("baseline BodyState expired before perturbation start")

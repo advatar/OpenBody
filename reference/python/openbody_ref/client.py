@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from .validation import counterfactual_output_scopes, semantic_validate, validate_definition
+from .validation import canonical_digest, counterfactual_output_scopes, semantic_validate, validate_definition
 
 
 class OpenBodyClient:
@@ -75,6 +75,8 @@ class OpenBodyClient:
         if value.get("kind") == "CounterfactualScenario" and value.get("disposition") == "simulated":
             if value["subject"] != state["subject"]:
                 raise ValueError("simulation response subject does not match request")
+            if canonical_digest(value["baseline"]["states"]) != canonical_digest([state]):
+                raise ValueError("simulation response baseline does not match request state")
             if value["perturbation"] != perturbation:
                 raise ValueError("simulation response perturbation does not match request")
             if value["applicability"]["horizon_seconds"] != horizon_seconds:

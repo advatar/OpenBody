@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 
 from .store import InMemoryTwinStore, producing_model_requirements
-from .validation import parse_timestamp, scenario_horizon_seconds, semantic_validate, validate_definition
+from .validation import parse_timestamp, scenario_evidence_references, scenario_horizon_seconds, semantic_validate, validate_definition
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FIXTURE = ROOT / "examples" / "post-meal-walk.scenario.json"
@@ -74,8 +74,11 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
             "The deterministic reference provider only supports its exact bundled baseline state and subject",
         )
     valid_until = baseline_state.get("valid_until")
-    if valid_until is not None and parse_timestamp(valid_until) < parse_timestamp(candidate["perturbation"]["starts_at"]):
-        return _abstention("stale_evidence", "The baseline BodyState expired before perturbation start")
+    perturbation_start = parse_timestamp(candidate["perturbation"]["starts_at"])
+    if parse_timestamp(baseline_state["state_time"]) > perturbation_start or (
+        valid_until is not None and parse_timestamp(valid_until) < perturbation_start
+    ):
+        return _abstention("stale_evidence", "The baseline BodyState does not cover perturbation start")
 
     declared = candidate["perturbation"]
     if requested != declared:
@@ -84,7 +87,7 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
             "The deterministic reference provider only supports the exact bundled perturbation",
         )
 
-    evidence = candidate.get("evidence", [])
+    evidence = scenario_evidence_references(candidate)
     evidence_binding_fields = ("content_digest", "observed_at", "subject", "scopes", "model_refs", "claim_refs")
     if not evidence or any(not all(reference.get(field) for field in evidence_binding_fields) for reference in evidence):
         return _abstention("insufficient_evidence", "The stored scenario lacks bound, digest-addressed evidence")
@@ -95,7 +98,10 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
         return _abstention(reason_code, "The stored scenario does not prove its declared applicability boundary")
     declared_horizon = candidate["applicability"]["horizon_seconds"]
     derived_horizon = scenario_horizon_seconds(candidate)
-    requirements = producing_model_requirements(candidate)
+    try:
+        requirements = producing_model_requirements(candidate)
+    except ValueError:
+        return _abstention("insufficient_validation", "A producing model receipt has no biological scope")
     producing_models = []
     for (model_id, model_version, family), requirement in requirements.items():
         model = store.models.get(model_id)

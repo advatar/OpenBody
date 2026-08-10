@@ -26,6 +26,8 @@ def producing_model_requirements(value: dict[str, Any]) -> dict[tuple[str, str, 
     requirements: dict[tuple[str, str, str], dict[str, set[str]]] = {}
 
     def add(receipt: dict[str, Any], capabilities: set[str], scopes: set[str]) -> None:
+        if not scopes:
+            raise ValueError("producing model receipt placement requires non-empty biological scope")
         key = (receipt["model_id"], receipt["model_version"], receipt["family"])
         requirement = requirements.setdefault(key, {"capabilities": set(), "scopes": set()})
         requirement["capabilities"].update(capabilities)
@@ -138,19 +140,29 @@ class InMemoryTwinStore:
             raise ValueError("outcome id already exists")
         self.outcomes[value["id"]] = value
 
+    @staticmethod
+    def _validate_outcome_scenario_window(outcome: dict[str, Any], scenario: dict[str, Any]) -> None:
+        semantic_validate(scenario)
+        semantic_validate(outcome)
+        derived_horizon = scenario_horizon_seconds(scenario)
+        if derived_horizon != scenario["applicability"]["horizon_seconds"]:
+            raise ValueError("stored scenario horizon is not trustworthy")
+        if scenario["subject"] != outcome["subject"]:
+            raise ValueError("outcome subject binding does not match scenario")
+        if scenario["perturbation"]["id"] != outcome["perturbation_id"]:
+            raise ValueError("outcome perturbation binding does not match scenario")
+        window_start = parse_timestamp(scenario["perturbation"]["starts_at"])
+        window_end = window_start + timedelta(seconds=derived_horizon)
+        if parse_timestamp(outcome["started_at"]) < window_start or parse_timestamp(outcome["ended_at"]) > window_end:
+            raise ValueError("outcome falls outside its hosted scenario observation window")
+
     def put_calibration(self, value: dict[str, Any]) -> None:
         semantic_validate(value)
         scenario = self.scenarios.get(value["scenario_id"])
         outcome = self.outcomes.get(value["outcome_id"])
         if scenario is None or outcome is None:
             raise ValueError("calibration requires an existing scenario and outcome")
-        semantic_validate(scenario)
-        if scenario_horizon_seconds(scenario) != scenario["applicability"]["horizon_seconds"]:
-            raise ValueError("calibration scenario horizon is not trustworthy")
-        if scenario["subject"] != outcome["subject"]:
-            raise ValueError("calibration subject binding does not match")
-        if scenario["perturbation"]["id"] != outcome["perturbation_id"]:
-            raise ValueError("calibration perturbation binding does not match")
+        self._validate_outcome_scenario_window(outcome, scenario)
         absolute_error_metrics = set(value["absolute_errors"])
         interval_metrics = set(value["within_predicted_interval"])
         if not absolute_error_metrics or absolute_error_metrics != interval_metrics:

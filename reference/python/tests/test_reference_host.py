@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from openbody_ref.client import OpenBodyClient
 from openbody_ref.host import ROOT, create_app
 from openbody_ref.store import InMemoryTwinStore
-from openbody_ref.validation import semantic_validate, validate_definition
+from openbody_ref.validation import scenario_evidence_references, semantic_validate, validate_definition
 
 
 def _fixture() -> dict:
@@ -372,7 +372,8 @@ def test_reference_client_rejects_request_inconsistent_simulation(mismatch: str)
     if mismatch == "subject":
         response_value["subject"] = "subject:other"
         response_value["applicability"]["subject"] = "subject:other"
-        response_value["evidence"][0]["subject"] = "subject:other"
+        for reference in scenario_evidence_references(response_value):
+            reference["subject"] = "subject:other"
         for trajectory_name in ("baseline", "counterfactual"):
             for state in response_value[trajectory_name]["states"]:
                 state["subject"] = "subject:other"
