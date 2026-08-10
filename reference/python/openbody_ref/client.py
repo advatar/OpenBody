@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from .validation import semantic_validate
+from .validation import semantic_validate, validate_definition
 
 
 class OpenBodyClient:
@@ -40,6 +40,29 @@ class OpenBodyClient:
 
     def simulation(self, scenario_id: str) -> dict[str, Any]:
         response = self._client.get(f"/v1/simulations/{scenario_id}")
+        response.raise_for_status()
+        value = response.json()
+        semantic_validate(value)
+        return value
+
+    def simulate(
+        self,
+        state: dict[str, Any],
+        perturbation: dict[str, Any],
+        horizon_seconds: int,
+        requested_scopes: list[str] | None = None,
+        authority_ref: str | None = None,
+    ) -> dict[str, Any]:
+        semantic_validate(state)
+        validate_definition("Perturbation", perturbation)
+        payload = {
+            "state": state,
+            "perturbation": perturbation,
+            "horizon_seconds": horizon_seconds,
+            "requested_scopes": requested_scopes or [],
+            "authority_ref": authority_ref,
+        }
+        response = self._client.post("/v1/simulations", json=payload)
         response.raise_for_status()
         value = response.json()
         semantic_validate(value)
