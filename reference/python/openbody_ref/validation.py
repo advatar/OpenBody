@@ -14,11 +14,21 @@ def _schema() -> dict[str, Any]:
     return json.loads(SCHEMA_PATH.read_text())
 
 
-VALIDATOR = Draft202012Validator(_schema(), format_checker=FormatChecker())
+SCHEMA = _schema()
+VALIDATOR = Draft202012Validator(SCHEMA, format_checker=FormatChecker())
 
 
 def validate_object(value: dict[str, Any]) -> None:
     VALIDATOR.validate(value)
+
+
+def validate_definition(name: str, value: Any) -> None:
+    wrapper = {
+        "$schema": SCHEMA["$schema"],
+        "$defs": SCHEMA["$defs"],
+        "$ref": f"#/$defs/{name}",
+    }
+    Draft202012Validator(wrapper, format_checker=FormatChecker()).validate(value)
 
 
 def semantic_validate(value: dict[str, Any]) -> None:
@@ -38,6 +48,5 @@ def semantic_validate(value: dict[str, Any]) -> None:
                 raise ValueError("non-simulated scenarios must not invent effects, receipts, or counterfactual trajectory")
             if disposition == "abstained" and abstention is None:
                 raise ValueError("abstained scenarios require abstention details")
-    if kind == "ObservedOutcome":
-        if value["ended_at"] < value["started_at"]:
-            raise ValueError("outcome ended_at precedes started_at")
+    if kind == "ObservedOutcome" and value["ended_at"] < value["started_at"]:
+        raise ValueError("outcome ended_at precedes started_at")
