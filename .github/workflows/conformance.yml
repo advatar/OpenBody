@@ -26,3 +26,7 @@ jobs:
           python -m json.tool profiles/mcp/tools.json >/dev/null
       - name: Validate examples and protocol invariants
         run: python tools/validate_openbody.py
+      - name: Test Python reference host and client
+        env:
+          PYTHONPATH: reference/python
+        run: pytest -q reference/python/tests

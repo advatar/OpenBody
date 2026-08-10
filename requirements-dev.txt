@@ -1,1 +1,5 @@
-jsonschema[format]>=4.23,<5
+jsonschema[format]>=4.25,<5
+fastapi>=0.116,<1
+httpx>=0.28,<1
+uvicorn>=0.35,<1
+pytest>=8.4,<9
