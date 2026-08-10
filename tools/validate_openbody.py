@@ -44,6 +44,8 @@ def collect_receipt_model_ids(value):
 
 def counterfactual_output_scopes(doc):
     scopes = {effect["scope"] for effect in doc["expected_effects"]}
+    for evidence in doc["evidence"]:
+        scopes.update(evidence.get("scopes", []))
     for state in doc["counterfactual"]["states"]:
         scopes.update(subsystem["coordinate"] for subsystem in state["subsystems"])
         for coupling in state["couplings"]:
@@ -102,6 +104,8 @@ def invariant_errors(doc):
                     evidence_scopes = {scope for reference in evidence for scope in reference.get("scopes", [])}
                     evidence_models = {model_id for reference in evidence for model_id in reference.get("model_refs", [])}
                     evidence_claims = {claim_id for reference in evidence for claim_id in reference.get("claim_refs", [])}
+                    if any(reference.get("subject") != doc["subject"] for reference in evidence):
+                        errors.append("simulated scenario evidence subject MUST match scenario subject")
                     if not output_scopes.issubset(evidence_scopes):
                         errors.append("simulated scenario evidence MUST cover all output scopes")
                     if not set(collect_receipt_model_ids(doc)).issubset(evidence_models):
@@ -133,11 +137,30 @@ def invariant_errors(doc):
             ]
             if state_times != sorted(state_times):
                 errors.append("trajectory states MUST be time ordered")
+            for state in trajectory["states"]:
+                valid_until = state.get("valid_until")
+                if valid_until is not None:
+                    state_time = datetime.fromisoformat(state["state_time"].replace("Z", "+00:00"))
+                    validity_end = datetime.fromisoformat(valid_until.replace("Z", "+00:00"))
+                    if validity_end < state_time:
+                        errors.append("BodyState valid_until MUST be >= state_time")
+        perturbation_start = datetime.fromisoformat(doc["perturbation"]["starts_at"].replace("Z", "+00:00"))
+        for state in doc["baseline"]["states"]:
+            valid_until = state.get("valid_until")
+            if valid_until is not None:
+                validity_end = datetime.fromisoformat(valid_until.replace("Z", "+00:00"))
+                if validity_end < perturbation_start:
+                    errors.append("baseline BodyState validity MUST cover perturbation start")
     if doc.get("kind") == "ObservedOutcome":
         started_at = datetime.fromisoformat(doc["started_at"].replace("Z", "+00:00"))
         ended_at = datetime.fromisoformat(doc["ended_at"].replace("Z", "+00:00"))
         if ended_at < started_at:
             errors.append("ObservedOutcome ended_at MUST be >= started_at")
+    if doc.get("kind") == "BodyState" and doc.get("valid_until") is not None:
+        state_time = datetime.fromisoformat(doc["state_time"].replace("Z", "+00:00"))
+        valid_until = datetime.fromisoformat(doc["valid_until"].replace("Z", "+00:00"))
+        if valid_until < state_time:
+            errors.append("BodyState valid_until MUST be >= state_time")
     return errors
 
 

@@ -49,6 +49,8 @@ def scenario_horizon_seconds(value: dict[str, Any]) -> int:
 
 def counterfactual_output_scopes(value: dict[str, Any]) -> set[str]:
     scopes = {effect["scope"] for effect in value["expected_effects"]}
+    for evidence in value["evidence"]:
+        scopes.update(evidence.get("scopes", []))
     for state in value["counterfactual"]["states"]:
         scopes.update(subsystem["coordinate"] for subsystem in state["subsystems"])
         for coupling in state["couplings"]:
@@ -59,6 +61,12 @@ def counterfactual_output_scopes(value: dict[str, Any]) -> set[str]:
             for evidence in subsystem["evidence"]:
                 scopes.update(evidence.get("scopes", []))
     return scopes
+
+
+def validate_state_validity(value: dict[str, Any]) -> None:
+    valid_until = value.get("valid_until")
+    if valid_until is not None and parse_timestamp(valid_until) < parse_timestamp(value["state_time"]):
+        raise ValueError("BodyState valid_until precedes state_time")
 
 
 def _receipt_model_ids(value: Any) -> set[str]:
@@ -109,6 +117,8 @@ def semantic_validate(value: dict[str, Any]) -> None:
             evidence_scopes = {scope for reference in evidence for scope in reference["scopes"]}
             evidence_models = {model_id for reference in evidence for model_id in reference["model_refs"]}
             evidence_claims = {claim_id for reference in evidence for claim_id in reference["claim_refs"]}
+            if any(reference["subject"] != value["subject"] for reference in evidence):
+                raise ValueError("simulated scenario evidence subject must match scenario subject")
             if not output_scopes.issubset(evidence_scopes):
                 raise ValueError("simulated scenario evidence does not cover every output scope")
             if not _receipt_model_ids(value).issubset(evidence_models):
@@ -141,6 +151,15 @@ def semantic_validate(value: dict[str, Any]) -> None:
             state_times = [parse_timestamp(state["state_time"]) for state in trajectory["states"]]
             if state_times != sorted(state_times):
                 raise ValueError("trajectory states must be time ordered")
+            for state in trajectory["states"]:
+                validate_state_validity(state)
+        perturbation_start = parse_timestamp(value["perturbation"]["starts_at"])
+        if any(
+            state.get("valid_until") is not None
+            and parse_timestamp(state["valid_until"]) < perturbation_start
+            for state in value["baseline"]["states"]
+        ):
+            raise ValueError("baseline BodyState expired before perturbation start")
         starts_at = parse_timestamp(value["perturbation"]["starts_at"])
         ends_at = value["perturbation"].get("ends_at")
         if ends_at is not None and parse_timestamp(ends_at) < starts_at:
@@ -148,3 +167,5 @@ def semantic_validate(value: dict[str, Any]) -> None:
     if kind == "ObservedOutcome":
         if parse_timestamp(value["ended_at"]) < parse_timestamp(value["started_at"]):
             raise ValueError("outcome ended_at precedes started_at")
+    if kind == "BodyState":
+        validate_state_validity(value)

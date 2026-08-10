@@ -372,6 +372,7 @@ def test_reference_client_rejects_request_inconsistent_simulation(mismatch: str)
     if mismatch == "subject":
         response_value["subject"] = "subject:other"
         response_value["applicability"]["subject"] = "subject:other"
+        response_value["evidence"][0]["subject"] = "subject:other"
         for trajectory_name in ("baseline", "counterfactual"):
             for state in response_value[trajectory_name]["states"]:
                 state["subject"] = "subject:other"

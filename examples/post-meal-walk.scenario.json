@@ -118,6 +118,7 @@
         "mode": "synthetic-demo"
       },
       "authorization_ref": null,
+      "subject": "subject:local-demo",
       "scopes": [
         "ob://human/metabolic/glucose_regulation"
       ],

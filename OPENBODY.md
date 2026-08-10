@@ -175,6 +175,8 @@ Every derived state, trajectory, and simulated effect MUST identify the producin
 
 Every model producing a successful simulation MUST be discoverable through the Model Plane with the exact model ID, version, and family carried by its receipt. This applies to receipts at scenario and trajectory level and to receipts nested in states, subsystems, and couplings. Its descriptor MUST declare the capability, biological scope, applicability boundary, validation information, execution mode, and prohibited uses relevant to that simulation.
 
+Receipt placement determines required producer semantics. A receipt nested in counterfactual trajectory output MUST resolve to a model declaring `counterfactual` capability in addition to any state-estimation role it performs. Before success, a host MUST prove that every producing descriptor contains all capabilities and biological scopes required by the receipt's exact placement; empty or incompatible declarations MUST fail closed.
+
 ### EvidenceReference
 
 ```yaml
@@ -222,7 +224,13 @@ Abstention is a successful protocol response, not a transport error. Reasons inc
 ### AuthorityReference
 An opaque reference to external authorization such as OAuth/OIDC, capabilities, Mandamus, or future systems. OpenBody objects MUST NOT embed reusable credentials or secrets.
 
+A host that advertises no enforced authorization scheme MUST fail closed when any authority reference is non-null, including both transport-level request authority and authority embedded in a perturbation. An opaque reference is never self-authenticating.
+
 RFC 3339 timestamps represent temporal instants. Implementations MUST parse and compare normalized instants and MUST NOT infer chronology from lexicographic string ordering.
+
+For every `BodyState`, a non-null `valid_until` MUST be no earlier than `state_time`. A baseline state with `valid_until` earlier than perturbation start is stale and MUST NOT support successful simulation.
+
+Cryptographic digests MUST use algorithm-specific hexadecimal lengths: SHA-256 requires exactly 64 hexadecimal digits and SHA-512 requires exactly 128 hexadecimal digits.
 
 ## 7. OpenBody Coordinates
 
@@ -297,9 +305,11 @@ A request MUST identify subject/twin, state/reference, perturbation, horizon, a 
 
 The declared simulation horizon MUST equal the normalized elapsed time from perturbation start to the returned counterfactual boundary and MUST agree with the producing model applicability declaration. A hard-coded or transport-default horizon is not proof of temporal applicability.
 
-A successful simulated scenario MUST contain one or more digest-addressed, timestamped `EvidenceReference` objects explicitly bound to every claimed output scope, producing model, and scenario claim. A free-form evidence-boundary label or empty evidence array is not evidence. If those bindings cannot be proven, the provider MUST abstain.
+A successful simulated scenario MUST contain one or more digest-addressed, timestamped `EvidenceReference` objects explicitly bound to the represented subject, every claimed output scope, producing model, and scenario claim. Subject identity MUST be carried in a normative evidence field and MUST NOT be inferred from arbitrary provenance content. Scenario-level evidence scopes participate in exact output-scope closure and MUST NOT broaden requested or model-supported scopes. A free-form evidence-boundary label or empty evidence array is not evidence. If those bindings cannot be proven, the provider MUST abstain.
 
 A consumer receiving a successful simulation MUST validate it against the originating request, including subject, perturbation semantics, horizon, and complete output-scope closure. Internal schema validity alone MUST NOT cause a request-inconsistent response to be trusted.
+
+Injected or persisted store contents are an untrusted protocol boundary. Before a stored scenario can authorize model claims, simulation output, outcome windows, or calibration lineage, the host MUST semantically validate it and independently recompute its normalized temporal horizon. Unvalidated final timestamps MUST NOT establish an observation window.
 
 A model MUST abstain when perturbation, dose, biological scope, temporal horizon, subject context, or evidence falls outside its declared boundary. The response MUST state whether its epistemic basis is statistical association, causal estimate, mechanistic simulation, hybrid inference, or another registered class.
 

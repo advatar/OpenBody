@@ -7,8 +7,8 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 
-from .store import InMemoryTwinStore, collect_model_receipts
-from .validation import scenario_horizon_seconds, semantic_validate, validate_definition
+from .store import InMemoryTwinStore, producing_model_requirements
+from .validation import parse_timestamp, scenario_horizon_seconds, semantic_validate, validate_definition
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FIXTURE = ROOT / "examples" / "post-meal-walk.scenario.json"
@@ -56,6 +56,12 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
         validate_definition("Coordinate", scope)
     if len(requested_scopes) != len(set(requested_scopes)):
         raise ValueError("requested_scopes must not contain duplicates")
+    requested = request["perturbation"]
+    if request.get("authority_ref") is not None or requested.get("authority_ref") is not None:
+        return _abstention(
+            "authorization_required",
+            "The reference provider cannot validate external authority references",
+        )
 
     candidate = next(iter(store.scenarios.values()), None)
     if candidate is None:
@@ -67,8 +73,10 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
             "out_of_distribution",
             "The deterministic reference provider only supports its exact bundled baseline state and subject",
         )
+    valid_until = baseline_state.get("valid_until")
+    if valid_until is not None and parse_timestamp(valid_until) < parse_timestamp(candidate["perturbation"]["starts_at"]):
+        return _abstention("stale_evidence", "The baseline BodyState expired before perturbation start")
 
-    requested = request["perturbation"]
     declared = candidate["perturbation"]
     if requested != declared:
         return _abstention(
@@ -77,7 +85,7 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
         )
 
     evidence = candidate.get("evidence", [])
-    evidence_binding_fields = ("content_digest", "observed_at", "scopes", "model_refs", "claim_refs")
+    evidence_binding_fields = ("content_digest", "observed_at", "subject", "scopes", "model_refs", "claim_refs")
     if not evidence or any(not all(reference.get(field) for field in evidence_binding_fields) for reference in evidence):
         return _abstention("insufficient_evidence", "The stored scenario lacks bound, digest-addressed evidence")
     try:
@@ -87,15 +95,20 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
         return _abstention(reason_code, "The stored scenario does not prove its declared applicability boundary")
     declared_horizon = candidate["applicability"]["horizon_seconds"]
     derived_horizon = scenario_horizon_seconds(candidate)
+    requirements = producing_model_requirements(candidate)
     producing_models = []
-    for receipt in collect_model_receipts(candidate):
-        model = store.models.get(receipt["model_id"])
+    for (model_id, model_version, family), requirement in requirements.items():
+        model = store.models.get(model_id)
         if (
             model is None
-            or model["version"] != receipt["model_version"]
-            or model["family"] != receipt["family"]
+            or model["version"] != model_version
+            or model["family"] != family
         ):
             return _abstention("model_unavailable", "A producing model receipt is not discoverable")
+        if not requirement["capabilities"].issubset(set(model["capabilities"])):
+            return _abstention("insufficient_validation", "A producing model lacks its required capability")
+        if not requirement["scopes"].issubset(set(model["scopes"])):
+            return _abstention("unsupported_scope", "A producing model does not support its receipt scopes")
         producing_models.append(model)
     if not producing_models or any(
         model.get("applicability", {}).get("horizon_seconds") != declared_horizon for model in producing_models
@@ -112,12 +125,6 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
     supported_scopes = set(candidate["applicability"]["scopes"])
     if set(requested_scopes) != supported_scopes:
         return _abstention("unsupported_scope", "Requested output scopes must exactly match the provider boundary")
-
-    if request.get("authority_ref") is not None:
-        return _abstention(
-            "authorization_required",
-            "The reference provider cannot validate external authority references",
-        )
 
     result = copy.deepcopy(candidate)
     semantic_validate(result)

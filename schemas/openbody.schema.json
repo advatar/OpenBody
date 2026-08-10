@@ -15,7 +15,7 @@
     "Version": {"type": "string", "const": "0.1"},
     "URI": {"type": "string", "format": "uri"},
     "Timestamp": {"type": "string", "format": "date-time"},
-    "Digest": {"type": "string", "pattern": "^(sha256|sha512):[A-Fa-f0-9]+$"},
+    "Digest": {"type": "string", "pattern": "^(?:sha256:[A-Fa-f0-9]{64}|sha512:[A-Fa-f0-9]{128})$"},
     "Coordinate": {"type": "string", "pattern": "^ob://[a-z0-9._-]+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+(?:\\?[A-Za-z0-9._~!$&'()*+,;=:@%/?-]+)?$"},
     "EpistemicClass": {"enum": ["observation","inference","clinical_interpretation","statistical_association","causal_estimate","mechanistic_simulation","prediction","counterfactual","hypothesis","recommendation"]},
     "ModelFamily": {"enum": ["statistical","machine_learning","foundation","causal","mechanistic","pkpd","physiological","cellular","hybrid"]},
@@ -44,6 +44,7 @@
         "observed_at":{"oneOf":[{"$ref":"#/$defs/Timestamp"},{"type":"null"}]},
         "source_provenance":{"type":"object","minProperties":1},
         "authorization_ref":{"type":["string","null"]},
+        "subject":{"type":"string","minLength":1},
         "scopes":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/$defs/Coordinate"}},
         "model_refs":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
         "claim_refs":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}}
@@ -52,7 +53,7 @@
     "SimulationEvidenceReference": {
       "allOf":[
         {"$ref":"#/$defs/EvidenceReference"},
-        {"required":["content_digest","observed_at","scopes","model_refs","claim_refs"]}
+        {"required":["content_digest","observed_at","subject","scopes","model_refs","claim_refs"]}
       ]
     },
     "ModelReceipt": {
