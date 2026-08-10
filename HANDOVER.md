@@ -5,23 +5,22 @@
 - Repository: `advatar/OpenBody`
 - Pull request: [#5](https://github.com/advatar/OpenBody/pull/5)
 - Branch: `fix/openbody-0.1-hardening`
-- Qualified protocol commit: `b5e986680f0a7f627ae418ed5ec1d967e61d5b2d`
+- Qualified protocol commit: `6f422f9d46f1323627dc7340f6370ed5ea9497b8`
 - State: draft, open, and unmerged
 - Tracker: issue #3; issue #4 is closed as duplicate
 
 ## Latest bounded patch
 
-Commit `b5e986680f0a7f627ae418ed5ec1d967e61d5b2d` closes the final three P1 findings reported against the previous qualified protocol commit:
+Commit `6f422f9d46f1323627dc7340f6370ed5ea9497b8` closes the two P1 findings reported by the bounded review of `b5e986680f0a7f627ae418ed5ec1d967e61d5b2d`:
 
-1. Nested evidence model references must resolve to producers responsible for the exact scenario, trajectory, state, or subsystem placement.
-2. Trajectory-level model receipts fail semantic validation when their trajectory has no biological output scope.
-3. Calibration revalidation requires both the linked scenario and outcome subject to equal the hosted twin's canonical subject.
+1. State and other nested evidence now binds claimed scopes to models that produce those scopes at the exact placement, rather than any producer in the object subtree.
+2. Producing model descriptors must declare applicability subject, scopes, and horizon compatible with the scenario and exact receipt placement.
 
-The patch extends the shared placement-aware evidence and producer walkers rather than adding fixture-specific exceptions. It preserves the previously closed subject, scope, temporal, discoverability, capability, evidence, request-response, outcome/calibration, and authority invariants.
+The patch extends the shared placement-aware evidence/producer scope maps and full model-applicability checks rather than adding fixture-specific exceptions. It preserves the previously closed subject, scope, temporal, discoverability, capability, evidence, request-response, outcome/calibration, and authority invariants.
 
 ## Qualification results
 
-- Reference suite: `51 passed`
+- Reference suite: `53 passed`
 - Conformance validator: all examples pass
 - JSON Schema validation/parsing: pass
 - OpenAPI parsing: pass
@@ -31,7 +30,7 @@ The patch extends the shared placement-aware evidence and producer walkers rathe
 
 ## Active gate
 
-A single final bounded adversarial Codex review must now verify qualified protocol commit `b5e986680f0a7f627ae418ed5ec1d967e61d5b2d`.
+A single final bounded adversarial Codex review must now verify qualified protocol commit `6f422f9d46f1323627dc7340f6370ed5ea9497b8`.
 
 Acceptance criterion: **0 unresolved in-scope P1/P2 findings** across the established OpenBody 0.1 invariant classes. The review must not expand into performance, deployment hardening, future protocol features, or unrelated security concerns.
 
