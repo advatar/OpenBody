@@ -36,7 +36,9 @@ class OpenBodyClient:
         encoded = coordinate.removeprefix("ob://")
         response = self._client.get(f"/v1/state/{encoded}")
         response.raise_for_status()
-        return response.json()
+        value = response.json()
+        validate_definition("BodySubsystemState", value)
+        return value
 
     def simulation(self, scenario_id: str) -> dict[str, Any]:
         response = self._client.get(f"/v1/simulations/{scenario_id}")

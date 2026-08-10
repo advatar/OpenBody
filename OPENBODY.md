@@ -64,6 +64,12 @@ A counterfactual or recommendation MUST NOT itself authorize disclosure, medicat
 ### 4.7 Objectives belong to the person
 OpenBody MUST NOT define a universal optimal biological state. Goals and trade-offs are external authorized inputs.
 
+### 4.8 Subject and lineage integrity
+Subject identity MUST bind state, simulation, outcome, and calibration lineage. A host MUST NOT rebind another subject's trajectory, evidence, expected effect, model receipt, outcome, or calibration by changing only a top-level subject identifier. Every successful simulation and every accepted outcome or calibration MUST preserve a verifiable subject and perturbation lineage.
+
+### 4.9 Advertised enforcement
+A host MUST NOT advertise an authorization mechanism that it does not enforce. Discovery metadata MUST distinguish enforced authorization schemes from unsupported or externally unavailable schemes. Possession of an `authority_ref` string MUST NOT itself be treated as proof of authority.
+
 ## 5. Seven protocol planes
 
 1. **Observation Plane** — source-grounded measurements/events and references to authoritative external formats.
@@ -167,6 +173,8 @@ BodyModel:
 
 Every derived state, trajectory, and simulated effect MUST identify the producing model with model ID, immutable version, family, execution ID/time, input/output digests, and validation reference where available.
 
+Every model producing a successful simulation MUST be discoverable through the Model Plane with the exact model ID and version carried by its receipt. Its descriptor MUST declare the capability, biological scope, applicability boundary, validation information, execution mode, and prohibited uses relevant to that simulation.
+
 ### EvidenceReference
 
 ```yaml
@@ -206,11 +214,15 @@ Contains subject, baseline, perturbation, counterfactual trajectory, expected ef
 ### ObservedOutcome / CalibrationEvent
 An outcome binds observations to the exact intervention instance. Calibration compares prediction and outcome. Calibration MUST NOT silently retrain or mutate a production model; learned updates require a new version and provenance.
 
+An accepted `ObservedOutcome` MUST bind to the represented subject and to a known perturbation instance for that subject. An accepted `CalibrationEvent` MUST reference a known, compatible scenario/outcome pair whose subject and perturbation lineage agree. A host MUST reject unbound, cross-subject, or conflicting outcome and calibration writes.
+
 ### Abstention
 Abstention is a successful protocol response, not a transport error. Reasons include insufficient/stale evidence, unsupported scope/perturbation, out-of-distribution input, insufficient validation, authorization required, clinician review required, model unavailable, and invalid input.
 
 ### AuthorityReference
 An opaque reference to external authorization such as OAuth/OIDC, capabilities, Mandamus, or future systems. OpenBody objects MUST NOT embed reusable credentials or secrets.
+
+RFC 3339 timestamps represent temporal instants. Implementations MUST parse and compare normalized instants and MUST NOT infer chronology from lexicographic string ordering.
 
 ## 7. OpenBody Coordinates
 
@@ -281,7 +293,7 @@ The base profile intentionally does not define `diagnose`, `prescribe`, or `perf
 
 ## 12. Simulation contract
 
-A request MUST identify subject/twin, state/reference, perturbation, horizon, requested outputs/scopes, and authority when required. Success MUST include baseline and counterfactual trajectories, exact model receipts, assumptions, expected effects, uncertainty, and applicability.
+A request MUST identify subject/twin, state/reference, perturbation, horizon, requested outputs/scopes, and authority when required. Success MUST bind to the declared model capability, represented subject, requested biological scopes, temporal horizon, and applicable evidence boundary. Success MUST include baseline and counterfactual trajectories, exact model receipts, assumptions, expected effects, uncertainty, evidence, and applicability. `requested_scopes` and horizon MUST NOT be silently ignored.
 
 A model MUST abstain when perturbation, dose, biological scope, temporal horizon, subject context, or evidence falls outside its declared boundary. The response MUST state whether its epistemic basis is statistical association, causal estimate, mechanistic simulation, hybrid inference, or another registered class.
 

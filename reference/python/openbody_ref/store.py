@@ -29,12 +29,51 @@ class InMemoryTwinStore:
             store.trajectories[fixture["baseline"]["id"]] = fixture["baseline"]
             if fixture.get("counterfactual"):
                 store.trajectories[fixture["counterfactual"]["id"]] = fixture["counterfactual"]
+            receipt = fixture["model_receipts"][0]
+            store.models[receipt["model_id"]] = {
+                "schema_version": "0.1",
+                "kind": "BodyModel",
+                "id": receipt["model_id"],
+                "version": receipt["model_version"],
+                "family": receipt["family"],
+                "provider": "OpenBody deterministic fixture replay",
+                "scopes": sorted({effect["scope"] for effect in fixture["expected_effects"]}),
+                "capabilities": ["counterfactual"],
+                "required_inputs": ["exact bundled baseline BodyState"],
+                "outputs": ["exact bundled CounterfactualScenario"],
+                "applicability": {"scenario_id": fixture["id"], "horizon_seconds": 7200},
+                "validation": {"reference": receipt.get("validation_ref")},
+                "prohibited_uses": ["clinical decision-making", "generalization beyond the bundled fixture"],
+                "execution": {"mode": "fixture_replay"},
+                "dependencies": [],
+            }
+            semantic_validate(store.models[receipt["model_id"]])
         return store
 
     def put_outcome(self, value: dict[str, Any]) -> None:
         semantic_validate(value)
+        if value["subject"] != self.state["subject"]:
+            raise ValueError("outcome subject does not match hosted twin")
+        if not any(
+            scenario["perturbation"]["id"] == value["perturbation_id"]
+            and scenario["subject"] == value["subject"]
+            for scenario in self.scenarios.values()
+        ):
+            raise ValueError("outcome is not bound to a hosted perturbation")
+        if value["id"] in self.outcomes:
+            raise ValueError("outcome id already exists")
         self.outcomes[value["id"]] = value
 
     def put_calibration(self, value: dict[str, Any]) -> None:
         semantic_validate(value)
+        scenario = self.scenarios.get(value["scenario_id"])
+        outcome = self.outcomes.get(value["outcome_id"])
+        if scenario is None or outcome is None:
+            raise ValueError("calibration requires an existing scenario and outcome")
+        if scenario["subject"] != outcome["subject"]:
+            raise ValueError("calibration subject binding does not match")
+        if scenario["perturbation"]["id"] != outcome["perturbation_id"]:
+            raise ValueError("calibration perturbation binding does not match")
+        if value["id"] in self.calibrations:
+            raise ValueError("calibration id already exists")
         self.calibrations[value["id"]] = value

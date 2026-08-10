@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
@@ -53,7 +54,9 @@ def invariant_errors(doc):
             if disposition == "abstained" and abstention is None:
                 errors.append("abstained scenario MUST carry Abstention")
     if doc.get("kind") == "ObservedOutcome":
-        if doc.get("ended_at", "") < doc.get("started_at", ""):
+        started_at = datetime.fromisoformat(doc["started_at"].replace("Z", "+00:00"))
+        ended_at = datetime.fromisoformat(doc["ended_at"].replace("Z", "+00:00"))
+        if ended_at < started_at:
             errors.append("ObservedOutcome ended_at MUST be >= started_at")
     return errors
 

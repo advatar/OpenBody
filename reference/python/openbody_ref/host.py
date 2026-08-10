@@ -27,37 +27,72 @@ def _capabilities() -> dict[str, Any]:
             "outcomes.write",
             "calibrations.write",
         ],
-        "authorization": {"schemes": ["oauth2", "oidc", "mandamus"]},
+        "authorization": {"schemes": []},
     }
 
 
+def _abstention(reason_code: str, reason: str) -> dict[str, Any]:
+    value = json.loads(ABSTENTION_FIXTURE.read_text())
+    value["reason_code"] = reason_code
+    value["reasons"] = [reason, "No counterfactual effect was generated"]
+    semantic_validate(value)
+    return value
+
+
 def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> dict[str, Any]:
+    allowed_fields = {"state", "perturbation", "horizon_seconds", "requested_scopes", "authority_ref"}
+    unexpected_fields = set(request) - allowed_fields
+    if unexpected_fields:
+        raise ValueError(f"unsupported simulation request fields: {sorted(unexpected_fields)}")
     validate_definition("BodyState", request.get("state"))
     validate_definition("Perturbation", request.get("perturbation"))
     horizon = request.get("horizon_seconds")
-    if not isinstance(horizon, int) or horizon < 1:
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon < 1:
         raise ValueError("horizon_seconds must be a positive integer")
 
     candidate = next(iter(store.scenarios.values()), None)
     if candidate is None:
-        return json.loads(ABSTENTION_FIXTURE.read_text())
+        return _abstention("model_unavailable", "No reference scenario is available")
+
+    baseline_state = candidate["baseline"]["states"][0]
+    if request["state"] != baseline_state:
+        return _abstention(
+            "out_of_distribution",
+            "The deterministic reference provider only supports its exact bundled baseline state and subject",
+        )
 
     requested = request["perturbation"]
     declared = candidate["perturbation"]
-    same_capability = (
-        requested.get("id") == declared.get("id")
-        and requested.get("class") == declared.get("class")
-        and requested.get("scope") == declared.get("scope")
-        and requested.get("parameters") == declared.get("parameters")
-    )
-    if not same_capability:
-        return json.loads(ABSTENTION_FIXTURE.read_text())
+    if requested != declared:
+        return _abstention(
+            "unsupported_perturbation",
+            "The deterministic reference provider only supports the exact bundled perturbation",
+        )
+
+    model = store.models.get(candidate["model_receipts"][0]["model_id"])
+    supported_horizon = model.get("applicability", {}).get("horizon_seconds") if model else None
+    if horizon != supported_horizon:
+        return _abstention(
+            "out_of_distribution",
+            f"The deterministic reference provider only supports a {supported_horizon}-second horizon",
+        )
+
+    requested_scopes = request.get("requested_scopes", [])
+    if not isinstance(requested_scopes, list):
+        raise ValueError("requested_scopes must be an array")
+    for scope in requested_scopes:
+        validate_definition("Coordinate", scope)
+    supported_scopes = {effect["scope"] for effect in candidate["expected_effects"]}
+    if not set(requested_scopes).issubset(supported_scopes):
+        return _abstention("unsupported_scope", "One or more requested output scopes are unsupported")
+
+    if request.get("authority_ref") is not None:
+        return _abstention(
+            "authorization_required",
+            "The reference provider cannot validate external authority references",
+        )
 
     result = copy.deepcopy(candidate)
-    result["baseline"] = copy.deepcopy(request["state"] and candidate["baseline"])
-    result["baseline"]["states"][0] = copy.deepcopy(request["state"])
-    result["subject"] = request["state"]["subject"]
-    result["perturbation"] = copy.deepcopy(requested)
     semantic_validate(result)
     return result
 
@@ -84,12 +119,16 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         normalized = coordinate if coordinate.startswith("ob://") else f"ob://{coordinate}"
         for subsystem in store.state.get("subsystems", []):
             if subsystem.get("coordinate") == normalized:
+                validate_definition("BodySubsystemState", subsystem)
                 return subsystem
         raise HTTPException(status_code=404, detail="OpenBody coordinate not present in current state")
 
     @app.get("/v1/models")
     def list_models() -> list[dict[str, Any]]:
-        return list(store.models.values())
+        models = list(store.models.values())
+        for model in models:
+            validate_definition("BodyModel", model)
+        return models
 
     @app.get("/v1/models/{model_id}")
     def get_model(model_id: str) -> dict[str, Any]:
@@ -124,7 +163,7 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         semantic_validate(scenario)
         return scenario
 
-    @app.post("/v1/outcomes", status_code=201)
+    @app.post("/v1/outcomes", status_code=202)
     def record_outcome(value: dict[str, Any]) -> dict[str, Any]:
         try:
             store.put_outcome(value)
@@ -132,7 +171,7 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         return value
 
-    @app.post("/v1/calibrations", status_code=201)
+    @app.post("/v1/calibrations", status_code=202)
     def record_calibration(value: dict[str, Any]) -> dict[str, Any]:
         try:
             store.put_calibration(value)

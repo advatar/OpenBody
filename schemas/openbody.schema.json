@@ -158,13 +158,14 @@
     },
     "CounterfactualScenario": {
       "type":"object","additionalProperties":false,
-      "required":["schema_version","kind","id","subject","generated_at","baseline","perturbation","disposition","expected_effects","assumptions","uncertainty","model_receipts"],
+      "required":["schema_version","kind","id","subject","generated_at","baseline","perturbation","disposition","applicability","evidence","expected_effects","assumptions","uncertainty","model_receipts"],
       "properties": {
         "schema_version":{"$ref":"#/$defs/Version"},"kind":{"const":"CounterfactualScenario"},"id":{"type":"string"},"subject":{"type":"string"},"generated_at":{"$ref":"#/$defs/Timestamp"},
         "baseline":{"$ref":"#/$defs/BodyTrajectory"},"perturbation":{"$ref":"#/$defs/Perturbation"},
         "counterfactual":{"oneOf":[{"$ref":"#/$defs/BodyTrajectory"},{"type":"null"}]},
         "disposition":{"enum":["simulated","abstained","authorization_required","clinician_review_required"]},
         "abstention":{"oneOf":[{"$ref":"#/$defs/Abstention"},{"type":"null"}]},
+        "applicability":{"type":"object"},"evidence":{"type":"array","items":{"$ref":"#/$defs/EvidenceReference"}},
         "expected_effects":{"type":"array","items":{"$ref":"#/$defs/ExpectedEffect"}},"assumptions":{"type":"array","items":{"type":"string"}},
         "uncertainty":{"$ref":"#/$defs/Uncertainty"},"model_receipts":{"type":"array","items":{"$ref":"#/$defs/ModelReceipt"}}
       }

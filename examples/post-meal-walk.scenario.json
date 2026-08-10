@@ -96,6 +96,12 @@
   },
   "disposition": "simulated",
   "abstention": null,
+  "applicability": {
+    "mode": "exact_fixture_replay",
+    "horizon_seconds": 7200,
+    "generalizable": false
+  },
+  "evidence": [],
   "expected_effects": [
     {"scope":"ob://human/metabolic/glucose_regulation","metric":"postprandial_glucose_excursion_mgdl","delta":-20,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-25,"point":-20,"upper":-15},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}},
     {"scope":"ob://human/metabolic/glucose_regulation","metric":"glucose_recovery_minutes","delta":-30,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-40,"point":-30,"upper":-20},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}}
