@@ -1,0 +1,28 @@
+name: OpenBody conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - name: Parse machine-readable protocol artifacts
+        run: |
+          python -m json.tool schemas/openbody.schema.json >/dev/null
+          python -m json.tool registry/coordinates.json >/dev/null
+          python -m json.tool openapi/openbody.openapi.json >/dev/null
+          python -m json.tool profiles/mcp/tools.json >/dev/null
+      - name: Validate examples and protocol invariants
+        run: python tools/validate_openbody.py
