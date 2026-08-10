@@ -36,6 +36,17 @@ def parse_timestamp(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def scenario_horizon_seconds(value: dict[str, Any]) -> int:
+    starts_at = parse_timestamp(value["perturbation"]["starts_at"])
+    state_times = [parse_timestamp(state["state_time"]) for state in value["counterfactual"]["states"]]
+    if state_times != sorted(state_times):
+        raise ValueError("counterfactual trajectory states must be time ordered")
+    horizon = (state_times[-1] - starts_at).total_seconds()
+    if horizon < 1 or not horizon.is_integer():
+        raise ValueError("scenario counterfactual horizon must be a positive whole number of seconds")
+    return int(horizon)
+
+
 def semantic_validate(value: dict[str, Any]) -> None:
     validate_object(value)
     kind = value.get("kind")
@@ -48,6 +59,14 @@ def semantic_validate(value: dict[str, Any]) -> None:
         if disposition == "simulated":
             if not receipts or counterfactual is None or abstention is not None:
                 raise ValueError("simulated scenarios require model receipt + counterfactual and no abstention")
+            applicability = value["applicability"]
+            if applicability["subject"] != value["subject"]:
+                raise ValueError("scenario applicability subject must match scenario subject")
+            effect_scopes = {effect["scope"] for effect in effects}
+            if set(applicability["scopes"]) != effect_scopes:
+                raise ValueError("scenario applicability scopes must equal expected effect scopes")
+            if applicability["horizon_seconds"] != scenario_horizon_seconds(value):
+                raise ValueError("scenario applicability horizon does not match returned trajectory")
         else:
             if receipts or effects or counterfactual is not None:
                 raise ValueError("non-simulated scenarios must not invent effects, receipts, or counterfactual trajectory")
@@ -61,6 +80,19 @@ def semantic_validate(value: dict[str, Any]) -> None:
         }
         if subjects != {value["subject"]}:
             raise ValueError("scenario and trajectory subjects must match")
+        trajectories = [value["baseline"]]
+        if value.get("counterfactual") is not None:
+            trajectories.append(value["counterfactual"])
+        trajectory_ids = [trajectory["id"] for trajectory in trajectories]
+        if len(trajectory_ids) != len(set(trajectory_ids)):
+            raise ValueError("scenario trajectory ids must be distinct")
+        state_ids = [state["id"] for trajectory in trajectories for state in trajectory["states"]]
+        if len(state_ids) != len(set(state_ids)):
+            raise ValueError("scenario state ids must be distinct")
+        for trajectory in trajectories:
+            state_times = [parse_timestamp(state["state_time"]) for state in trajectory["states"]]
+            if state_times != sorted(state_times):
+                raise ValueError("trajectory states must be time ordered")
         starts_at = parse_timestamp(value["perturbation"]["starts_at"])
         ends_at = value["perturbation"].get("ends_at")
         if ends_at is not None and parse_timestamp(ends_at) < starts_at:

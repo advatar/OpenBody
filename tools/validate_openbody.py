@@ -44,6 +44,20 @@ def invariant_errors(doc):
                 errors.append("simulated scenario MUST carry a counterfactual trajectory")
             if abstention is not None:
                 errors.append("simulated scenario MUST NOT carry abstention")
+            if counterfactual is not None:
+                starts_at = datetime.fromisoformat(doc["perturbation"]["starts_at"].replace("Z", "+00:00"))
+                state_times = [
+                    datetime.fromisoformat(state["state_time"].replace("Z", "+00:00"))
+                    for state in counterfactual["states"]
+                ]
+                if state_times != sorted(state_times):
+                    errors.append("counterfactual trajectory states MUST be time ordered")
+                derived_horizon = (state_times[-1] - starts_at).total_seconds()
+                if derived_horizon != doc["applicability"]["horizon_seconds"]:
+                    errors.append("simulated scenario applicability horizon MUST match returned trajectory")
+                effect_scopes = {effect["scope"] for effect in effects}
+                if set(doc["applicability"]["scopes"]) != effect_scopes:
+                    errors.append("simulated scenario applicability scopes MUST match expected effect scopes")
         else:
             if effects:
                 errors.append("non-simulated scenario MUST NOT invent expected effects")
@@ -53,6 +67,22 @@ def invariant_errors(doc):
                 errors.append("non-simulated scenario MUST NOT claim a producing model receipt")
             if disposition == "abstained" and abstention is None:
                 errors.append("abstained scenario MUST carry Abstention")
+        trajectories = [doc["baseline"]]
+        if counterfactual is not None:
+            trajectories.append(counterfactual)
+        trajectory_ids = [trajectory["id"] for trajectory in trajectories]
+        if len(trajectory_ids) != len(set(trajectory_ids)):
+            errors.append("scenario trajectory IDs MUST be distinct")
+        state_ids = [state["id"] for trajectory in trajectories for state in trajectory["states"]]
+        if len(state_ids) != len(set(state_ids)):
+            errors.append("scenario state IDs MUST be distinct")
+        for trajectory in trajectories:
+            state_times = [
+                datetime.fromisoformat(state["state_time"].replace("Z", "+00:00"))
+                for state in trajectory["states"]
+            ]
+            if state_times != sorted(state_times):
+                errors.append("trajectory states MUST be time ordered")
     if doc.get("kind") == "ObservedOutcome":
         started_at = datetime.fromisoformat(doc["started_at"].replace("Z", "+00:00"))
         ended_at = datetime.fromisoformat(doc["ended_at"].replace("Z", "+00:00"))

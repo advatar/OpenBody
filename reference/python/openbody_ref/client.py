@@ -52,7 +52,7 @@ class OpenBodyClient:
         state: dict[str, Any],
         perturbation: dict[str, Any],
         horizon_seconds: int,
-        requested_scopes: list[str] | None = None,
+        requested_scopes: list[str],
         authority_ref: str | None = None,
     ) -> dict[str, Any]:
         semantic_validate(state)
@@ -61,7 +61,7 @@ class OpenBodyClient:
             "state": state,
             "perturbation": perturbation,
             "horizon_seconds": horizon_seconds,
-            "requested_scopes": requested_scopes or [],
+            "requested_scopes": requested_scopes,
             "authority_ref": authority_ref,
         }
         response = self._client.post("/v1/simulations", json=payload)

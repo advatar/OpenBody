@@ -98,7 +98,12 @@
   "abstention": null,
   "applicability": {
     "mode": "exact_fixture_replay",
+    "subject": "subject:local-demo",
+    "scopes": [
+      "ob://human/metabolic/glucose_regulation"
+    ],
     "horizon_seconds": 7200,
+    "evidence_boundary": "Exact bundled baseline state and its referenced evidence only",
     "generalizable": false
   },
   "evidence": [],

@@ -7,8 +7,8 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 
-from .store import InMemoryTwinStore
-from .validation import semantic_validate, validate_definition
+from .store import InMemoryTwinStore, collect_model_receipts
+from .validation import scenario_horizon_seconds, semantic_validate, validate_definition
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FIXTURE = ROOT / "examples" / "post-meal-walk.scenario.json"
@@ -49,6 +49,13 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
     horizon = request.get("horizon_seconds")
     if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon < 1:
         raise ValueError("horizon_seconds must be a positive integer")
+    requested_scopes = request.get("requested_scopes")
+    if not isinstance(requested_scopes, list) or not requested_scopes:
+        raise ValueError("requested_scopes must be a non-empty array")
+    for scope in requested_scopes:
+        validate_definition("Coordinate", scope)
+    if len(requested_scopes) != len(set(requested_scopes)):
+        raise ValueError("requested_scopes must not contain duplicates")
 
     candidate = next(iter(store.scenarios.values()), None)
     if candidate is None:
@@ -69,22 +76,30 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
             "The deterministic reference provider only supports the exact bundled perturbation",
         )
 
-    model = store.models.get(candidate["model_receipts"][0]["model_id"])
-    supported_horizon = model.get("applicability", {}).get("horizon_seconds") if model else None
-    if horizon != supported_horizon:
+    semantic_validate(candidate)
+    declared_horizon = candidate["applicability"]["horizon_seconds"]
+    derived_horizon = scenario_horizon_seconds(candidate)
+    producing_models = []
+    for receipt in collect_model_receipts(candidate):
+        model = store.models.get(receipt["model_id"])
+        if model is None or model["version"] != receipt["model_version"]:
+            return _abstention("model_unavailable", "A producing model receipt is not discoverable")
+        producing_models.append(model)
+    if not producing_models or any(
+        model.get("applicability", {}).get("horizon_seconds") != declared_horizon for model in producing_models
+    ):
+        return _abstention("insufficient_validation", "Producing model applicability does not match the scenario")
+    if declared_horizon != derived_horizon:
+        return _abstention("insufficient_validation", "Declared and returned trajectory horizons do not match")
+    if horizon != declared_horizon:
         return _abstention(
             "out_of_distribution",
-            f"The deterministic reference provider only supports a {supported_horizon}-second horizon",
+            f"The deterministic reference provider only supports a {declared_horizon}-second horizon",
         )
 
-    requested_scopes = request.get("requested_scopes", [])
-    if not isinstance(requested_scopes, list):
-        raise ValueError("requested_scopes must be an array")
-    for scope in requested_scopes:
-        validate_definition("Coordinate", scope)
-    supported_scopes = {effect["scope"] for effect in candidate["expected_effects"]}
-    if not set(requested_scopes).issubset(supported_scopes):
-        return _abstention("unsupported_scope", "One or more requested output scopes are unsupported")
+    supported_scopes = set(candidate["applicability"]["scopes"])
+    if set(requested_scopes) != supported_scopes:
+        return _abstention("unsupported_scope", "Requested output scopes must exactly match the provider boundary")
 
     if request.get("authority_ref") is not None:
         return _abstention(

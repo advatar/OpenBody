@@ -4,11 +4,13 @@ import json
 from copy import deepcopy
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from openbody_ref.client import OpenBodyClient
 from openbody_ref.host import ROOT, create_app
-from openbody_ref.validation import validate_definition
+from openbody_ref.store import InMemoryTwinStore
+from openbody_ref.validation import semantic_validate, validate_definition
 
 
 def _fixture() -> dict:
@@ -46,7 +48,12 @@ def test_reference_client_executes_supported_counterfactual() -> None:
     with OpenBodyClient("http://openbody.test", transport=httpx.MockTransport(handler)) as client:
         assert "simulation.execute" in client.capabilities()["capabilities"]
         state = client.state()
-        result = client.simulate(state, fixture["perturbation"], horizon_seconds=7_200)
+        result = client.simulate(
+            state,
+            fixture["perturbation"],
+            horizon_seconds=7_200,
+            requested_scopes=[fixture["perturbation"]["scope"]],
+        )
         assert result["kind"] == "CounterfactualScenario"
         assert result["disposition"] == "simulated"
         assert result["subject"] == state["subject"]
@@ -59,6 +66,7 @@ def test_unsupported_counterfactual_abstains_without_effects() -> None:
         "state": fixture["baseline"]["states"][0],
         "perturbation": fixture["perturbation"] | {"id": "unsupported_experiment"},
         "horizon_seconds": 7_200,
+        "requested_scopes": [fixture["perturbation"]["scope"]],
     }
     response = TestClient(create_app()).post("/v1/simulations", json=request)
     assert response.status_code == 200
@@ -73,7 +81,12 @@ def test_simulation_abstains_for_cross_subject_fixture_replay() -> None:
     state["subject"] = "subject:other"
     response = TestClient(create_app()).post(
         "/v1/simulations",
-        json={"state": state, "perturbation": fixture["perturbation"], "horizon_seconds": 7_200},
+        json={
+            "state": state,
+            "perturbation": fixture["perturbation"],
+            "horizon_seconds": 7_200,
+            "requested_scopes": [fixture["perturbation"]["scope"]],
+        },
     )
     assert response.status_code == 200
     assert response.json()["reason_code"] == "out_of_distribution"
@@ -85,6 +98,7 @@ def test_simulation_abstains_for_unsupported_horizon_and_scope() -> None:
         "state": fixture["baseline"]["states"][0],
         "perturbation": fixture["perturbation"],
         "horizon_seconds": 1,
+        "requested_scopes": [fixture["perturbation"]["scope"]],
     }
     horizon_response = TestClient(create_app()).post("/v1/simulations", json=request)
     assert horizon_response.status_code == 200
@@ -103,6 +117,7 @@ def test_simulation_rejects_boolean_horizon_and_abstains_for_changed_dates() -> 
         "state": fixture["baseline"]["states"][0],
         "perturbation": fixture["perturbation"],
         "horizon_seconds": True,
+        "requested_scopes": [fixture["perturbation"]["scope"]],
     }
     assert TestClient(create_app()).post("/v1/simulations", json=request).status_code == 422
 
@@ -111,6 +126,27 @@ def test_simulation_rejects_boolean_horizon_and_abstains_for_changed_dates() -> 
     response = TestClient(create_app()).post("/v1/simulations", json=request)
     assert response.status_code == 200
     assert response.json()["reason_code"] == "unsupported_perturbation"
+
+
+def test_simulation_requires_explicit_nonempty_scopes() -> None:
+    fixture = _fixture()
+    request = {
+        "state": fixture["baseline"]["states"][0],
+        "perturbation": fixture["perturbation"],
+        "horizon_seconds": 7_200,
+    }
+    assert TestClient(create_app()).post("/v1/simulations", json=request).status_code == 422
+    request["requested_scopes"] = []
+    assert TestClient(create_app()).post("/v1/simulations", json=request).status_code == 422
+
+
+def test_fixture_temporal_boundary_must_match_returned_trajectory(tmp_path) -> None:
+    fixture = _fixture()
+    fixture["applicability"]["horizon_seconds"] = 1
+    path = tmp_path / "hostile-scenario.json"
+    path.write_text(json.dumps(fixture))
+    with pytest.raises(ValueError, match="horizon"):
+        InMemoryTwinStore.from_fixture(path)
 
 
 def test_discovery_does_not_advertise_unenforced_authorization() -> None:
@@ -158,6 +194,22 @@ def test_host_rejects_offset_chronology_and_cross_subject_outcome() -> None:
     assert client.post("/v1/outcomes", json=outcome).status_code == 422
 
 
+def test_host_rejects_outcome_before_bound_perturbation() -> None:
+    fixture = _fixture()
+    outcome = {
+        "schema_version": "0.1",
+        "kind": "ObservedOutcome",
+        "id": "outcome-before-perturbation",
+        "subject": fixture["subject"],
+        "perturbation_id": fixture["perturbation"]["id"],
+        "started_at": "2000-01-01T00:00:00Z",
+        "ended_at": "2000-01-01T01:00:00Z",
+        "observed_effects": [fixture["expected_effects"][0]],
+        "evidence": [],
+    }
+    assert TestClient(create_app()).post("/v1/outcomes", json=outcome).status_code == 422
+
+
 def test_calibration_requires_bound_scenario_and_outcome() -> None:
     calibration = {
         "schema_version": "0.1",
@@ -166,11 +218,62 @@ def test_calibration_requires_bound_scenario_and_outcome() -> None:
         "scenario_id": "missing-scenario",
         "outcome_id": "missing-outcome",
         "generated_at": "2026-08-10T12:00:00Z",
-        "absolute_errors": {},
-        "within_predicted_interval": {},
+        "absolute_errors": {"postprandial_glucose_excursion_mgdl": 1.0},
+        "within_predicted_interval": {"postprandial_glucose_excursion_mgdl": True},
     }
     response = TestClient(create_app()).post("/v1/calibrations", json=calibration)
     assert response.status_code == 422
+
+
+def test_calibration_requires_matching_prediction_and_outcome_metrics() -> None:
+    fixture = _fixture()
+    client = TestClient(create_app())
+    outcome = {
+        "schema_version": "0.1",
+        "kind": "ObservedOutcome",
+        "id": "outcome-bound",
+        "subject": fixture["subject"],
+        "perturbation_id": fixture["perturbation"]["id"],
+        "started_at": fixture["perturbation"]["starts_at"],
+        "ended_at": fixture["perturbation"]["ends_at"],
+        "observed_effects": [fixture["expected_effects"][0]],
+        "evidence": [],
+    }
+    assert client.post("/v1/outcomes", json=outcome).status_code == 202
+    calibration = {
+        "schema_version": "0.1",
+        "kind": "CalibrationEvent",
+        "id": "calibration-mismatched-metrics",
+        "scenario_id": fixture["id"],
+        "outcome_id": outcome["id"],
+        "generated_at": "2026-08-10T21:00:00Z",
+        "absolute_errors": {"unrelated_metric": 1.0},
+        "within_predicted_interval": {"different_metric": True},
+    }
+    assert client.post("/v1/calibrations", json=calibration).status_code == 422
+
+    wrong_scope_outcome = deepcopy(outcome)
+    wrong_scope_outcome["id"] = "outcome-wrong-scope"
+    wrong_scope_outcome["observed_effects"][0]["scope"] = "ob://human/cardiovascular/heart"
+    assert client.post("/v1/outcomes", json=wrong_scope_outcome).status_code == 202
+    metric = fixture["expected_effects"][0]["metric"]
+    calibration["id"] = "calibration-mismatched-scope"
+    calibration["outcome_id"] = wrong_scope_outcome["id"]
+    calibration["absolute_errors"] = {metric: 1.0}
+    calibration["within_predicted_interval"] = {metric: True}
+    assert client.post("/v1/calibrations", json=calibration).status_code == 422
+
+
+def test_simulated_scenario_requires_applicability_boundary_and_distinct_ids() -> None:
+    fixture = _fixture()
+    fixture["applicability"] = {}
+    with pytest.raises(Exception):
+        semantic_validate(fixture)
+
+    fixture = _fixture()
+    fixture["counterfactual"]["id"] = fixture["baseline"]["id"]
+    with pytest.raises(ValueError, match="trajectory ids"):
+        semantic_validate(fixture)
 
 
 def test_reference_client_validates_subsystem_response() -> None:
@@ -189,5 +292,9 @@ def test_reference_client_validates_subsystem_response() -> None:
 def test_host_exposes_valid_fixture_model() -> None:
     models = TestClient(create_app()).get("/v1/models")
     assert models.status_code == 200
-    assert len(models.json()) == 1
-    validate_definition("BodyModel", models.json()[0])
+    assert {model["id"] for model in models.json()} == {
+        "post-meal-walk-personal-difference",
+        "twin-state-metabolic",
+    }
+    for model in models.json():
+        validate_definition("BodyModel", model)
