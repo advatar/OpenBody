@@ -51,9 +51,8 @@ If the review returns zero unresolved in-scope P1/P2 findings:
 
 ## Local workspace hygiene
 
-The following unrelated local work remains intentionally untouched and outside PR #5:
+The LandingPage repository is pushed on its `main` branch at `cd361000533d07f28d99456ec51c77fd4140adeb`. OpenBody records it as a submodule in commit `b2b937c847e5892fce5890a0280c3a51f50bdfdb`.
 
-- staged: `.gitmodules`, `LandingPage`
+The following unrelated local work remains intentionally untouched:
+
 - untracked: `MODEL.md`, `assets/`, `output/`, `tmp/`
-
-`HANDOVER.md` is currently a local handover artifact and is not part of the protocol patch commit.
