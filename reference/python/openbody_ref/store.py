@@ -140,13 +140,14 @@ class InMemoryTwinStore:
             raise ValueError("outcome id already exists")
         self.outcomes[value["id"]] = value
 
-    @staticmethod
-    def _validate_outcome_scenario_window(outcome: dict[str, Any], scenario: dict[str, Any]) -> None:
+    def _validate_outcome_scenario_window(self, outcome: dict[str, Any], scenario: dict[str, Any]) -> None:
         semantic_validate(scenario)
         semantic_validate(outcome)
         derived_horizon = scenario_horizon_seconds(scenario)
         if derived_horizon != scenario["applicability"]["horizon_seconds"]:
             raise ValueError("stored scenario horizon is not trustworthy")
+        if scenario["subject"] != self.state["subject"] or outcome["subject"] != self.state["subject"]:
+            raise ValueError("calibration lineage subject does not match hosted twin")
         if scenario["subject"] != outcome["subject"]:
             raise ValueError("outcome subject binding does not match scenario")
         if scenario["perturbation"]["id"] != outcome["perturbation_id"]:

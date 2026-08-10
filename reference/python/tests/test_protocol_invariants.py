@@ -164,6 +164,15 @@ class TestReceiptModelClosure:
         with pytest.raises(ValueError, match="scope"):
             InMemoryTwinStore.from_fixture(path)
 
+    def test_scope_less_trajectory_producer_fails_semantic_validation(self) -> None:
+        scenario = fixture()
+        for state in scenario["counterfactual"]["states"]:
+            state["subsystems"] = []
+            state["couplings"] = []
+            state["model_receipts"] = []
+        with pytest.raises(ValueError, match="scope"):
+            semantic_validate(scenario)
+
     def test_wrong_scope_descriptor_for_nested_producer_fails_closed(self) -> None:
         scenario = fixture()
         store = injected_store(scenario)
@@ -178,6 +187,13 @@ class TestEvidenceClosure:
         scenario = fixture()
         scenario["evidence"][0]["content_digest"] = "sha256:a"
         with pytest.raises(Exception):
+            semantic_validate(scenario)
+
+    def test_nested_evidence_must_bind_its_exact_producer(self) -> None:
+        scenario = fixture()
+        nested_evidence = scenario["baseline"]["states"][0]["subsystems"][0]["evidence"][0]
+        nested_evidence["model_refs"] = [scenario["model_receipts"][0]["model_id"]]
+        with pytest.raises(ValueError, match="placement producer"):
             semantic_validate(scenario)
 
 
@@ -318,6 +334,43 @@ class TestOutcomeCalibrationLineageClosure:
             "generated_at": "2099-01-01T02:00:00Z",
             "absolute_errors": {scenario["expected_effects"][0]["metric"]: 1.0},
             "within_predicted_interval": {scenario["expected_effects"][0]["metric"]: True},
+        }
+        response = TestClient(create_app(store)).post("/v1/calibrations", json=calibration)
+        assert response.status_code == 422
+
+    def test_calibration_rejects_foreign_subject_store_lineage(self) -> None:
+        scenario = fixture()
+        store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")
+        foreign_scenario = deepcopy(scenario)
+        foreign_scenario["subject"] = "subject:other"
+        foreign_scenario["applicability"]["subject"] = "subject:other"
+        for reference in scenario_evidence_references(foreign_scenario):
+            reference["subject"] = "subject:other"
+        for trajectory_name in ("baseline", "counterfactual"):
+            for state in foreign_scenario[trajectory_name]["states"]:
+                state["subject"] = "subject:other"
+        foreign_outcome = {
+            "schema_version": "0.1",
+            "kind": "ObservedOutcome",
+            "id": "outcome-foreign-subject-calibration",
+            "subject": "subject:other",
+            "perturbation_id": foreign_scenario["perturbation"]["id"],
+            "started_at": foreign_scenario["perturbation"]["starts_at"],
+            "ended_at": foreign_scenario["perturbation"]["ends_at"],
+            "observed_effects": [foreign_scenario["expected_effects"][0]],
+            "evidence": [],
+        }
+        store.scenarios[foreign_scenario["id"]] = foreign_scenario
+        store.outcomes[foreign_outcome["id"]] = foreign_outcome
+        calibration = {
+            "schema_version": "0.1",
+            "kind": "CalibrationEvent",
+            "id": "calibration-foreign-subject",
+            "scenario_id": foreign_scenario["id"],
+            "outcome_id": foreign_outcome["id"],
+            "generated_at": "2026-08-10T21:00:00Z",
+            "absolute_errors": {foreign_scenario["expected_effects"][0]["metric"]: 1.0},
+            "within_predicted_interval": {foreign_scenario["expected_effects"][0]["metric"]: True},
         }
         response = TestClient(create_app(store)).post("/v1/calibrations", json=calibration)
         assert response.status_code == 422

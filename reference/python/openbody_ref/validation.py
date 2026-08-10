@@ -42,9 +42,10 @@ def canonical_digest(value: Any) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
-def scenario_evidence_bindings(value: dict[str, Any]) -> list[tuple[dict[str, Any], set[str]]]:
+def scenario_evidence_bindings(value: dict[str, Any]) -> list[tuple[dict[str, Any], set[str], set[str]]]:
     output_scopes = set(value["applicability"]["scopes"])
-    bindings = [(reference, output_scopes) for reference in value.get("evidence", [])]
+    all_model_ids = _receipt_model_ids(value)
+    bindings = [(reference, output_scopes, all_model_ids) for reference in value.get("evidence", [])]
     for trajectory_name in ("baseline", "counterfactual"):
         trajectory = value.get(trajectory_name)
         if trajectory is None:
@@ -58,22 +59,27 @@ def scenario_evidence_bindings(value: dict[str, Any]) -> list[tuple[dict[str, An
             for coupling in state["couplings"]
             for coordinate in (coupling["source"], coupling["target"])
         )
-        bindings.extend((reference, trajectory_scopes) for reference in trajectory.get("evidence", []))
+        trajectory_model_ids = _receipt_model_ids(trajectory)
+        bindings.extend(
+            (reference, trajectory_scopes, trajectory_model_ids) for reference in trajectory.get("evidence", [])
+        )
         for state in trajectory["states"]:
             state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}
             state_scopes.update(
                 coordinate for coupling in state["couplings"] for coordinate in (coupling["source"], coupling["target"])
             )
-            bindings.extend((reference, state_scopes) for reference in state["evidence"])
+            state_model_ids = _receipt_model_ids(state)
+            bindings.extend((reference, state_scopes, state_model_ids) for reference in state["evidence"])
             for subsystem in state["subsystems"]:
                 bindings.extend(
-                    (reference, {subsystem["coordinate"]}) for reference in subsystem["evidence"]
+                    (reference, {subsystem["coordinate"]}, {subsystem["model_receipt"]["model_id"]})
+                    for reference in subsystem["evidence"]
                 )
     return bindings
 
 
 def scenario_evidence_references(value: dict[str, Any]) -> list[dict[str, Any]]:
-    return [reference for reference, _ in scenario_evidence_bindings(value)]
+    return [reference for reference, _, _ in scenario_evidence_bindings(value)]
 
 
 def scenario_horizon_seconds(value: dict[str, Any]) -> int:
@@ -141,7 +147,7 @@ def semantic_validate(value: dict[str, Any]) -> None:
             if applicability["horizon_seconds"] != scenario_horizon_seconds(value):
                 raise ValueError("scenario applicability horizon does not match returned trajectory")
             evidence_bindings = scenario_evidence_bindings(value)
-            evidence = [reference for reference, _ in evidence_bindings]
+            evidence = [reference for reference, _, _ in evidence_bindings]
             if not evidence:
                 raise ValueError("simulated scenarios require actual evidence references")
             for reference in evidence:
@@ -160,8 +166,13 @@ def semantic_validate(value: dict[str, Any]) -> None:
             evidence_models = {model_id for reference in evidence for model_id in reference["model_refs"]}
             if any(reference["subject"] != value["subject"] for reference in evidence):
                 raise ValueError("simulated scenario evidence subject must match scenario subject")
-            if any(not set(reference["scopes"]).issubset(scopes) for reference, scopes in evidence_bindings):
+            if any(not set(reference["scopes"]).issubset(scopes) for reference, scopes, _ in evidence_bindings):
                 raise ValueError("simulated scenario evidence scopes must match their placement")
+            if any(
+                not set(reference["model_refs"]).issubset(producer_ids)
+                for reference, _, producer_ids in evidence_bindings
+            ):
+                raise ValueError("simulated scenario evidence must bind its placement producer")
             if any(not set(reference["model_refs"]).issubset(receipt_model_ids) for reference in evidence):
                 raise ValueError("simulated scenario evidence references an unknown producing model")
             if any(value["id"] not in reference["claim_refs"] for reference in evidence):
@@ -196,6 +207,17 @@ def semantic_validate(value: dict[str, Any]) -> None:
             state_times = [parse_timestamp(state["state_time"]) for state in trajectory["states"]]
             if state_times != sorted(state_times):
                 raise ValueError("trajectory states must be time ordered")
+            trajectory_scopes = {
+                subsystem["coordinate"] for state in trajectory["states"] for subsystem in state["subsystems"]
+            }
+            trajectory_scopes.update(
+                coordinate
+                for state in trajectory["states"]
+                for coupling in state["couplings"]
+                for coordinate in (coupling["source"], coupling["target"])
+            )
+            if trajectory["model_receipts"] and not trajectory_scopes:
+                raise ValueError("producing model receipt placement requires non-empty biological scope")
             for state in trajectory["states"]:
                 validate_state_validity(state)
                 state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}

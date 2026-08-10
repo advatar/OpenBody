@@ -44,7 +44,8 @@ def collect_receipt_model_ids(value):
 
 def scenario_evidence_bindings(value):
     output_scopes = set(value["applicability"]["scopes"])
-    bindings = [(reference, output_scopes) for reference in value.get("evidence", [])]
+    all_model_ids = set(collect_receipt_model_ids(value))
+    bindings = [(reference, output_scopes, all_model_ids) for reference in value.get("evidence", [])]
     for trajectory_name in ("baseline", "counterfactual"):
         trajectory = value.get(trajectory_name)
         if trajectory is None:
@@ -58,15 +59,22 @@ def scenario_evidence_bindings(value):
             for coupling in state["couplings"]
             for coordinate in (coupling["source"], coupling["target"])
         )
-        bindings.extend((reference, trajectory_scopes) for reference in trajectory.get("evidence", []))
+        trajectory_model_ids = set(collect_receipt_model_ids(trajectory))
+        bindings.extend(
+            (reference, trajectory_scopes, trajectory_model_ids) for reference in trajectory.get("evidence", [])
+        )
         for state in trajectory["states"]:
             state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}
             state_scopes.update(
                 coordinate for coupling in state["couplings"] for coordinate in (coupling["source"], coupling["target"])
             )
-            bindings.extend((reference, state_scopes) for reference in state["evidence"])
+            state_model_ids = set(collect_receipt_model_ids(state))
+            bindings.extend((reference, state_scopes, state_model_ids) for reference in state["evidence"])
             for subsystem in state["subsystems"]:
-                bindings.extend((reference, {subsystem["coordinate"]}) for reference in subsystem["evidence"])
+                bindings.extend(
+                    (reference, {subsystem["coordinate"]}, {subsystem["model_receipt"]["model_id"]})
+                    for reference in subsystem["evidence"]
+                )
     return bindings
 
 
@@ -116,7 +124,7 @@ def invariant_errors(doc):
                 if set(doc["applicability"]["scopes"]) != output_scopes:
                     errors.append("simulated scenario applicability scopes MUST match all output scopes")
                 evidence_bindings = scenario_evidence_bindings(doc)
-                evidence = [reference for reference, _ in evidence_bindings]
+                evidence = [reference for reference, _, _ in evidence_bindings]
                 if not evidence:
                     errors.append("simulated scenario MUST carry actual evidence references")
                 else:
@@ -137,9 +145,14 @@ def invariant_errors(doc):
                         errors.append("simulated scenario evidence subject MUST match scenario subject")
                     if any(
                         not set(reference.get("scopes", [])).issubset(scopes)
-                        for reference, scopes in evidence_bindings
+                        for reference, scopes, _ in evidence_bindings
                     ):
                         errors.append("simulated scenario evidence scopes MUST match their placement")
+                    if any(
+                        not set(reference.get("model_refs", [])).issubset(producer_ids)
+                        for reference, _, producer_ids in evidence_bindings
+                    ):
+                        errors.append("simulated scenario evidence MUST bind its placement producer")
                     if any(not set(reference.get("model_refs", [])).issubset(receipt_model_ids) for reference in evidence):
                         errors.append("simulated scenario evidence MUST reference known producing models")
                     if any(doc["id"] not in reference.get("claim_refs", []) for reference in evidence):
@@ -173,6 +186,17 @@ def invariant_errors(doc):
             ]
             if state_times != sorted(state_times):
                 errors.append("trajectory states MUST be time ordered")
+            trajectory_scopes = {
+                subsystem["coordinate"] for state in trajectory["states"] for subsystem in state["subsystems"]
+            }
+            trajectory_scopes.update(
+                coordinate
+                for state in trajectory["states"]
+                for coupling in state["couplings"]
+                for coordinate in (coupling["source"], coupling["target"])
+            )
+            if trajectory["model_receipts"] and not trajectory_scopes:
+                errors.append("trajectory producing model receipt placement MUST have biological scope")
             for state in trajectory["states"]:
                 valid_until = state.get("valid_until")
                 if valid_until is not None:
