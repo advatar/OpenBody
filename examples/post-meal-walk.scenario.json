@@ -106,7 +106,30 @@
     "evidence_boundary": "Exact bundled baseline state and its referenced evidence only",
     "generalizable": false
   },
-  "evidence": [],
+  "evidence": [
+    {
+      "id": "evidence-post-meal-walk-demo",
+      "scheme": "openbody",
+      "canonical_ref": "openbody:evidence:post-meal-walk-demo",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_at": "2026-08-10T06:30:00Z",
+      "source_provenance": {
+        "source": "bundled-reference-fixture",
+        "mode": "synthetic-demo"
+      },
+      "authorization_ref": null,
+      "scopes": [
+        "ob://human/metabolic/glucose_regulation"
+      ],
+      "model_refs": [
+        "post-meal-walk-personal-difference",
+        "twin-state-metabolic"
+      ],
+      "claim_refs": [
+        "scenario-post-meal-walk-001"
+      ]
+    }
+  ],
   "expected_effects": [
     {"scope":"ob://human/metabolic/glucose_regulation","metric":"postprandial_glucose_excursion_mgdl","delta":-20,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-25,"point":-20,"upper":-15},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}},
     {"scope":"ob://human/metabolic/glucose_regulation","metric":"glucose_recovery_minutes","delta":-30,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-40,"point":-30,"upper":-20},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}}

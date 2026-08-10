@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from .validation import semantic_validate, validate_definition
+from .validation import counterfactual_output_scopes, semantic_validate, validate_definition
 
 
 class OpenBodyClient:
@@ -57,6 +57,10 @@ class OpenBodyClient:
     ) -> dict[str, Any]:
         semantic_validate(state)
         validate_definition("Perturbation", perturbation)
+        if not requested_scopes or len(requested_scopes) != len(set(requested_scopes)):
+            raise ValueError("requested_scopes must be non-empty and unique")
+        for scope in requested_scopes:
+            validate_definition("Coordinate", scope)
         payload = {
             "state": state,
             "perturbation": perturbation,
@@ -68,6 +72,18 @@ class OpenBodyClient:
         response.raise_for_status()
         value = response.json()
         semantic_validate(value)
+        if value.get("kind") == "CounterfactualScenario" and value.get("disposition") == "simulated":
+            if value["subject"] != state["subject"]:
+                raise ValueError("simulation response subject does not match request")
+            if value["perturbation"] != perturbation:
+                raise ValueError("simulation response perturbation does not match request")
+            if value["applicability"]["horizon_seconds"] != horizon_seconds:
+                raise ValueError("simulation response horizon does not match request")
+            requested_scope_set = set(requested_scopes)
+            if set(value["applicability"]["scopes"]) != requested_scope_set:
+                raise ValueError("simulation response applicability scopes do not match request")
+            if counterfactual_output_scopes(value) != requested_scope_set:
+                raise ValueError("simulation response contains unrequested output scopes")
         return value
 
     def record_outcome(self, outcome: dict[str, Any]) -> dict[str, Any]:

@@ -173,7 +173,7 @@ BodyModel:
 
 Every derived state, trajectory, and simulated effect MUST identify the producing model with model ID, immutable version, family, execution ID/time, input/output digests, and validation reference where available.
 
-Every model producing a successful simulation MUST be discoverable through the Model Plane with the exact model ID and version carried by its receipt. Its descriptor MUST declare the capability, biological scope, applicability boundary, validation information, execution mode, and prohibited uses relevant to that simulation.
+Every model producing a successful simulation MUST be discoverable through the Model Plane with the exact model ID, version, and family carried by its receipt. This applies to receipts at scenario and trajectory level and to receipts nested in states, subsystems, and couplings. Its descriptor MUST declare the capability, biological scope, applicability boundary, validation information, execution mode, and prohibited uses relevant to that simulation.
 
 ### EvidenceReference
 
@@ -214,7 +214,7 @@ Contains subject, baseline, perturbation, counterfactual trajectory, expected ef
 ### ObservedOutcome / CalibrationEvent
 An outcome binds observations to the exact intervention instance. Calibration compares prediction and outcome. Calibration MUST NOT silently retrain or mutate a production model; learned updates require a new version and provenance.
 
-An accepted `ObservedOutcome` MUST bind to the represented subject and to a known perturbation instance for that subject, including a temporally compatible observation interval. An accepted `CalibrationEvent` MUST reference a known, compatible scenario/outcome pair whose subject and perturbation lineage agree. Its metric maps MUST be non-empty, use identical keys, and refer only to metrics present in both the prediction and observed outcome. A host MUST reject unbound, cross-subject, temporally unrelated, metrically incompatible, or conflicting outcome and calibration writes.
+An accepted `ObservedOutcome` MUST bind to the represented subject and to a known perturbation instance for that subject. Its normalized interval MUST begin no earlier than the exact perturbation start and end no later than the linked scenario counterfactual horizon boundary. An accepted `CalibrationEvent` MUST reference a known, compatible scenario/outcome pair whose subject and perturbation lineage agree. Its metric maps MUST be non-empty, use identical keys, and refer only to metrics present in both the prediction and observed outcome. A host MUST reject unbound, cross-subject, temporally unrelated, metrically incompatible, or conflicting outcome and calibration writes.
 
 ### Abstention
 Abstention is a successful protocol response, not a transport error. Reasons include insufficient/stale evidence, unsupported scope/perturbation, out-of-distribution input, insufficient validation, authorization required, clinician review required, model unavailable, and invalid input.
@@ -293,9 +293,13 @@ The base profile intentionally does not define `diagnose`, `prescribe`, or `perf
 
 ## 12. Simulation contract
 
-A request MUST identify subject/twin, state/reference, perturbation, horizon, a non-empty set of requested outputs/scopes, and authority when required. Success MUST bind to the declared model capability, represented subject, requested biological scopes, temporal horizon, and applicable evidence boundary. Success MUST include baseline and counterfactual trajectories, exact model receipts, assumptions, expected effects, uncertainty, evidence, and applicability. Successful output scopes MUST equal the explicitly requested scopes; omitted or empty `requested_scopes` is invalid. `requested_scopes` and horizon MUST NOT be silently ignored.
+A request MUST identify subject/twin, state/reference, perturbation, horizon, a non-empty set of requested outputs/scopes, and authority when required. Success MUST bind to the declared model capability, represented subject, requested biological scopes, temporal horizon, and applicable evidence boundary. Success MUST include baseline and counterfactual trajectories, exact model receipts, assumptions, expected effects, uncertainty, evidence, and applicability. Successful output scopes MUST equal the explicitly requested scopes across expected effects and every nested counterfactual state, subsystem, coupling, and scoped evidence reference; omitted or empty `requested_scopes` is invalid. Contradictory broader output MUST fail closed rather than be silently filtered. `requested_scopes` and horizon MUST NOT be silently ignored.
 
 The declared simulation horizon MUST equal the normalized elapsed time from perturbation start to the returned counterfactual boundary and MUST agree with the producing model applicability declaration. A hard-coded or transport-default horizon is not proof of temporal applicability.
+
+A successful simulated scenario MUST contain one or more digest-addressed, timestamped `EvidenceReference` objects explicitly bound to every claimed output scope, producing model, and scenario claim. A free-form evidence-boundary label or empty evidence array is not evidence. If those bindings cannot be proven, the provider MUST abstain.
+
+A consumer receiving a successful simulation MUST validate it against the originating request, including subject, perturbation semantics, horizon, and complete output-scope closure. Internal schema validity alone MUST NOT cause a request-inconsistent response to be trusted.
 
 A model MUST abstain when perturbation, dose, biological scope, temporal horizon, subject context, or evidence falls outside its declared boundary. The response MUST state whether its epistemic basis is statistical association, causal estimate, mechanistic simulation, hybrid inference, or another registered class.
 

@@ -29,6 +29,33 @@ def collect_coordinates(value):
     return found
 
 
+def collect_receipt_model_ids(value):
+    if isinstance(value, dict):
+        found = []
+        if {"model_id", "model_version", "execution_id"}.issubset(value):
+            found.append(value["model_id"])
+        for nested in value.values():
+            found.extend(collect_receipt_model_ids(nested))
+        return found
+    if isinstance(value, list):
+        return [model_id for nested in value for model_id in collect_receipt_model_ids(nested)]
+    return []
+
+
+def counterfactual_output_scopes(doc):
+    scopes = {effect["scope"] for effect in doc["expected_effects"]}
+    for state in doc["counterfactual"]["states"]:
+        scopes.update(subsystem["coordinate"] for subsystem in state["subsystems"])
+        for coupling in state["couplings"]:
+            scopes.update((coupling["source"], coupling["target"]))
+        for evidence in state["evidence"]:
+            scopes.update(evidence.get("scopes", []))
+        for subsystem in state["subsystems"]:
+            for evidence in subsystem["evidence"]:
+                scopes.update(evidence.get("scopes", []))
+    return scopes
+
+
 def invariant_errors(doc):
     errors = []
     if doc.get("kind") == "CounterfactualScenario":
@@ -55,9 +82,32 @@ def invariant_errors(doc):
                 derived_horizon = (state_times[-1] - starts_at).total_seconds()
                 if derived_horizon != doc["applicability"]["horizon_seconds"]:
                     errors.append("simulated scenario applicability horizon MUST match returned trajectory")
-                effect_scopes = {effect["scope"] for effect in effects}
-                if set(doc["applicability"]["scopes"]) != effect_scopes:
-                    errors.append("simulated scenario applicability scopes MUST match expected effect scopes")
+                output_scopes = counterfactual_output_scopes(doc)
+                if set(doc["applicability"]["scopes"]) != output_scopes:
+                    errors.append("simulated scenario applicability scopes MUST match all output scopes")
+                evidence = doc["evidence"]
+                if not evidence:
+                    errors.append("simulated scenario MUST carry actual evidence references")
+                else:
+                    bound = all(
+                        reference.get("content_digest")
+                        and reference.get("observed_at")
+                        and reference.get("scopes")
+                        and reference.get("model_refs")
+                        and reference.get("claim_refs")
+                        for reference in evidence
+                    )
+                    if not bound:
+                        errors.append("simulated scenario evidence MUST be digest-addressed and explicitly bound")
+                    evidence_scopes = {scope for reference in evidence for scope in reference.get("scopes", [])}
+                    evidence_models = {model_id for reference in evidence for model_id in reference.get("model_refs", [])}
+                    evidence_claims = {claim_id for reference in evidence for claim_id in reference.get("claim_refs", [])}
+                    if not output_scopes.issubset(evidence_scopes):
+                        errors.append("simulated scenario evidence MUST cover all output scopes")
+                    if not set(collect_receipt_model_ids(doc)).issubset(evidence_models):
+                        errors.append("simulated scenario evidence MUST cover all producing models")
+                    if doc["id"] not in evidence_claims:
+                        errors.append("simulated scenario evidence MUST bind the scenario claim")
         else:
             if effects:
                 errors.append("non-simulated scenario MUST NOT invent expected effects")

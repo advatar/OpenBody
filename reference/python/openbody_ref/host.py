@@ -76,13 +76,25 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
             "The deterministic reference provider only supports the exact bundled perturbation",
         )
 
-    semantic_validate(candidate)
+    evidence = candidate.get("evidence", [])
+    evidence_binding_fields = ("content_digest", "observed_at", "scopes", "model_refs", "claim_refs")
+    if not evidence or any(not all(reference.get(field) for field in evidence_binding_fields) for reference in evidence):
+        return _abstention("insufficient_evidence", "The stored scenario lacks bound, digest-addressed evidence")
+    try:
+        semantic_validate(candidate)
+    except Exception as exc:
+        reason_code = "insufficient_evidence" if "evidence" in str(exc).lower() else "insufficient_validation"
+        return _abstention(reason_code, "The stored scenario does not prove its declared applicability boundary")
     declared_horizon = candidate["applicability"]["horizon_seconds"]
     derived_horizon = scenario_horizon_seconds(candidate)
     producing_models = []
     for receipt in collect_model_receipts(candidate):
         model = store.models.get(receipt["model_id"])
-        if model is None or model["version"] != receipt["model_version"]:
+        if (
+            model is None
+            or model["version"] != receipt["model_version"]
+            or model["family"] != receipt["family"]
+        ):
             return _abstention("model_unavailable", "A producing model receipt is not discoverable")
         producing_models.append(model)
     if not producing_models or any(

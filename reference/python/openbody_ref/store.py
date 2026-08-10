@@ -46,31 +46,50 @@ class InMemoryTwinStore:
             if fixture.get("counterfactual"):
                 store.trajectories[fixture["counterfactual"]["id"]] = fixture["counterfactual"]
             receipt_capabilities: dict[tuple[str, str], set[str]] = {}
+            receipt_scopes: dict[tuple[str, str], set[str]] = {}
             receipt_values: dict[tuple[str, str], dict[str, Any]] = {}
             trajectories = [fixture["baseline"], fixture["counterfactual"]]
             for trajectory in trajectories:
-                for receipt in collect_model_receipts(trajectory["states"]):
+                trajectory_scopes = set()
+                for state in trajectory["states"]:
+                    state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}
+                    for coupling in state["couplings"]:
+                        state_scopes.update((coupling["source"], coupling["target"]))
+                    trajectory_scopes.update(state_scopes)
+                    for receipt in collect_model_receipts(state["model_receipts"]):
+                        key = (receipt["model_id"], receipt["model_version"])
+                        receipt_values[key] = receipt
+                        receipt_capabilities.setdefault(key, set()).add("state_estimation")
+                        receipt_scopes.setdefault(key, set()).update(state_scopes)
+                    for subsystem in state["subsystems"]:
+                        receipt = subsystem["model_receipt"]
+                        key = (receipt["model_id"], receipt["model_version"])
+                        receipt_values[key] = receipt
+                        receipt_capabilities.setdefault(key, set()).add("state_estimation")
+                        receipt_scopes.setdefault(key, set()).add(subsystem["coordinate"])
+                    for coupling in state["couplings"]:
+                        receipt = coupling["model_receipt"]
+                        key = (receipt["model_id"], receipt["model_version"])
+                        receipt_values[key] = receipt
+                        receipt_capabilities.setdefault(key, set()).add("state_estimation")
+                        receipt_scopes.setdefault(key, set()).update((coupling["source"], coupling["target"]))
+                trajectory_capability = "counterfactual" if trajectory is fixture["counterfactual"] else "state_estimation"
+                for receipt in collect_model_receipts(trajectory["model_receipts"]):
                     key = (receipt["model_id"], receipt["model_version"])
                     receipt_values[key] = receipt
-                    receipt_capabilities.setdefault(key, set()).add("state_estimation")
-            simulation_receipts = fixture["model_receipts"] + fixture["counterfactual"]["model_receipts"]
-            for receipt in collect_model_receipts(simulation_receipts):
+                    receipt_capabilities.setdefault(key, set()).add(trajectory_capability)
+                    receipt_scopes.setdefault(key, set()).update(trajectory_scopes)
+            for receipt in collect_model_receipts(fixture["model_receipts"]):
                 key = (receipt["model_id"], receipt["model_version"])
                 receipt_values[key] = receipt
                 receipt_capabilities.setdefault(key, set()).add("counterfactual")
+                receipt_scopes.setdefault(key, set()).update(fixture["applicability"]["scopes"])
 
-            state_scopes = {subsystem["coordinate"] for state in fixture["baseline"]["states"] for subsystem in state["subsystems"]}
-            simulation_scopes = set(fixture["applicability"]["scopes"])
             for (model_id, model_version), capabilities in receipt_capabilities.items():
                 existing = store.models.get(model_id)
                 if existing is not None and existing["version"] != model_version:
                     raise ValueError("fixture uses multiple versions of one model id")
                 receipt = receipt_values[(model_id, model_version)]
-                scopes = set()
-                if "state_estimation" in capabilities:
-                    scopes.update(state_scopes)
-                if "counterfactual" in capabilities:
-                    scopes.update(simulation_scopes)
                 store.models[model_id] = {
                     "schema_version": "0.1",
                     "kind": "BodyModel",
@@ -78,7 +97,7 @@ class InMemoryTwinStore:
                     "version": model_version,
                     "family": receipt["family"],
                     "provider": "OpenBody deterministic fixture replay",
-                    "scopes": sorted(scopes),
+                    "scopes": sorted(receipt_scopes[(model_id, model_version)]),
                     "capabilities": sorted(capabilities),
                     "required_inputs": ["exact bundled fixture inputs"],
                     "outputs": ["exact bundled fixture outputs"],
@@ -104,8 +123,13 @@ class InMemoryTwinStore:
         if not scenarios:
             raise ValueError("outcome is not bound to a hosted perturbation")
         outcome_start = parse_timestamp(value["started_at"])
-        if not any(outcome_start >= parse_timestamp(scenario["perturbation"]["starts_at"]) for scenario in scenarios):
-            raise ValueError("outcome predates its hosted perturbation instance")
+        outcome_end = parse_timestamp(value["ended_at"])
+        if not any(
+            outcome_start >= parse_timestamp(scenario["perturbation"]["starts_at"])
+            and outcome_end <= parse_timestamp(scenario["counterfactual"]["states"][-1]["state_time"])
+            for scenario in scenarios
+        ):
+            raise ValueError("outcome falls outside its hosted scenario observation window")
         if value["id"] in self.outcomes:
             raise ValueError("outcome id already exists")
         self.outcomes[value["id"]] = value

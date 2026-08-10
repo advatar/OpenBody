@@ -47,6 +47,31 @@ def scenario_horizon_seconds(value: dict[str, Any]) -> int:
     return int(horizon)
 
 
+def counterfactual_output_scopes(value: dict[str, Any]) -> set[str]:
+    scopes = {effect["scope"] for effect in value["expected_effects"]}
+    for state in value["counterfactual"]["states"]:
+        scopes.update(subsystem["coordinate"] for subsystem in state["subsystems"])
+        for coupling in state["couplings"]:
+            scopes.update((coupling["source"], coupling["target"]))
+        for evidence in state["evidence"]:
+            scopes.update(evidence.get("scopes", []))
+        for subsystem in state["subsystems"]:
+            for evidence in subsystem["evidence"]:
+                scopes.update(evidence.get("scopes", []))
+    return scopes
+
+
+def _receipt_model_ids(value: Any) -> set[str]:
+    if isinstance(value, dict):
+        model_ids = {value["model_id"]} if {"model_id", "model_version", "execution_id"}.issubset(value) else set()
+        for nested in value.values():
+            model_ids.update(_receipt_model_ids(nested))
+        return model_ids
+    if isinstance(value, list):
+        return set().union(*(_receipt_model_ids(nested) for nested in value), set())
+    return set()
+
+
 def semantic_validate(value: dict[str, Any]) -> None:
     validate_object(value)
     kind = value.get("kind")
@@ -62,11 +87,34 @@ def semantic_validate(value: dict[str, Any]) -> None:
             applicability = value["applicability"]
             if applicability["subject"] != value["subject"]:
                 raise ValueError("scenario applicability subject must match scenario subject")
-            effect_scopes = {effect["scope"] for effect in effects}
-            if set(applicability["scopes"]) != effect_scopes:
-                raise ValueError("scenario applicability scopes must equal expected effect scopes")
+            output_scopes = counterfactual_output_scopes(value)
+            if set(applicability["scopes"]) != output_scopes:
+                raise ValueError("scenario applicability scopes must equal all counterfactual output scopes")
             if applicability["horizon_seconds"] != scenario_horizon_seconds(value):
                 raise ValueError("scenario applicability horizon does not match returned trajectory")
+            evidence = value["evidence"]
+            if not evidence:
+                raise ValueError("simulated scenarios require actual evidence references")
+            for reference in evidence:
+                if not all(
+                    (
+                        reference.get("content_digest"),
+                        reference.get("observed_at"),
+                        reference.get("scopes"),
+                        reference.get("model_refs"),
+                        reference.get("claim_refs"),
+                    )
+                ):
+                    raise ValueError("simulated scenario evidence must be digest-addressed and explicitly bound")
+            evidence_scopes = {scope for reference in evidence for scope in reference["scopes"]}
+            evidence_models = {model_id for reference in evidence for model_id in reference["model_refs"]}
+            evidence_claims = {claim_id for reference in evidence for claim_id in reference["claim_refs"]}
+            if not output_scopes.issubset(evidence_scopes):
+                raise ValueError("simulated scenario evidence does not cover every output scope")
+            if not _receipt_model_ids(value).issubset(evidence_models):
+                raise ValueError("simulated scenario evidence does not cover every producing model")
+            if value["id"] not in evidence_claims:
+                raise ValueError("simulated scenario evidence is not bound to the scenario claim")
         else:
             if receipts or effects or counterfactual is not None:
                 raise ValueError("non-simulated scenarios must not invent effects, receipts, or counterfactual trajectory")

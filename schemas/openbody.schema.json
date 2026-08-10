@@ -42,9 +42,18 @@
         "canonical_ref":{"type":"string"},
         "content_digest":{"oneOf":[{"$ref":"#/$defs/Digest"},{"type":"null"}]},
         "observed_at":{"oneOf":[{"$ref":"#/$defs/Timestamp"},{"type":"null"}]},
-        "source_provenance":{"type":"object"},
-        "authorization_ref":{"type":["string","null"]}
+        "source_provenance":{"type":"object","minProperties":1},
+        "authorization_ref":{"type":["string","null"]},
+        "scopes":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/$defs/Coordinate"}},
+        "model_refs":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
+        "claim_refs":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}}
       }
+    },
+    "SimulationEvidenceReference": {
+      "allOf":[
+        {"$ref":"#/$defs/EvidenceReference"},
+        {"required":["content_digest","observed_at","scopes","model_refs","claim_refs"]}
+      ]
     },
     "ModelReceipt": {
       "type":"object","additionalProperties":false,
@@ -175,7 +184,7 @@
         "counterfactual":{"oneOf":[{"$ref":"#/$defs/BodyTrajectory"},{"type":"null"}]},
         "disposition":{"enum":["simulated","abstained","authorization_required","clinician_review_required"]},
         "abstention":{"oneOf":[{"$ref":"#/$defs/Abstention"},{"type":"null"}]},
-        "applicability":{"$ref":"#/$defs/SimulationApplicability"},"evidence":{"type":"array","items":{"$ref":"#/$defs/EvidenceReference"}},
+        "applicability":{"$ref":"#/$defs/SimulationApplicability"},"evidence":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/SimulationEvidenceReference"}},
         "expected_effects":{"type":"array","items":{"$ref":"#/$defs/ExpectedEffect"}},"assumptions":{"type":"array","items":{"type":"string"}},
         "uncertainty":{"$ref":"#/$defs/Uncertainty"},"model_receipts":{"type":"array","items":{"$ref":"#/$defs/ModelReceipt"}}
       }
