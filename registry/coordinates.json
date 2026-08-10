@@ -1,0 +1,25 @@
+{
+  "registry_version": "0.1",
+  "species": "human",
+  "coordinates": [
+    {"coordinate":"ob://human/whole_body","label":"Whole body","scale":"whole_body"},
+    {"coordinate":"ob://human/cardiovascular","label":"Cardiovascular system","scale":"subsystem"},
+    {"coordinate":"ob://human/cardiovascular/heart","label":"Heart","scale":"organ"},
+    {"coordinate":"ob://human/cardiovascular/heart/left_ventricle","label":"Left ventricle","scale":"organ"},
+    {"coordinate":"ob://human/metabolic","label":"Metabolic system","scale":"subsystem"},
+    {"coordinate":"ob://human/metabolic/glucose_regulation","label":"Glucose regulation","scale":"subsystem"},
+    {"coordinate":"ob://human/endocrine","label":"Endocrine system","scale":"subsystem"},
+    {"coordinate":"ob://human/endocrine/pancreas","label":"Pancreas","scale":"organ"},
+    {"coordinate":"ob://human/endocrine/pancreas/beta_cell","label":"Pancreatic beta cell","scale":"cellular"},
+    {"coordinate":"ob://human/neural","label":"Nervous system","scale":"subsystem"},
+    {"coordinate":"ob://human/neural/autonomic","label":"Autonomic nervous system","scale":"subsystem"},
+    {"coordinate":"ob://human/neural/autonomic/vagus","label":"Vagus nerve","scale":"organ"},
+    {"coordinate":"ob://human/renal","label":"Renal system","scale":"subsystem"},
+    {"coordinate":"ob://human/hepatic","label":"Hepatic system","scale":"subsystem"},
+    {"coordinate":"ob://human/immune","label":"Immune system","scale":"subsystem"},
+    {"coordinate":"ob://human/gastrointestinal","label":"Gastrointestinal system","scale":"subsystem"},
+    {"coordinate":"ob://human/musculoskeletal","label":"Musculoskeletal system","scale":"subsystem"},
+    {"coordinate":"ob://human/molecular/protein/PCSK9","label":"PCSK9 protein","scale":"molecular","aliases":[{"system":"UniProt","id":"Q8NBP7"}]},
+    {"coordinate":"ob://human/genome/GRCh38","label":"Human genome GRCh38","scale":"molecular"}
+  ]
+}
