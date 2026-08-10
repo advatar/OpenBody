@@ -32,9 +32,37 @@ Observation -> BodyState -> Trajectory -> Perturbation
 9. **Fail closed.** Unsupported, stale, out-of-distribution, insufficiently calibrated, or unauthorized requests produce explicit abstention rather than fabricated results.
 10. **Objectives belong to the person.** The protocol does not define a universal "optimal human." Goals and acceptable trade-offs are external, authorized inputs.
 
-## Specification
+## Executable 0.1 artifacts
 
-See [`OPENBODY.md`](OPENBODY.md).
+- [`OPENBODY.md`](OPENBODY.md) — normative protocol draft.
+- [`schemas/openbody.schema.json`](schemas/openbody.schema.json) — JSON Schema 2020-12 definitions for the core state/model/simulation/outcome objects.
+- [`registry/coordinates.json`](registry/coordinates.json) — initial machine-readable `ob://` biological coordinate registry.
+- [`openapi/openbody.openapi.json`](openapi/openbody.openapi.json) — OpenAPI 3.1 HTTP profile.
+- [`profiles/mcp/tools.json`](profiles/mcp/tools.json) — agent/MCP semantic capability profile.
+- [`examples/post-meal-walk.scenario.json`](examples/post-meal-walk.scenario.json) — first end-to-end simulated scenario, aligned with the InVivo personal CGM/walking model.
+- [`examples/insufficient-evidence.abstention.json`](examples/insufficient-evidence.abstention.json) — fail-closed response example.
+- [`tools/validate_openbody.py`](tools/validate_openbody.py) — schema + protocol-invariant conformance validator.
+
+## Validate locally
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+python tools/validate_openbody.py
+```
+
+CI runs the same conformance path on every pull request and push to `main`.
+
+The validator currently enforces structural JSON Schema conformance plus semantic invariants that JSON Schema alone should not silently encode, including:
+
+- a `simulated` scenario must contain a counterfactual trajectory and model receipt;
+- a non-simulated scenario must not invent expected effects or claim a producing model receipt;
+- an explicit `abstained` scenario must contain an `Abstention`;
+- an `ObservedOutcome` cannot end before it starts;
+- OpenBody coordinates referenced by fixtures are checked against the registry and unknown coordinates are reported.
+
+## Status
 
 Version: **OpenBody Protocol 0.1.0-draft.1**
 
