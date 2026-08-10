@@ -1,0 +1,13 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title":"OpenBody HTTP Profile","version":"0.1.0-draft.1"},
+  "servers": [{"url":"https://example.org/openbody/v1"}],
+  "paths": {
+    "/capabilities": {"get":{"operationId":"getCapabilities","responses":{"200":{"description":"Capabilities","content":{"application/json":{"schema":{"type":"object","required":["protocol","versions","capabilities"],"properties":{"protocol":{"const":"openbody"},"versions":{"type":"array","items":{"type":"string"}},"capabilities":{"type":"array","items":{"type":"string"}}}}}}}}}},
+    "/state": {"get":{"operationId":"getState","parameters":[{"name":"coordinate","in":"query","schema":{"type":"string"}}],"responses":{"200":{"description":"Current body state","content":{"application/json":{"schema":{"$ref":"../schemas/openbody.schema.json#/$defs/BodyState"}}}}}}},
+    "/models": {"get":{"operationId":"listModels","responses":{"200":{"description":"Models","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"../schemas/openbody.schema.json#/$defs/BodyModel"}}}}}}}},
+    "/simulations": {"post":{"operationId":"simulate","requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["state","perturbation","horizon_seconds"],"properties":{"state":{"$ref":"../schemas/openbody.schema.json#/$defs/BodyState"},"perturbation":{"$ref":"../schemas/openbody.schema.json#/$defs/Perturbation"},"horizon_seconds":{"type":"integer","minimum":1},"requested_scopes":{"type":"array","items":{"type":"string"}},"authority_ref":{"type":["string","null"]}}}}}},"responses":{"200":{"description":"Simulation or governed abstention","content":{"application/json":{"schema":{"oneOf":[{"$ref":"../schemas/openbody.schema.json#/$defs/CounterfactualScenario"},{"$ref":"../schemas/openbody.schema.json#/$defs/Abstention"}]}}}}}}},
+    "/outcomes": {"post":{"operationId":"recordOutcome","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"../schemas/openbody.schema.json#/$defs/ObservedOutcome"}}}},"responses":{"202":{"description":"Outcome accepted"}}}},
+    "/calibrations": {"post":{"operationId":"recordCalibration","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"../schemas/openbody.schema.json#/$defs/CalibrationEvent"}}}},"responses":{"202":{"description":"Calibration accepted"}}}}
+  }
+}

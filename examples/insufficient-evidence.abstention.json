@@ -1,0 +1,9 @@
+{
+  "schema_version": "0.1",
+  "kind": "Abstention",
+  "reason_code": "insufficient_evidence",
+  "reasons": [
+    "Fewer than the model's required explicit treated and control observations were available",
+    "No counterfactual effect was generated"
+  ]
+}

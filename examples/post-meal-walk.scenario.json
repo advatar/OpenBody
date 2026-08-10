@@ -1,0 +1,108 @@
+{
+  "schema_version": "0.1",
+  "kind": "CounterfactualScenario",
+  "id": "scenario-post-meal-walk-001",
+  "subject": "subject:local-demo",
+  "generated_at": "2026-08-10T06:30:00Z",
+  "baseline": {
+    "id": "trajectory-baseline-001",
+    "trajectory_kind": "predicted",
+    "generated_at": "2026-08-10T06:30:00Z",
+    "states": [
+      {
+        "schema_version": "0.1",
+        "kind": "BodyState",
+        "id": "state-metabolic-001",
+        "subject": "subject:local-demo",
+        "generated_at": "2026-08-10T06:30:00Z",
+        "state_time": "2026-08-10T06:30:00Z",
+        "valid_until": "2026-08-11T06:30:00Z",
+        "subsystems": [
+          {
+            "coordinate": "ob://human/metabolic/glucose_regulation",
+            "organizational_scale": "subsystem",
+            "state_vector": {
+              "postprandial_glucose_excursion_mgdl": 45,
+              "glucose_recovery_minutes": 100
+            },
+            "latent_state": {},
+            "trend": "indeterminate",
+            "uncertainty": {"epistemic":0.2,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":[]},
+            "evidence": [
+              {"id":"ev-cgm-1","scheme":"openbody","canonical_ref":"local://cgm/meal-response-set-001","content_digest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","observed_at":"2026-08-09T18:00:00Z","source_provenance":{"device_class":"CGM","exposure":"explicit"},"authorization_ref":null}
+            ],
+            "model_receipt": {
+              "model_id":"twin-state-metabolic","model_version":"1.0.0","family":"statistical","execution_id":"exec-state-001","executed_at":"2026-08-10T06:30:00Z","input_digest":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","output_digest":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","environment_digest":null,"validation_ref":"validation:twin-state-metabolic:1"
+            }
+          }
+        ],
+        "couplings": [],
+        "evidence": [],
+        "uncertainty": {"epistemic":0.2,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":[]},
+        "model_receipts": []
+      }
+    ],
+    "uncertainty": {"epistemic":0.3,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":["Persistence baseline; no intervention effect inferred"]},
+    "assumptions": ["No-change persistence baseline"],
+    "model_receipts": []
+  },
+  "perturbation": {
+    "id": "post_meal_walk",
+    "class": "exercise",
+    "scope": "ob://human/metabolic/glucose_regulation",
+    "parameters": {"duration_minutes":10,"start_delay_minutes":5},
+    "starts_at": "2026-08-10T18:05:00Z",
+    "ends_at": "2026-08-10T18:15:00Z",
+    "authority_ref": null
+  },
+  "counterfactual": {
+    "id": "trajectory-walk-001",
+    "trajectory_kind": "intervention",
+    "generated_at": "2026-08-10T06:30:00Z",
+    "states": [
+      {
+        "schema_version": "0.1",
+        "kind": "BodyState",
+        "id": "state-walk-001",
+        "subject": "subject:local-demo",
+        "generated_at": "2026-08-10T06:30:00Z",
+        "state_time": "2026-08-10T20:05:00Z",
+        "valid_until": null,
+        "subsystems": [
+          {
+            "coordinate": "ob://human/metabolic/glucose_regulation",
+            "organizational_scale": "subsystem",
+            "state_vector": {"postprandial_glucose_excursion_mgdl":25,"glucose_recovery_minutes":70},
+            "latent_state": {},
+            "trend": "indeterminate",
+            "uncertainty": {"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":["Personal repeated-measure CGM association; not population causal efficacy"]},
+            "evidence": [],
+            "model_receipt": {
+              "model_id":"post-meal-walk-personal-difference","model_version":"1.0.0","family":"statistical","execution_id":"exec-walk-001","executed_at":"2026-08-10T06:30:00Z","input_digest":"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","output_digest":"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","environment_digest":null,"validation_ref":"validation:n-of-1-observational"
+            }
+          }
+        ],
+        "couplings": [],
+        "evidence": [],
+        "uncertainty": {"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":["Personal repeated-measure CGM association; not population causal efficacy"]},
+        "model_receipts": []
+      }
+    ],
+    "uncertainty": {"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":["Personal repeated-measure CGM association; not population causal efficacy"]},
+    "assumptions": ["4+ walked and 4+ explicit no-walk CGM observations in a matched personal meal stratum"],
+    "model_receipts": [
+      {"model_id":"post-meal-walk-personal-difference","model_version":"1.0.0","family":"statistical","execution_id":"exec-walk-001","executed_at":"2026-08-10T06:30:00Z","input_digest":"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","output_digest":"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","environment_digest":null,"validation_ref":"validation:n-of-1-observational"}
+    ]
+  },
+  "disposition": "simulated",
+  "abstention": null,
+  "expected_effects": [
+    {"scope":"ob://human/metabolic/glucose_regulation","metric":"postprandial_glucose_excursion_mgdl","delta":-20,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-25,"point":-20,"upper":-15},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}},
+    {"scope":"ob://human/metabolic/glucose_regulation","metric":"glucose_recovery_minutes","delta":-30,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-40,"point":-30,"upper":-20},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}}
+  ],
+  "assumptions": ["Personal observational association, not diabetes diagnosis or medication guidance"],
+  "uncertainty": {"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":["Observed within-person differences can remain confounded"]},
+  "model_receipts": [
+    {"model_id":"post-meal-walk-personal-difference","model_version":"1.0.0","family":"statistical","execution_id":"exec-walk-001","executed_at":"2026-08-10T06:30:00Z","input_digest":"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","output_digest":"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","environment_digest":null,"validation_ref":"validation:n-of-1-observational"}
+  ]
+}
