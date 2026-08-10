@@ -181,6 +181,17 @@ class TestReceiptModelClosure:
         assert response.status_code == 200
         assert response.json()["reason_code"] == "unsupported_scope"
 
+    def test_model_applicability_must_match_subject_and_receipt_scopes(self) -> None:
+        scenario = fixture()
+        store = injected_store(scenario)
+        for model in store.models.values():
+            model["applicability"] = deepcopy(model["applicability"])
+            model["applicability"]["subject"] = "subject:other"
+            model["applicability"]["scopes"] = ["ob://human/cardiovascular/heart"]
+        response = TestClient(create_app(store)).post("/v1/simulations", json=simulation_request(scenario))
+        assert response.status_code == 200
+        assert response.json()["reason_code"] == "insufficient_validation"
+
 
 class TestEvidenceClosure:
     def test_short_digest_is_rejected(self) -> None:
@@ -193,6 +204,25 @@ class TestEvidenceClosure:
         scenario = fixture()
         nested_evidence = scenario["baseline"]["states"][0]["subsystems"][0]["evidence"][0]
         nested_evidence["model_refs"] = [scenario["model_receipts"][0]["model_id"]]
+        with pytest.raises(ValueError, match="placement producer"):
+            semantic_validate(scenario)
+
+    def test_state_evidence_must_bind_producer_for_claimed_scope(self) -> None:
+        scenario = fixture()
+        state = scenario["counterfactual"]["states"][0]
+        cardiovascular = deepcopy(state["subsystems"][0])
+        cardiovascular["coordinate"] = "ob://human/cardiovascular/heart"
+        cardiovascular["model_receipt"]["model_id"] = "cardiovascular-counterfactual-model"
+        cardiovascular["model_receipt"]["execution_id"] = "exec-cardiovascular-counterfactual"
+        state["subsystems"].append(cardiovascular)
+        scenario["applicability"]["scopes"].append(cardiovascular["coordinate"])
+        scenario["evidence"][0]["scopes"].append(cardiovascular["coordinate"])
+        scenario["evidence"][0]["model_refs"].append(cardiovascular["model_receipt"]["model_id"])
+        state_evidence = deepcopy(scenario["evidence"][0])
+        state_evidence["id"] = "evidence-state-wrong-scope-producer"
+        state_evidence["scopes"] = ["ob://human/metabolic/glucose_regulation"]
+        state_evidence["model_refs"] = [cardiovascular["model_receipt"]["model_id"]]
+        state["evidence"].append(state_evidence)
         with pytest.raises(ValueError, match="placement producer"):
             semantic_validate(scenario)
 

@@ -115,6 +115,15 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
             return _abstention("insufficient_validation", "A producing model lacks its required capability")
         if not requirement["scopes"].issubset(set(model["scopes"])):
             return _abstention("unsupported_scope", "A producing model does not support its receipt scopes")
+        model_applicability = model.get("applicability", {})
+        if (
+            model_applicability.get("subject") != candidate["subject"]
+            or not requirement["scopes"].issubset(set(model_applicability.get("scopes", [])))
+        ):
+            return _abstention(
+                "insufficient_validation",
+                "A producing model applicability boundary does not match its subject and receipt scopes",
+            )
         producing_models.append(model)
     if not producing_models or any(
         model.get("applicability", {}).get("horizon_seconds") != declared_horizon for model in producing_models

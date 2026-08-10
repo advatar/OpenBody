@@ -42,10 +42,50 @@ def collect_receipt_model_ids(value):
     return []
 
 
+def merge_producer_scopes(target, source):
+    for model_id, scopes in source.items():
+        target.setdefault(model_id, set()).update(scopes)
+
+
+def state_producer_scopes(state):
+    state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}
+    state_scopes.update(
+        coordinate for coupling in state["couplings"] for coordinate in (coupling["source"], coupling["target"])
+    )
+    producers = {receipt["model_id"]: set(state_scopes) for receipt in state["model_receipts"]}
+    for subsystem in state["subsystems"]:
+        producers.setdefault(subsystem["model_receipt"]["model_id"], set()).add(subsystem["coordinate"])
+    for coupling in state["couplings"]:
+        producers.setdefault(coupling["model_receipt"]["model_id"], set()).update(
+            (coupling["source"], coupling["target"])
+        )
+    return producers
+
+
+def trajectory_producer_scopes(trajectory):
+    trajectory_scopes = {
+        subsystem["coordinate"] for state in trajectory["states"] for subsystem in state["subsystems"]
+    }
+    trajectory_scopes.update(
+        coordinate
+        for state in trajectory["states"]
+        for coupling in state["couplings"]
+        for coordinate in (coupling["source"], coupling["target"])
+    )
+    producers = {receipt["model_id"]: set(trajectory_scopes) for receipt in trajectory["model_receipts"]}
+    for state in trajectory["states"]:
+        merge_producer_scopes(producers, state_producer_scopes(state))
+    return producers
+
+
 def scenario_evidence_bindings(value):
     output_scopes = set(value["applicability"]["scopes"])
-    all_model_ids = set(collect_receipt_model_ids(value))
-    bindings = [(reference, output_scopes, all_model_ids) for reference in value.get("evidence", [])]
+    all_producers = {receipt["model_id"]: set(output_scopes) for receipt in value["model_receipts"]}
+    for trajectory_name in ("baseline", "counterfactual"):
+        trajectory = value.get(trajectory_name)
+        if trajectory is not None:
+            merge_producer_scopes(all_producers, trajectory_producer_scopes(trajectory))
+    bindings = [(reference, output_scopes, all_producers) for reference in value.get("evidence", [])]
     for trajectory_name in ("baseline", "counterfactual"):
         trajectory = value.get(trajectory_name)
         if trajectory is None:
@@ -59,20 +99,24 @@ def scenario_evidence_bindings(value):
             for coupling in state["couplings"]
             for coordinate in (coupling["source"], coupling["target"])
         )
-        trajectory_model_ids = set(collect_receipt_model_ids(trajectory))
+        trajectory_producers = trajectory_producer_scopes(trajectory)
         bindings.extend(
-            (reference, trajectory_scopes, trajectory_model_ids) for reference in trajectory.get("evidence", [])
+            (reference, trajectory_scopes, trajectory_producers) for reference in trajectory.get("evidence", [])
         )
         for state in trajectory["states"]:
             state_scopes = {subsystem["coordinate"] for subsystem in state["subsystems"]}
             state_scopes.update(
                 coordinate for coupling in state["couplings"] for coordinate in (coupling["source"], coupling["target"])
             )
-            state_model_ids = set(collect_receipt_model_ids(state))
-            bindings.extend((reference, state_scopes, state_model_ids) for reference in state["evidence"])
+            state_producers = state_producer_scopes(state)
+            bindings.extend((reference, state_scopes, state_producers) for reference in state["evidence"])
             for subsystem in state["subsystems"]:
                 bindings.extend(
-                    (reference, {subsystem["coordinate"]}, {subsystem["model_receipt"]["model_id"]})
+                    (
+                        reference,
+                        {subsystem["coordinate"]},
+                        {subsystem["model_receipt"]["model_id"]: {subsystem["coordinate"]}},
+                    )
                     for reference in subsystem["evidence"]
                 )
     return bindings
@@ -149,8 +193,13 @@ def invariant_errors(doc):
                     ):
                         errors.append("simulated scenario evidence scopes MUST match their placement")
                     if any(
-                        not set(reference.get("model_refs", [])).issubset(producer_ids)
-                        for reference, _, producer_ids in evidence_bindings
+                        not set(reference.get("model_refs", [])).issubset(producer_scopes)
+                        or not set(reference.get("scopes", [])).issubset(
+                            set().union(
+                                *(producer_scopes[model_id] for model_id in reference.get("model_refs", [])), set()
+                            )
+                        )
+                        for reference, _, producer_scopes in evidence_bindings
                     ):
                         errors.append("simulated scenario evidence MUST bind its placement producer")
                     if any(not set(reference.get("model_refs", [])).issubset(receipt_model_ids) for reference in evidence):
