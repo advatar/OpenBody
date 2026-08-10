@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openbody-ref"
+version = "0.1.0.dev1"
+description = "Reference OpenBody 0.1 host and client"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
+  "jsonschema[format]>=4.25,<5",
+  "uvicorn>=0.35,<1"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["openbody_ref*"]
