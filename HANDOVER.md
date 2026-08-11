@@ -20,23 +20,32 @@ The patch tightens the shared placement-aware evidence/producer scope maps rathe
 
 ## Qualification results
 
+Independently re-run against `253b65536050f7f6d65916355f55aaca175775a4`:
+
 - Reference suite: `56 passed`
 - Conformance validator: all examples pass
 - JSON Schema validation/parsing: pass
 - OpenAPI parsing: pass
 - MCP profile parsing: pass
 - `git diff --check`: pass
-- GitHub `validate` CI: pass
+- GitHub `validate` CI: pass (run 31458746859, `SUCCESS`)
 
-## Active gate
+## Final bounded review: clean
 
-A single final bounded adversarial Codex review must now verify qualified protocol commit `253b65536050f7f6d65916355f55aaca175775a4`.
+The final bounded adversarial review of qualified protocol commit `253b65536050f7f6d65916355f55aaca175775a4` is complete and reports **0 unresolved in-scope P1/P2 findings** across the established OpenBody 0.1 invariant classes.
 
-Acceptance criterion: **0 unresolved in-scope P1/P2 findings** across the established OpenBody 0.1 invariant classes. The review must not expand into performance, deployment hardening, future protocol features, or unrelated security concerns.
+Verification performed beyond re-running the suite:
 
-Do not merge PR #5 or resolve historical review threads until this gate is clean. If the review reports another in-scope P1/P2, treat only that finding as the next blocker and do not widen the patch opportunistically.
+1. **Regressions bite.** Reverting `validation.py` to `6f422f9` while keeping the new tests fails `test_evidence_rejects_unrelated_extra_producer`, `test_disjoint_producers_require_separate_scoped_evidence`, and the tightened `test_state_evidence_must_bind_producer_for_claimed_scope`. The "must continue to pass" guard `test_single_correctly_scoped_producer_remains_valid` passes under both, so the tightening is not over-broad.
+2. **Invariant holds at every placement.** Adversarial probes confirm per-producer applicability is enforced at scenario, trajectory, state, and subsystem placements, that an unrelated *extra* producer is rejected even alongside a valid one, and that cross-trajectory provenance leakage (baseline evidence citing a counterfactual-only model) is refused. Positive controls remain valid.
+3. **No dual-implementation drift.** The tightened predicate in `reference/python/openbody_ref/validation.py` and `tools/validate_openbody.py` is logically identical, and both validators agree on accept/reject for every probe.
+4. **No masked coverage.** The `test_reference_host.py` fixture tweak preserves test intent: each `mismatch` case still rejects for its own request-response reason (`subject`, `perturbation`, `horizon`, `scopes`), not for a provenance error raised earlier in `client.simulate`.
+5. **No per-model applicability bypass.** `ModelReceipt` declares no scopes of its own, so producer scope is necessarily placement-derived; the host independently cross-checks each receipt against the discoverable `BodyModel` `scopes` and `applicability` in `_reference_simulate`.
+6. **No stale normative text.** The only remaining references to unioned scope coverage are the new prohibitions in `OPENBODY.md` and this document.
 
-If the review returns zero unresolved in-scope P1/P2 findings:
+## Remaining actions — pending owner authorization
+
+The gate is clean, so the following are unblocked. They are outward-facing and have not been performed:
 
 1. Resolve the historical review threads.
 2. Merge PR #5.
