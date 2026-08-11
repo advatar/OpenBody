@@ -3,10 +3,10 @@
 ## Current checkpoint
 
 - Repository: `advatar/OpenBody`
-- Pull request: [#5](https://github.com/advatar/OpenBody/pull/5)
-- Branch: `fix/openbody-0.1-hardening`
+- Pull request: [#5](https://github.com/advatar/OpenBody/pull/5) — **merged** as `d8d841e`
+- Frozen baseline: tag `v0.1.0-draft.1` at `d8d841e`
 - Qualified protocol commit: `215f55d`
-- State: reviewed clean at `215f55d`
+- State: merged; all 37 review threads resolved; baseline frozen
 - Tracker: issue #3; issue #4 is closed as duplicate
 
 ## Latest bounded patch
@@ -91,8 +91,52 @@ The 16 outdated threads were resolved as superseded rather than individually re-
 
 ## Remaining actions
 
-1. Rebase InVivo/Metabolog #972 onto the tagged contract.
-2. Add cross-repository conformance fixtures and CI.
+### 1. InVivo #972 does not conform to the frozen contract
+
+`advatar/Metabolog` (the InVivo checkout; same repo for historical reasons) PR
+[#972](https://github.com/advatar/Metabolog/pull/972) "Expose InVivo Twin through OpenBody 0.1" is open and mergeable on
+`feat/openbody-adapter`, but it was written against a looser OpenBody and is **not** conformant with
+`v0.1.0-draft.1`. This is more than a rebase.
+
+`OpenBodyWireAdapter.scenarioObject` emits neither `applicability` nor `evidence`, both of which are required on
+`CounterfactualScenario`, so *every* scenario it produces fails schema validation. `evidenceObject` emits
+`content_digest: null` and never emits `subject`, `scopes`, `model_refs`, or `claim_refs` — the four bindings a
+simulated scenario requires at every evidence placement.
+
+Closing this needs real provenance plumbing in InVivo, not field padding:
+
+- InVivo must content-digest its health events so `content_digest` is a genuine `sha256:` value.
+- InVivo needs a mapping from its internal signals to registered `ob://` coordinates in `registry/coordinates.json`,
+  to populate evidence `scopes` and `applicability.scopes`.
+- `applicability.scopes` MUST equal all counterfactual output scopes and `applicability.horizon_seconds` MUST equal the
+  derived elapsed time; neither can be hard-coded.
+- Each evidence `model_refs` entry must individually support every scope on that object at its placement, per the
+  per-producer invariant closed in `253b6553`.
+
+The abstention path is closer to conformant, and the conditional-evidence fix in `215f55d` is what makes a governed
+abstention expressible with no evidence at all.
+
+### 2. Cross-repository conformance CI
+
+InVivo should emit fixtures into a shared conformance corpus that OpenBody's `tools/validate_openbody.py` validates in
+CI on both sides, pinned to `v0.1.0-draft.1`. Without this, drift between the two repos is invisible until integration.
+
+### 3. Body/mind interoperability with OpenMind and BrIAn
+
+`advatar/OpenMind` is the mind-side standard (`spec/omps.md` plus `spec/extensions/om*.md` profiles, JSON Schema, MCP
+server); `advatar/BrIAn` is an app implementing it. Two cross-standard questions are unresolved and should be settled
+before BrIAn consumes OpenBody:
+
+- **Subject identity.** OpenBody uses `subject:` URIs and binds every object to one canonical twin. OpenMind carries
+  its own person identity. One person must resolve to one identity across both standards, or the binding between them
+  must be explicit and verifiable.
+- **Authority.** The OpenBody reference host abstains on any `authority_ref` because it cannot validate external
+  authority. OpenMind already has an authorization and peer-grant model (`AUTHORITY.md`). OpenBody authority should
+  delegate to that model rather than introduce a second scheme.
+
+The natural shape is an `OMBODY` extension profile in OpenMind, following the existing `om*.md` convention, defining
+the subject-identity binding, how OpenBody claims enter OpenMind's evidence/claim path (per `OMTRANS-0.1`), and
+authority delegation.
 
 ## Local workspace hygiene
 
