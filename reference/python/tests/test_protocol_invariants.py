@@ -46,6 +46,29 @@ def add_cardiovascular_counterfactual_producer(scenario: dict) -> tuple[dict, di
     return state, cardiovascular
 
 
+def foreign_subject_scenario(scenario: dict) -> dict:
+    """A fully self-consistent scenario for a twin other than the hosted one."""
+    foreign = deepcopy(scenario)
+    foreign["subject"] = "subject:other"
+    foreign["applicability"]["subject"] = "subject:other"
+    for reference in scenario_evidence_references(foreign):
+        reference["subject"] = "subject:other"
+    for trajectory_name in ("baseline", "counterfactual"):
+        for state in foreign[trajectory_name]["states"]:
+            state["subject"] = "subject:other"
+    return foreign
+
+
+def foreign_twin_store(tmp_path, scenario: dict) -> tuple[InMemoryTwinStore, dict]:
+    """Store whose scenario and descriptors are foreign but whose hosted twin is canonical."""
+    foreign = foreign_subject_scenario(scenario)
+    path = tmp_path / "foreign.scenario.json"
+    path.write_text(json.dumps(foreign))
+    store = InMemoryTwinStore.from_fixture(path)
+    store.state = fixture()["baseline"]["states"][0]
+    return store, foreign
+
+
 class TestSubjectClosure:
     def test_cross_subject_scenario_evidence_is_rejected(self) -> None:
         scenario = fixture()
@@ -269,6 +292,19 @@ class TestEvidenceClosure:
             state["evidence"].append(reference)
         semantic_validate(scenario)
 
+    def test_evidence_cannot_postdate_scenario_generation(self) -> None:
+        scenario = fixture()
+        scenario["evidence"][0]["observed_at"] = "2099-01-01T00:00:00Z"
+        with pytest.raises(ValueError, match="observed after the scenario was generated"):
+            semantic_validate(scenario)
+
+    def test_nested_evidence_cannot_postdate_scenario_generation(self) -> None:
+        scenario = fixture()
+        nested = scenario["baseline"]["states"][0]["subsystems"][0]["evidence"][0]
+        nested["observed_at"] = "2099-01-01T00:00:00Z"
+        with pytest.raises(ValueError, match="observed after the scenario was generated"):
+            semantic_validate(scenario)
+
     def test_single_correctly_scoped_producer_remains_valid(self) -> None:
         scenario = fixture()
         state = scenario["counterfactual"]["states"][0]
@@ -331,6 +367,67 @@ class TestRequestResponseClosure:
                     request_scenario["applicability"]["horizon_seconds"],
                     request_scenario["applicability"]["scopes"],
                 )
+
+
+class TestTrajectoryLineageClosure:
+    def test_duplicate_trajectory_ids_are_rejected(self) -> None:
+        scenario = fixture()
+        scenario["counterfactual"]["id"] = scenario["baseline"]["id"]
+        with pytest.raises(ValueError, match="trajectory ids must be distinct"):
+            semantic_validate(scenario)
+
+    def test_duplicate_state_ids_are_rejected(self) -> None:
+        scenario = fixture()
+        scenario["counterfactual"]["states"][0]["id"] = scenario["baseline"]["states"][0]["id"]
+        with pytest.raises(ValueError, match="state ids must be distinct"):
+            semantic_validate(scenario)
+
+
+class TestHostTrustBoundaryClosure:
+    def test_read_path_rechecks_producing_model_applicability(self) -> None:
+        store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")
+        scenario_id = next(iter(store.scenarios))
+        target = next(iter(store.models))
+        store.models[target]["applicability"]["subject"] = "subject:other"
+        store.models[target]["applicability"]["scopes"] = ["ob://human/cardiovascular/heart"]
+        response = TestClient(create_app(store)).get(f"/v1/simulations/{scenario_id}")
+        assert response.status_code == 422
+        assert response.json()["detail"]
+
+    def test_read_path_rechecks_producing_model_discoverability(self) -> None:
+        store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")
+        scenario_id = next(iter(store.scenarios))
+        store.models.pop(next(iter(store.models)))
+        response = TestClient(create_app(store)).get(f"/v1/simulations/{scenario_id}")
+        assert response.status_code == 422
+
+    def test_read_path_rejects_scenario_for_another_twin(self, tmp_path) -> None:
+        store, foreign = foreign_twin_store(tmp_path, fixture())
+        response = TestClient(create_app(store)).get(f"/v1/simulations/{foreign['id']}")
+        assert response.status_code == 422
+
+    def test_read_path_still_returns_a_substantiated_simulation(self) -> None:
+        store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")
+        scenario_id = next(iter(store.scenarios))
+        response = TestClient(create_app(store)).get(f"/v1/simulations/{scenario_id}")
+        assert response.status_code == 200
+        assert response.json()["disposition"] == "simulated"
+
+    def test_self_consistent_foreign_scenario_is_never_simulated(self, tmp_path) -> None:
+        store, foreign = foreign_twin_store(tmp_path, fixture())
+        assert store.state["subject"] != foreign["subject"]
+        response = TestClient(create_app(store)).post("/v1/simulations", json=simulation_request(foreign))
+        assert response.status_code == 200
+        body = response.json()
+        assert body.get("disposition") != "simulated"
+        assert body["kind"] == "Abstention"
+
+    def test_fixture_descriptors_do_not_alias_scenario_applicability(self) -> None:
+        store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")
+        scenario = store.scenarios[next(iter(store.scenarios))]
+        before = deepcopy(scenario["applicability"])
+        store.models[next(iter(store.models))]["applicability"]["subject"] = "subject:other"
+        assert scenario["applicability"] == before
 
 
 class TestAuthorityClosure:

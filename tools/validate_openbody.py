@@ -182,6 +182,13 @@ def invariant_errors(doc):
                     )
                     if not bound:
                         errors.append("simulated scenario evidence MUST be digest-addressed and explicitly bound")
+                    generated_at = datetime.fromisoformat(doc["generated_at"].replace("Z", "+00:00"))
+                    if any(
+                        reference.get("observed_at")
+                        and datetime.fromisoformat(reference["observed_at"].replace("Z", "+00:00")) > generated_at
+                        for reference in evidence
+                    ):
+                        errors.append("simulated scenario evidence MUST NOT be observed after scenario generation")
                     evidence_scopes = {scope for reference in evidence for scope in reference.get("scopes", [])}
                     evidence_models = {model_id for reference in evidence for model_id in reference.get("model_refs", [])}
                     receipt_model_ids = set(collect_receipt_model_ids(doc))

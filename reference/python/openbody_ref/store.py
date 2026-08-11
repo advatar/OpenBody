@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
@@ -100,7 +101,7 @@ class InMemoryTwinStore:
                     "capabilities": sorted(requirement["capabilities"]),
                     "required_inputs": ["exact bundled fixture inputs"],
                     "outputs": ["exact bundled fixture outputs"],
-                    "applicability": fixture["applicability"],
+                    "applicability": deepcopy(fixture["applicability"]),
                     "validation": {"references": sorted(requirement.get("validation_refs", set()))},
                     "prohibited_uses": ["clinical decision-making", "generalization beyond the bundled fixture"],
                     "execution": {"mode": "fixture_replay"},

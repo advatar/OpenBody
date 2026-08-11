@@ -207,6 +207,9 @@ def semantic_validate(value: dict[str, Any]) -> None:
                     )
                 ):
                     raise ValueError("simulated scenario evidence must be digest-addressed and explicitly bound")
+            generated_at = parse_timestamp(value["generated_at"])
+            if any(parse_timestamp(reference["observed_at"]) > generated_at for reference in evidence):
+                raise ValueError("simulated scenario evidence cannot be observed after the scenario was generated")
             evidence_scopes = {scope for reference in evidence for scope in reference["scopes"]}
             receipt_model_ids = _receipt_model_ids(value)
             evidence_models = {model_id for reference in evidence for model_id in reference["model_refs"]}

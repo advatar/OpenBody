@@ -39,6 +39,47 @@ def _abstention(reason_code: str, reason: str) -> dict[str, Any]:
     return value
 
 
+def _producing_model_defect(store: InMemoryTwinStore, candidate: dict[str, Any]) -> tuple[str, str] | None:
+    """Substantiate every producing receipt against its discoverable descriptor.
+
+    Stored scenarios are an untrusted protocol boundary, so this runs on both the
+    execute and read paths rather than only when a simulation is generated.
+    """
+    try:
+        requirements = producing_model_requirements(candidate)
+    except ValueError:
+        return ("insufficient_validation", "A producing model receipt has no biological scope")
+    declared_horizon = candidate["applicability"]["horizon_seconds"]
+    producing_models = []
+    for (model_id, model_version, family), requirement in requirements.items():
+        model = store.models.get(model_id)
+        if (
+            model is None
+            or model["version"] != model_version
+            or model["family"] != family
+        ):
+            return ("model_unavailable", "A producing model receipt is not discoverable")
+        if not requirement["capabilities"].issubset(set(model["capabilities"])):
+            return ("insufficient_validation", "A producing model lacks its required capability")
+        if not requirement["scopes"].issubset(set(model["scopes"])):
+            return ("unsupported_scope", "A producing model does not support its receipt scopes")
+        model_applicability = model.get("applicability", {})
+        if (
+            model_applicability.get("subject") != candidate["subject"]
+            or not requirement["scopes"].issubset(set(model_applicability.get("scopes", [])))
+        ):
+            return (
+                "insufficient_validation",
+                "A producing model applicability boundary does not match its subject and receipt scopes",
+            )
+        producing_models.append(model)
+    if not producing_models or any(
+        model.get("applicability", {}).get("horizon_seconds") != declared_horizon for model in producing_models
+    ):
+        return ("insufficient_validation", "Producing model applicability does not match the scenario")
+    return None
+
+
 def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> dict[str, Any]:
     allowed_fields = {"state", "perturbation", "horizon_seconds", "requested_scopes", "authority_ref"}
     unexpected_fields = set(request) - allowed_fields
@@ -68,6 +109,12 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
         return _abstention("model_unavailable", "No reference scenario is available")
 
     baseline_state = candidate["baseline"]["states"][0]
+    hosted_subject = store.state["subject"]
+    if candidate["subject"] != hosted_subject or baseline_state["subject"] != hosted_subject:
+        return _abstention(
+            "out_of_distribution",
+            "The stored scenario does not represent the hosted twin",
+        )
     if request["state"] != baseline_state:
         return _abstention(
             "out_of_distribution",
@@ -98,37 +145,9 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
         return _abstention(reason_code, "The stored scenario does not prove its declared applicability boundary")
     declared_horizon = candidate["applicability"]["horizon_seconds"]
     derived_horizon = scenario_horizon_seconds(candidate)
-    try:
-        requirements = producing_model_requirements(candidate)
-    except ValueError:
-        return _abstention("insufficient_validation", "A producing model receipt has no biological scope")
-    producing_models = []
-    for (model_id, model_version, family), requirement in requirements.items():
-        model = store.models.get(model_id)
-        if (
-            model is None
-            or model["version"] != model_version
-            or model["family"] != family
-        ):
-            return _abstention("model_unavailable", "A producing model receipt is not discoverable")
-        if not requirement["capabilities"].issubset(set(model["capabilities"])):
-            return _abstention("insufficient_validation", "A producing model lacks its required capability")
-        if not requirement["scopes"].issubset(set(model["scopes"])):
-            return _abstention("unsupported_scope", "A producing model does not support its receipt scopes")
-        model_applicability = model.get("applicability", {})
-        if (
-            model_applicability.get("subject") != candidate["subject"]
-            or not requirement["scopes"].issubset(set(model_applicability.get("scopes", [])))
-        ):
-            return _abstention(
-                "insufficient_validation",
-                "A producing model applicability boundary does not match its subject and receipt scopes",
-            )
-        producing_models.append(model)
-    if not producing_models or any(
-        model.get("applicability", {}).get("horizon_seconds") != declared_horizon for model in producing_models
-    ):
-        return _abstention("insufficient_validation", "Producing model applicability does not match the scenario")
+    defect = _producing_model_defect(store, candidate)
+    if defect is not None:
+        return _abstention(*defect)
     if declared_horizon != derived_horizon:
         return _abstention("insufficient_validation", "Declared and returned trajectory horizons do not match")
     if horizon != declared_horizon:
@@ -209,7 +228,18 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         scenario = store.scenarios.get(scenario_id)
         if scenario is None:
             raise HTTPException(status_code=404, detail="scenario not found")
-        semantic_validate(scenario)
+        try:
+            semantic_validate(scenario)
+            if scenario.get("disposition") == "simulated":
+                if scenario["subject"] != store.state["subject"]:
+                    raise ValueError("stored scenario does not represent the hosted twin")
+                defect = _producing_model_defect(store, scenario)
+                if defect is not None:
+                    raise ValueError(defect[1])
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return scenario
 
     @app.post("/v1/outcomes", status_code=202)
