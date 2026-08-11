@@ -1,0 +1,33 @@
+@page {
+  size: A4;
+  margin: 20mm 18mm 20mm 18mm;
+  @bottom-center { content: counter(page); color: #738391; font: 9pt Arial, sans-serif; }
+}
+
+:root { color: #183247; font-family: Arial, Helvetica, sans-serif; }
+body { font-size: 10.6pt; line-height: 1.58; max-width: 178mm; margin: 0 auto; }
+h1 { color: #123049; font-size: 31pt; line-height: 1.08; letter-spacing: -0.7pt; margin: 0 0 8mm; }
+h2 { color: #0b7276; font-size: 19pt; line-height: 1.2; margin: 11mm 0 4mm; break-after: avoid; }
+p { margin: 0 0 3.4mm; orphans: 3; widows: 3; }
+blockquote { border-left: 4px solid #159095; background: #eaf6f4; margin: 6mm 0; padding: 4mm 6mm; color: #183247; break-inside: avoid; }
+blockquote p { margin: 0; }
+img { display: block; width: 100%; max-height: 122mm; object-fit: contain; margin: 7mm auto 2mm; break-inside: avoid; }
+img[src$="executable-human-hero.png"] { max-height: 105mm; margin-top: 3mm; }
+table { width: 100%; border-collapse: collapse; margin: 6mm 0; font-size: 9.6pt; break-inside: avoid; }
+th { background: #15324b; color: white; text-align: left; padding: 3.2mm; }
+td { border-bottom: 1px solid #c7d8dc; padding: 3.2mm; vertical-align: top; }
+tr:nth-child(even) td { background: #f3f8f7; }
+ul, ol { margin: 2mm 0 5mm; padding-left: 7mm; }
+li { margin-bottom: 1.5mm; }
+strong { color: #123049; }
+a { color: #0b7276; text-decoration: none; }
+hr { border: 0; border-top: 1px solid #c7d8dc; margin: 8mm 0; }
+figure { break-inside: avoid; }
+figcaption { color: #667b87; font-size: 8.5pt; text-align: center; }
+.subtitle { color: #517080; font-size: 14pt; line-height: 1.35; margin: 0 0 8mm; }
+.page-break { break-after: page; page-break-after: always; }
+@media print {
+  h1 { break-before: auto; }
+  h2, h3 { break-after: avoid; }
+  img, table, blockquote { break-inside: avoid; }
+}

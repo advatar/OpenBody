@@ -7,8 +7,8 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 
-from .store import InMemoryTwinStore
-from .validation import semantic_validate, validate_definition
+from .store import InMemoryTwinStore, producing_model_requirements
+from .validation import parse_timestamp, scenario_evidence_references, scenario_horizon_seconds, semantic_validate, validate_definition
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FIXTURE = ROOT / "examples" / "post-meal-walk.scenario.json"
@@ -27,37 +27,152 @@ def _capabilities() -> dict[str, Any]:
             "outcomes.write",
             "calibrations.write",
         ],
-        "authorization": {"schemes": ["oauth2", "oidc", "mandamus"]},
+        "authorization": {"schemes": []},
     }
 
 
+def _abstention(reason_code: str, reason: str) -> dict[str, Any]:
+    value = json.loads(ABSTENTION_FIXTURE.read_text())
+    value["reason_code"] = reason_code
+    value["reasons"] = [reason, "No counterfactual effect was generated"]
+    semantic_validate(value)
+    return value
+
+
+def _producing_model_defect(store: InMemoryTwinStore, candidate: dict[str, Any]) -> tuple[str, str] | None:
+    """Substantiate every producing receipt against its discoverable descriptor.
+
+    Stored scenarios are an untrusted protocol boundary, so this runs on both the
+    execute and read paths rather than only when a simulation is generated.
+    """
+    try:
+        requirements = producing_model_requirements(candidate)
+    except ValueError:
+        return ("insufficient_validation", "A producing model receipt has no biological scope")
+    declared_horizon = candidate["applicability"]["horizon_seconds"]
+    producing_models = []
+    for (model_id, model_version, family), requirement in requirements.items():
+        model = store.models.get(model_id)
+        if (
+            model is None
+            or model["version"] != model_version
+            or model["family"] != family
+        ):
+            return ("model_unavailable", "A producing model receipt is not discoverable")
+        if not requirement["capabilities"].issubset(set(model["capabilities"])):
+            return ("insufficient_validation", "A producing model lacks its required capability")
+        if not requirement["scopes"].issubset(set(model["scopes"])):
+            return ("unsupported_scope", "A producing model does not support its receipt scopes")
+        model_applicability = model.get("applicability", {})
+        if (
+            model_applicability.get("subject") != candidate["subject"]
+            or not requirement["scopes"].issubset(set(model_applicability.get("scopes", [])))
+        ):
+            return (
+                "insufficient_validation",
+                "A producing model applicability boundary does not match its subject and receipt scopes",
+            )
+        producing_models.append(model)
+    if not producing_models or any(
+        model.get("applicability", {}).get("horizon_seconds") != declared_horizon for model in producing_models
+    ):
+        return ("insufficient_validation", "Producing model applicability does not match the scenario")
+    return None
+
+
+def _require_hosted_twin(store: InMemoryTwinStore, subjects: set[str | None]) -> None:
+    """Every subject a read path discloses MUST be the host's canonical twin.
+
+    Applied uniformly to all stored, subject-bearing reads rather than per
+    endpoint: a stored object for another twin is a cross-twin disclosure
+    regardless of which resource or disposition carries it.
+    """
+    hosted = store.state["subject"]
+    if any(subject != hosted for subject in subjects):
+        raise ValueError("stored object does not represent the hosted twin")
+
+
 def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> dict[str, Any]:
+    allowed_fields = {"state", "perturbation", "horizon_seconds", "requested_scopes", "authority_ref"}
+    unexpected_fields = set(request) - allowed_fields
+    if unexpected_fields:
+        raise ValueError(f"unsupported simulation request fields: {sorted(unexpected_fields)}")
     validate_definition("BodyState", request.get("state"))
     validate_definition("Perturbation", request.get("perturbation"))
     horizon = request.get("horizon_seconds")
-    if not isinstance(horizon, int) or horizon < 1:
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon < 1:
         raise ValueError("horizon_seconds must be a positive integer")
+    requested_scopes = request.get("requested_scopes")
+    if not isinstance(requested_scopes, list) or not requested_scopes:
+        raise ValueError("requested_scopes must be a non-empty array")
+    for scope in requested_scopes:
+        validate_definition("Coordinate", scope)
+    if len(requested_scopes) != len(set(requested_scopes)):
+        raise ValueError("requested_scopes must not contain duplicates")
+    requested = request["perturbation"]
+    if request.get("authority_ref") is not None or requested.get("authority_ref") is not None:
+        return _abstention(
+            "authorization_required",
+            "The reference provider cannot validate external authority references",
+        )
 
     candidate = next(iter(store.scenarios.values()), None)
     if candidate is None:
-        return json.loads(ABSTENTION_FIXTURE.read_text())
+        return _abstention("model_unavailable", "No reference scenario is available")
 
-    requested = request["perturbation"]
+    baseline_state = candidate["baseline"]["states"][0]
+    hosted_subject = store.state["subject"]
+    if candidate["subject"] != hosted_subject or baseline_state["subject"] != hosted_subject:
+        return _abstention(
+            "out_of_distribution",
+            "The stored scenario does not represent the hosted twin",
+        )
+    if request["state"] != baseline_state:
+        return _abstention(
+            "out_of_distribution",
+            "The deterministic reference provider only supports its exact bundled baseline state and subject",
+        )
+    valid_until = baseline_state.get("valid_until")
+    perturbation_start = parse_timestamp(candidate["perturbation"]["starts_at"])
+    if parse_timestamp(baseline_state["state_time"]) > perturbation_start or (
+        valid_until is not None and parse_timestamp(valid_until) < perturbation_start
+    ):
+        return _abstention("stale_evidence", "The baseline BodyState does not cover perturbation start")
+
     declared = candidate["perturbation"]
-    same_capability = (
-        requested.get("id") == declared.get("id")
-        and requested.get("class") == declared.get("class")
-        and requested.get("scope") == declared.get("scope")
-        and requested.get("parameters") == declared.get("parameters")
-    )
-    if not same_capability:
-        return json.loads(ABSTENTION_FIXTURE.read_text())
+    if requested != declared:
+        return _abstention(
+            "unsupported_perturbation",
+            "The deterministic reference provider only supports the exact bundled perturbation",
+        )
+
+    evidence = scenario_evidence_references(candidate)
+    evidence_binding_fields = ("content_digest", "observed_at", "subject", "scopes", "model_refs", "claim_refs")
+    if not evidence or any(not all(reference.get(field) for field in evidence_binding_fields) for reference in evidence):
+        return _abstention("insufficient_evidence", "The stored scenario lacks bound, digest-addressed evidence")
+    try:
+        semantic_validate(candidate)
+    except Exception as exc:
+        reason_code = "insufficient_evidence" if "evidence" in str(exc).lower() else "insufficient_validation"
+        return _abstention(reason_code, "The stored scenario does not prove its declared applicability boundary")
+    declared_horizon = candidate["applicability"]["horizon_seconds"]
+    derived_horizon = scenario_horizon_seconds(candidate)
+    defect = _producing_model_defect(store, candidate)
+    if defect is not None:
+        return _abstention(*defect)
+    if declared_horizon != derived_horizon:
+        return _abstention("insufficient_validation", "Declared and returned trajectory horizons do not match")
+    if horizon != declared_horizon:
+        return _abstention(
+            "out_of_distribution",
+            f"The deterministic reference provider only supports a {declared_horizon}-second horizon",
+        )
+
+    supported_scopes = set(candidate["applicability"]["scopes"])
+    if set(requested_scopes) != supported_scopes:
+        return _abstention("unsupported_scope", "Requested output scopes must exactly match the provider boundary")
 
     result = copy.deepcopy(candidate)
-    result["baseline"] = copy.deepcopy(request["state"] and candidate["baseline"])
-    result["baseline"]["states"][0] = copy.deepcopy(request["state"])
-    result["subject"] = request["state"]["subject"]
-    result["perturbation"] = copy.deepcopy(requested)
     semantic_validate(result)
     return result
 
@@ -84,19 +199,31 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         normalized = coordinate if coordinate.startswith("ob://") else f"ob://{coordinate}"
         for subsystem in store.state.get("subsystems", []):
             if subsystem.get("coordinate") == normalized:
+                validate_definition("BodySubsystemState", subsystem)
                 return subsystem
         raise HTTPException(status_code=404, detail="OpenBody coordinate not present in current state")
 
     @app.get("/v1/models")
     def list_models() -> list[dict[str, Any]]:
-        return list(store.models.values())
+        models = list(store.models.values())
+        try:
+            for model in models:
+                validate_definition("BodyModel", model)
+            _require_hosted_twin(store, {model.get("applicability", {}).get("subject") for model in models})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return models
 
     @app.get("/v1/models/{model_id}")
     def get_model(model_id: str) -> dict[str, Any]:
         model = store.models.get(model_id)
         if model is None:
             raise HTTPException(status_code=404, detail="model not found")
-        semantic_validate(model)
+        try:
+            semantic_validate(model)
+            _require_hosted_twin(store, {model.get("applicability", {}).get("subject")})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return model
 
     @app.get("/v1/trajectories/{trajectory_id}")
@@ -104,7 +231,11 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         trajectory = store.trajectories.get(trajectory_id)
         if trajectory is None:
             raise HTTPException(status_code=404, detail="trajectory not found")
-        validate_definition("BodyTrajectory", trajectory)
+        try:
+            validate_definition("BodyTrajectory", trajectory)
+            _require_hosted_twin(store, {state.get("subject") for state in trajectory.get("states", [])})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return trajectory
 
     @app.post("/v1/simulations")
@@ -121,10 +252,25 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         scenario = store.scenarios.get(scenario_id)
         if scenario is None:
             raise HTTPException(status_code=404, detail="scenario not found")
-        semantic_validate(scenario)
+        try:
+            semantic_validate(scenario)
+            # Every disposition carries a required baseline trajectory, so the
+            # hosted-twin binding cannot be limited to simulated scenarios.
+            subjects = {scenario.get("subject")}
+            for trajectory_name in ("baseline", "counterfactual"):
+                trajectory = scenario.get(trajectory_name)
+                if trajectory is not None:
+                    subjects.update(state.get("subject") for state in trajectory.get("states", []))
+            _require_hosted_twin(store, subjects)
+            if scenario.get("disposition") == "simulated":
+                defect = _producing_model_defect(store, scenario)
+                if defect is not None:
+                    raise ValueError(defect[1])
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return scenario
 
-    @app.post("/v1/outcomes", status_code=201)
+    @app.post("/v1/outcomes", status_code=202)
     def record_outcome(value: dict[str, Any]) -> dict[str, Any]:
         try:
             store.put_outcome(value)
@@ -132,7 +278,7 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         return value
 
-    @app.post("/v1/calibrations", status_code=201)
+    @app.post("/v1/calibrations", status_code=202)
     def record_calibration(value: dict[str, Any]) -> dict[str, Any]:
         try:
             store.put_calibration(value)

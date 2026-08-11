@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">Society of Organs</title><desc id="desc">Molecular and cellular models feed specialized organ models, coordinated by a whole-body model.</desc>
+  <defs><style>.t{font-family:Inter,Arial,sans-serif;fill:#15324b}.h{font-size:30px;font-weight:700}.m{font-size:21px;font-weight:600}.s{font-size:17px}.box{fill:#fff;stroke:#8bbbc2;stroke-width:2}.accent{fill:#e7f5f3;stroke:#178f91;stroke-width:3}.line{stroke:#74aeb5;stroke-width:3;fill:none}</style></defs>
+  <rect width="1200" height="560" rx="28" fill="#f7faf9"/>
+  <text x="600" y="55" text-anchor="middle" class="t h">A society of specialized biological models</text>
+  <path class="line" d="M600 150V205M600 205H190V270M600 205H395V270M600 205V270M600 205H805V270M600 205H1010V270"/>
+  <rect x="430" y="85" width="340" height="70" rx="18" class="accent"/><text x="600" y="128" text-anchor="middle" class="t m">Whole-body coordination</text>
+  <g class="t s" text-anchor="middle">
+    <rect x="95" y="270" width="190" height="75" rx="16" class="box"/><text x="190" y="315">Cardiovascular</text>
+    <rect x="300" y="270" width="190" height="75" rx="16" class="box"/><text x="395" y="315">Metabolic</text>
+    <rect x="505" y="270" width="190" height="75" rx="16" class="box"/><text x="600" y="315">Immune</text>
+    <rect x="710" y="270" width="190" height="75" rx="16" class="box"/><text x="805" y="315">Neurological</text>
+    <rect x="915" y="270" width="190" height="75" rx="16" class="box"/><text x="1010" y="315">Renal + hepatic</text>
+  </g>
+  <path class="line" d="M190 345V410M395 345V410M600 345V410M805 345V410M1010 345V410M190 410H1010"/>
+  <rect x="230" y="410" width="740" height="82" rx="18" fill="#15324b"/>
+  <text x="600" y="448" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700" fill="#fff">Molecular + cellular models</text>
+  <text x="600" y="475" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="17" fill="#cfe9e8">genome · proteins · metabolites · cells · tissues</text>
+</svg>

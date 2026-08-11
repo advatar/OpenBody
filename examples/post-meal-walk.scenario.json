@@ -29,7 +29,7 @@
             "trend": "indeterminate",
             "uncertainty": {"epistemic":0.2,"aleatoric":0.2,"coverage":0.8,"interval":null,"calibration_ref":null,"out_of_distribution":false,"reasons":[]},
             "evidence": [
-              {"id":"ev-cgm-1","scheme":"openbody","canonical_ref":"local://cgm/meal-response-set-001","content_digest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","observed_at":"2026-08-09T18:00:00Z","source_provenance":{"device_class":"CGM","exposure":"explicit"},"authorization_ref":null}
+              {"id":"ev-cgm-1","scheme":"openbody","canonical_ref":"local://cgm/meal-response-set-001","content_digest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","observed_at":"2026-08-09T18:00:00Z","source_provenance":{"device_class":"CGM","exposure":"explicit"},"authorization_ref":null,"subject":"subject:local-demo","scopes":["ob://human/metabolic/glucose_regulation"],"model_refs":["twin-state-metabolic"],"claim_refs":["scenario-post-meal-walk-001"]}
             ],
             "model_receipt": {
               "model_id":"twin-state-metabolic","model_version":"1.0.0","family":"statistical","execution_id":"exec-state-001","executed_at":"2026-08-10T06:30:00Z","input_digest":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","output_digest":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","environment_digest":null,"validation_ref":"validation:twin-state-metabolic:1"
@@ -96,6 +96,41 @@
   },
   "disposition": "simulated",
   "abstention": null,
+  "applicability": {
+    "mode": "exact_fixture_replay",
+    "subject": "subject:local-demo",
+    "scopes": [
+      "ob://human/metabolic/glucose_regulation"
+    ],
+    "horizon_seconds": 7200,
+    "evidence_boundary": "Exact bundled baseline state and its referenced evidence only",
+    "generalizable": false
+  },
+  "evidence": [
+    {
+      "id": "evidence-post-meal-walk-demo",
+      "scheme": "openbody",
+      "canonical_ref": "openbody:evidence:post-meal-walk-demo",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_at": "2026-08-10T06:30:00Z",
+      "source_provenance": {
+        "source": "bundled-reference-fixture",
+        "mode": "synthetic-demo"
+      },
+      "authorization_ref": null,
+      "subject": "subject:local-demo",
+      "scopes": [
+        "ob://human/metabolic/glucose_regulation"
+      ],
+      "model_refs": [
+        "post-meal-walk-personal-difference",
+        "twin-state-metabolic"
+      ],
+      "claim_refs": [
+        "scenario-post-meal-walk-001"
+      ]
+    }
+  ],
   "expected_effects": [
     {"scope":"ob://human/metabolic/glucose_regulation","metric":"postprandial_glucose_excursion_mgdl","delta":-20,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-25,"point":-20,"upper":-15},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}},
     {"scope":"ob://human/metabolic/glucose_regulation","metric":"glucose_recovery_minutes","delta":-30,"epistemic_class":"statistical_association","uncertainty":{"epistemic":0.55,"aleatoric":0.2,"coverage":0.8,"interval":{"lower":-40,"point":-30,"upper":-20},"calibration_ref":null,"out_of_distribution":false,"reasons":[]}}

@@ -64,6 +64,12 @@ A counterfactual or recommendation MUST NOT itself authorize disclosure, medicat
 ### 4.7 Objectives belong to the person
 OpenBody MUST NOT define a universal optimal biological state. Goals and trade-offs are external authorized inputs.
 
+### 4.8 Subject and lineage integrity
+Subject identity MUST bind state, simulation, outcome, and calibration lineage. A host MUST NOT rebind another subject's trajectory, evidence, expected effect, model receipt, outcome, or calibration by changing only a top-level subject identifier. Every successful simulation and every accepted outcome or calibration MUST preserve a verifiable subject and perturbation lineage.
+
+### 4.9 Advertised enforcement
+A host MUST NOT advertise an authorization mechanism that it does not enforce. Discovery metadata MUST distinguish enforced authorization schemes from unsupported or externally unavailable schemes. Possession of an `authority_ref` string MUST NOT itself be treated as proof of authority.
+
 ## 5. Seven protocol planes
 
 1. **Observation Plane** — source-grounded measurements/events and references to authoritative external formats.
@@ -167,6 +173,10 @@ BodyModel:
 
 Every derived state, trajectory, and simulated effect MUST identify the producing model with model ID, immutable version, family, execution ID/time, input/output digests, and validation reference where available.
 
+Every model producing a successful simulation MUST be discoverable through the Model Plane with the exact model ID, version, and family carried by its receipt. This applies to receipts at scenario and trajectory level and to receipts nested in states, subsystems, and couplings. Its descriptor MUST declare the capability, biological scope, applicability boundary, validation information, execution mode, and prohibited uses relevant to that simulation. The declared applicability subject, scopes, and horizon MUST authorize the represented subject and every output scope and temporal boundary supported by that receipt placement; matching only the descriptor's top-level scope or horizon is insufficient.
+
+Receipt placement determines required producer semantics. A receipt nested in counterfactual trajectory output MUST resolve to a model declaring `counterfactual` capability in addition to any state-estimation role it performs. Every producing receipt placement MUST have at least one biological scope derived from the output it supports. Before success, a host MUST prove that every producing descriptor contains all capabilities and biological scopes required by the receipt's exact placement; scope-less, empty, or incompatible declarations MUST fail closed.
+
 ### EvidenceReference
 
 ```yaml
@@ -206,11 +216,21 @@ Contains subject, baseline, perturbation, counterfactual trajectory, expected ef
 ### ObservedOutcome / CalibrationEvent
 An outcome binds observations to the exact intervention instance. Calibration compares prediction and outcome. Calibration MUST NOT silently retrain or mutate a production model; learned updates require a new version and provenance.
 
+An accepted `ObservedOutcome` MUST bind to the represented subject and to a known perturbation instance for that subject. Its normalized interval MUST begin no earlier than the exact perturbation start and end no later than the linked scenario counterfactual horizon boundary. An accepted `CalibrationEvent` MUST reference a known, compatible scenario/outcome pair whose subject and perturbation lineage agree, and both subjects MUST equal the host's canonical twin subject. Because stored objects are an untrusted protocol boundary, a host MUST revalidate the scenario, independently derive its horizon, validate the outcome, and re-prove their temporal and lineage compatibility when accepting calibration, even if both objects were validated when inserted. Its metric maps MUST be non-empty, use identical keys, and refer only to metrics present in both the prediction and observed outcome. A host MUST reject unbound, cross-subject, cross-twin, temporally unrelated, metrically incompatible, or conflicting outcome and calibration writes.
+
 ### Abstention
 Abstention is a successful protocol response, not a transport error. Reasons include insufficient/stale evidence, unsupported scope/perturbation, out-of-distribution input, insufficient validation, authorization required, clinician review required, model unavailable, and invalid input.
 
 ### AuthorityReference
 An opaque reference to external authorization such as OAuth/OIDC, capabilities, Mandamus, or future systems. OpenBody objects MUST NOT embed reusable credentials or secrets.
+
+A host that advertises no enforced authorization scheme MUST fail closed when any authority reference is non-null, including both transport-level request authority and authority embedded in a perturbation. An opaque reference is never self-authenticating.
+
+RFC 3339 timestamps represent temporal instants. Implementations MUST parse and compare normalized instants and MUST NOT infer chronology from lexicographic string ordering.
+
+For every `BodyState`, a non-null `valid_until` MUST be no earlier than `state_time`. Every baseline state used for simulation MUST satisfy `state_time <= perturbation.starts_at` after RFC 3339 instant normalization and, when `valid_until` is non-null, `perturbation.starts_at <= valid_until`. A baseline outside that interval is stale and MUST NOT support successful simulation.
+
+Cryptographic digests MUST use algorithm-specific hexadecimal lengths: SHA-256 requires exactly 64 hexadecimal digits and SHA-512 requires exactly 128 hexadecimal digits.
 
 ## 7. OpenBody Coordinates
 
@@ -281,9 +301,19 @@ The base profile intentionally does not define `diagnose`, `prescribe`, or `perf
 
 ## 12. Simulation contract
 
-A request MUST identify subject/twin, state/reference, perturbation, horizon, requested outputs/scopes, and authority when required. Success MUST include baseline and counterfactual trajectories, exact model receipts, assumptions, expected effects, uncertainty, and applicability.
+A request MUST identify subject/twin, state/reference, perturbation, horizon, a non-empty set of requested outputs/scopes, and authority when required. Success MUST bind to the exact requested state, declared model capability, represented subject, requested biological scopes, temporal horizon, and applicable evidence boundary. A client MUST compare the returned baseline to the complete requested `BodyState` using canonical semantic content, not merely subject identity; any changed state vector, subsystem, uncertainty, evidence, receipt, or additional baseline state invalidates the response. Success MUST include baseline and counterfactual trajectories, exact model receipts, assumptions, expected effects, uncertainty, evidence, and applicability. Successful output scopes MUST equal the explicitly requested scopes across expected effects and every nested counterfactual state, subsystem, coupling, and scoped evidence reference; omitted or empty `requested_scopes` is invalid. Contradictory broader output MUST fail closed rather than be silently filtered. `requested_scopes` and horizon MUST NOT be silently ignored.
 
-A model MUST abstain when perturbation, dose, biological scope, temporal horizon, subject context, or evidence falls outside its declared boundary. The response MUST state whether its epistemic basis is statistical association, causal estimate, mechanistic simulation, hybrid inference, or another registered class.
+The declared simulation horizon MUST equal the normalized elapsed time from perturbation start to the returned counterfactual boundary and MUST agree with the producing model applicability declaration. A hard-coded or transport-default horizon is not proof of temporal applicability.
+
+A successful simulated scenario MUST recursively validate every `EvidenceReference` at scenario, trajectory, state, subsystem, and other normative evidence placements. Each reference MUST be digest-addressed, timestamped, and explicitly bound to the represented subject, applicable claimed scopes, producing model, and scenario claim. A digest MUST carry its algorithm's full length, and no reference may be observed after the scenario's own generation instant; evidence that postdates the claim it substantiates is not evidence. For nested evidence, every referenced model MUST be a producer responsible for that exact placement and MUST individually support every scope listed on that evidence object; applicability MUST NOT be inferred from the union of unrelated producer scopes. OpenBody 0.1 expresses disjoint per-model attribution as separate evidence references, each containing only the scopes supported by all of its `model_refs`. A valid model elsewhere in the scenario cannot substitute for local provenance. Subject identity MUST be carried in a normative evidence field and MUST NOT be inferred from arbitrary provenance content. Evidence scopes at every placement participate in scope closure and MUST NOT broaden requested, applicable, output, or model-supported scopes. A free-form evidence-boundary label or empty evidence array is not evidence. If those bindings cannot be proven, the provider MUST abstain.
+
+A consumer receiving a successful simulation MUST validate it against the originating request, including subject, perturbation semantics, horizon, and complete output-scope closure. Internal schema validity alone MUST NOT cause a request-inconsistent response to be trusted.
+
+A host MUST bind every stored object it serves to its own canonical twin. A scenario, trajectory, state, or model descriptor whose subject differs from the host's represented subject MUST NOT be disclosed on any read path, however internally self-consistent that object and its descriptors are. This binding is independent of disposition and of which resource carries the object: an abstained or otherwise unsuccessful scenario still carries a baseline trajectory for its subject, and a descriptor still declares an applicable subject, so neither may be returned for another twin. Because stored scenarios are an untrusted protocol boundary, a host MUST re-substantiate producing-model discoverability, capability, biological scope, and applicability before returning a stored successful simulation on any read path, not only when the simulation is generated. A read that cannot re-prove those bindings MUST fail closed.
+
+Injected or persisted store contents are an untrusted protocol boundary. Before a stored scenario can authorize model claims, simulation output, outcome windows, or calibration lineage, the host MUST semantically validate it and independently recompute its normalized temporal horizon. Unvalidated final timestamps MUST NOT establish an observation window.
+
+A model MUST abstain when perturbation, dose, biological scope, temporal horizon, subject context, or evidence falls outside its declared boundary. The bound, non-empty evidence requirement applies only to the `simulated` disposition: a governed abstention MUST remain expressible with no evidence at all, so that abstaining for insufficient evidence never requires fabricating an evidence reference or a producing model to satisfy it. The response MUST state whether its epistemic basis is statistical association, causal estimate, mechanistic simulation, hybrid inference, or another registered class.
 
 ## 13. Society of Organs federation
 
