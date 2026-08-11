@@ -194,14 +194,15 @@ def invariant_errors(doc):
                         errors.append("simulated scenario evidence scopes MUST match their placement")
                     if any(
                         not set(reference.get("model_refs", [])).issubset(producer_scopes)
-                        or not set(reference.get("scopes", [])).issubset(
-                            set().union(
-                                *(producer_scopes[model_id] for model_id in reference.get("model_refs", [])), set()
-                            )
+                        or any(
+                            not set(reference.get("scopes", [])).issubset(producer_scopes[model_id])
+                            for model_id in reference.get("model_refs", [])
                         )
                         for reference, _, producer_scopes in evidence_bindings
                     ):
-                        errors.append("simulated scenario evidence MUST bind its placement producer")
+                        errors.append(
+                            "simulated scenario evidence producers MUST individually support every claimed scope"
+                        )
                     if any(not set(reference.get("model_refs", [])).issubset(receipt_model_ids) for reference in evidence):
                         errors.append("simulated scenario evidence MUST reference known producing models")
                     if any(doc["id"] not in reference.get("claim_refs", []) for reference in evidence):

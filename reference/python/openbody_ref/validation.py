@@ -216,12 +216,15 @@ def semantic_validate(value: dict[str, Any]) -> None:
                 raise ValueError("simulated scenario evidence scopes must match their placement")
             if any(
                 not set(reference["model_refs"]).issubset(producer_scopes)
-                or not set(reference["scopes"]).issubset(
-                    set().union(*(producer_scopes[model_id] for model_id in reference["model_refs"]), set())
+                or any(
+                    not set(reference["scopes"]).issubset(producer_scopes[model_id])
+                    for model_id in reference["model_refs"]
                 )
                 for reference, _, producer_scopes in evidence_bindings
             ):
-                raise ValueError("simulated scenario evidence must bind its placement producer")
+                raise ValueError(
+                    "simulated scenario evidence producers must individually support every claimed scope at placement"
+                )
             if any(not set(reference["model_refs"]).issubset(receipt_model_ids) for reference in evidence):
                 raise ValueError("simulated scenario evidence references an unknown producing model")
             if any(value["id"] not in reference["claim_refs"] for reference in evidence):

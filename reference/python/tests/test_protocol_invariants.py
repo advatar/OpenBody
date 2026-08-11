@@ -33,6 +33,19 @@ def injected_store(scenario: dict) -> InMemoryTwinStore:
     return store
 
 
+def add_cardiovascular_counterfactual_producer(scenario: dict) -> tuple[dict, dict]:
+    state = scenario["counterfactual"]["states"][0]
+    cardiovascular = deepcopy(state["subsystems"][0])
+    cardiovascular["coordinate"] = "ob://human/cardiovascular/heart"
+    cardiovascular["model_receipt"]["model_id"] = "cardiovascular-counterfactual-model"
+    cardiovascular["model_receipt"]["execution_id"] = "exec-cardiovascular-counterfactual"
+    state["subsystems"].append(cardiovascular)
+    scenario["applicability"]["scopes"].append(cardiovascular["coordinate"])
+    scenario["evidence"][0]["scopes"].append(cardiovascular["coordinate"])
+    scenario["evidence"][0]["model_refs"] = [scenario["model_receipts"][0]["model_id"]]
+    return state, cardiovascular
+
+
 class TestSubjectClosure:
     def test_cross_subject_scenario_evidence_is_rejected(self) -> None:
         scenario = fixture()
@@ -204,27 +217,66 @@ class TestEvidenceClosure:
         scenario = fixture()
         nested_evidence = scenario["baseline"]["states"][0]["subsystems"][0]["evidence"][0]
         nested_evidence["model_refs"] = [scenario["model_receipts"][0]["model_id"]]
-        with pytest.raises(ValueError, match="placement producer"):
+        with pytest.raises(ValueError, match="support every claimed scope"):
             semantic_validate(scenario)
 
     def test_state_evidence_must_bind_producer_for_claimed_scope(self) -> None:
         scenario = fixture()
-        state = scenario["counterfactual"]["states"][0]
-        cardiovascular = deepcopy(state["subsystems"][0])
-        cardiovascular["coordinate"] = "ob://human/cardiovascular/heart"
-        cardiovascular["model_receipt"]["model_id"] = "cardiovascular-counterfactual-model"
-        cardiovascular["model_receipt"]["execution_id"] = "exec-cardiovascular-counterfactual"
-        state["subsystems"].append(cardiovascular)
-        scenario["applicability"]["scopes"].append(cardiovascular["coordinate"])
-        scenario["evidence"][0]["scopes"].append(cardiovascular["coordinate"])
-        scenario["evidence"][0]["model_refs"].append(cardiovascular["model_receipt"]["model_id"])
+        state, cardiovascular = add_cardiovascular_counterfactual_producer(scenario)
         state_evidence = deepcopy(scenario["evidence"][0])
         state_evidence["id"] = "evidence-state-wrong-scope-producer"
         state_evidence["scopes"] = ["ob://human/metabolic/glucose_regulation"]
         state_evidence["model_refs"] = [cardiovascular["model_receipt"]["model_id"]]
         state["evidence"].append(state_evidence)
-        with pytest.raises(ValueError, match="placement producer"):
+        with pytest.raises(ValueError, match="support every claimed scope"):
             semantic_validate(scenario)
+
+    def test_evidence_rejects_unrelated_extra_producer(self) -> None:
+        scenario = fixture()
+        state, cardiovascular = add_cardiovascular_counterfactual_producer(scenario)
+        state_evidence = deepcopy(scenario["evidence"][0])
+        state_evidence["id"] = "evidence-metabolic-with-extra-producer"
+        state_evidence["scopes"] = ["ob://human/metabolic/glucose_regulation"]
+        state_evidence["model_refs"] = [
+            state["subsystems"][0]["model_receipt"]["model_id"],
+            cardiovascular["model_receipt"]["model_id"],
+        ]
+        state["evidence"].append(state_evidence)
+        with pytest.raises(ValueError, match="individually support"):
+            semantic_validate(scenario)
+
+    def test_disjoint_producers_require_separate_scoped_evidence(self) -> None:
+        scenario = fixture()
+        state, cardiovascular = add_cardiovascular_counterfactual_producer(scenario)
+        metabolic_model = state["subsystems"][0]["model_receipt"]["model_id"]
+        cardiovascular_model = cardiovascular["model_receipt"]["model_id"]
+        combined = deepcopy(scenario["evidence"][0])
+        combined["id"] = "evidence-combined-disjoint-producers"
+        combined["model_refs"] = [metabolic_model, cardiovascular_model]
+        state["evidence"].append(combined)
+        with pytest.raises(ValueError, match="individually support"):
+            semantic_validate(scenario)
+
+        state["evidence"].clear()
+        for evidence_id, scope, model_id in (
+            ("evidence-explicit-metabolic", "ob://human/metabolic/glucose_regulation", metabolic_model),
+            ("evidence-explicit-cardiovascular", "ob://human/cardiovascular/heart", cardiovascular_model),
+        ):
+            reference = deepcopy(scenario["evidence"][0])
+            reference["id"] = evidence_id
+            reference["scopes"] = [scope]
+            reference["model_refs"] = [model_id]
+            state["evidence"].append(reference)
+        semantic_validate(scenario)
+
+    def test_single_correctly_scoped_producer_remains_valid(self) -> None:
+        scenario = fixture()
+        state = scenario["counterfactual"]["states"][0]
+        reference = deepcopy(scenario["evidence"][0])
+        reference["id"] = "evidence-single-correct-producer"
+        reference["model_refs"] = [state["subsystems"][0]["model_receipt"]["model_id"]]
+        state["evidence"].append(reference)
+        semantic_validate(scenario)
 
 
 class TestRequestResponseClosure:

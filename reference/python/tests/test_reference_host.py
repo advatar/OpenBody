@@ -392,6 +392,7 @@ def test_reference_client_rejects_request_inconsistent_simulation(mismatch: str)
         response_value["expected_effects"].append(effect)
         response_value["applicability"]["scopes"].append(broader_scope)
         response_value["evidence"][0]["scopes"].append(broader_scope)
+        response_value["evidence"][0]["model_refs"] = [response_value["model_receipts"][0]["model_id"]]
 
     def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=response_value)
