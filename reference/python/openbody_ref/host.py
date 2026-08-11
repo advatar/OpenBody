@@ -80,6 +80,18 @@ def _producing_model_defect(store: InMemoryTwinStore, candidate: dict[str, Any])
     return None
 
 
+def _require_hosted_twin(store: InMemoryTwinStore, subjects: set[str | None]) -> None:
+    """Every subject a read path discloses MUST be the host's canonical twin.
+
+    Applied uniformly to all stored, subject-bearing reads rather than per
+    endpoint: a stored object for another twin is a cross-twin disclosure
+    regardless of which resource or disposition carries it.
+    """
+    hosted = store.state["subject"]
+    if any(subject != hosted for subject in subjects):
+        raise ValueError("stored object does not represent the hosted twin")
+
+
 def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> dict[str, Any]:
     allowed_fields = {"state", "perturbation", "horizon_seconds", "requested_scopes", "authority_ref"}
     unexpected_fields = set(request) - allowed_fields
@@ -194,8 +206,12 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
     @app.get("/v1/models")
     def list_models() -> list[dict[str, Any]]:
         models = list(store.models.values())
-        for model in models:
-            validate_definition("BodyModel", model)
+        try:
+            for model in models:
+                validate_definition("BodyModel", model)
+            _require_hosted_twin(store, {model.get("applicability", {}).get("subject") for model in models})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return models
 
     @app.get("/v1/models/{model_id}")
@@ -203,7 +219,11 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         model = store.models.get(model_id)
         if model is None:
             raise HTTPException(status_code=404, detail="model not found")
-        semantic_validate(model)
+        try:
+            semantic_validate(model)
+            _require_hosted_twin(store, {model.get("applicability", {}).get("subject")})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return model
 
     @app.get("/v1/trajectories/{trajectory_id}")
@@ -211,7 +231,11 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
         trajectory = store.trajectories.get(trajectory_id)
         if trajectory is None:
             raise HTTPException(status_code=404, detail="trajectory not found")
-        validate_definition("BodyTrajectory", trajectory)
+        try:
+            validate_definition("BodyTrajectory", trajectory)
+            _require_hosted_twin(store, {state.get("subject") for state in trajectory.get("states", [])})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return trajectory
 
     @app.post("/v1/simulations")
@@ -230,14 +254,18 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="scenario not found")
         try:
             semantic_validate(scenario)
+            # Every disposition carries a required baseline trajectory, so the
+            # hosted-twin binding cannot be limited to simulated scenarios.
+            subjects = {scenario.get("subject")}
+            for trajectory_name in ("baseline", "counterfactual"):
+                trajectory = scenario.get(trajectory_name)
+                if trajectory is not None:
+                    subjects.update(state.get("subject") for state in trajectory.get("states", []))
+            _require_hosted_twin(store, subjects)
             if scenario.get("disposition") == "simulated":
-                if scenario["subject"] != store.state["subject"]:
-                    raise ValueError("stored scenario does not represent the hosted twin")
                 defect = _producing_model_defect(store, scenario)
                 if defect is not None:
                     raise ValueError(defect[1])
-        except HTTPException:
-            raise
         except Exception as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         return scenario

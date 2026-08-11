@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from openbody_ref.client import OpenBodyClient
 from openbody_ref.host import ROOT, create_app
 from openbody_ref.store import InMemoryTwinStore
-from openbody_ref.validation import scenario_evidence_references, semantic_validate
+from openbody_ref.validation import scenario_evidence_references, semantic_validate, validate_object
 
 
 def fixture() -> dict:
@@ -369,6 +369,42 @@ class TestRequestResponseClosure:
                 )
 
 
+class TestDispositionEvidenceClosure:
+    """A governed abstention must be expressible without fabricating evidence."""
+
+    @staticmethod
+    def abstained() -> dict:
+        scenario = fixture()
+        scenario["id"] = "scenario-governed-abstention"
+        scenario["disposition"] = "abstained"
+        scenario["abstention"] = {
+            "schema_version": "0.1",
+            "kind": "Abstention",
+            "reason_code": "insufficient_evidence",
+            "reasons": ["no bound evidence is available for this subject"],
+        }
+        scenario.pop("counterfactual", None)
+        scenario["model_receipts"] = []
+        scenario["expected_effects"] = []
+        scenario["evidence"] = []
+        return scenario
+
+    def test_abstained_scenario_needs_no_evidence(self) -> None:
+        semantic_validate(self.abstained())
+
+    def test_simulated_scenario_still_requires_evidence(self) -> None:
+        scenario = fixture()
+        scenario["evidence"] = []
+        with pytest.raises(Exception):
+            semantic_validate(scenario)
+
+    def test_simulated_evidence_requirement_is_enforced_by_schema(self) -> None:
+        scenario = fixture()
+        scenario["evidence"] = []
+        with pytest.raises(Exception):
+            validate_object(scenario)
+
+
 class TestTrajectoryLineageClosure:
     def test_duplicate_trajectory_ids_are_rejected(self) -> None:
         scenario = fixture()
@@ -421,6 +457,53 @@ class TestHostTrustBoundaryClosure:
         body = response.json()
         assert body.get("disposition") != "simulated"
         assert body["kind"] == "Abstention"
+
+    def test_read_path_rejects_abstained_scenario_for_another_twin(self, tmp_path) -> None:
+        store, foreign = foreign_twin_store(tmp_path, fixture())
+        abstained = deepcopy(foreign)
+        abstained["id"] = "scenario-foreign-abstained"
+        abstained["disposition"] = "abstained"
+        abstained["abstention"] = {
+            "schema_version": "0.1",
+            "kind": "Abstention",
+            "reason_code": "insufficient_evidence",
+            "reasons": ["cross-twin read must fail closed"],
+        }
+        abstained.pop("counterfactual", None)
+        abstained["model_receipts"] = []
+        abstained["expected_effects"] = []
+        store.scenarios[abstained["id"]] = abstained
+        response = TestClient(create_app(store)).get(f"/v1/simulations/{abstained['id']}")
+        assert response.status_code == 422
+
+    def test_read_path_rejects_trajectory_for_another_twin(self, tmp_path) -> None:
+        store, foreign = foreign_twin_store(tmp_path, fixture())
+        response = TestClient(create_app(store)).get(f"/v1/trajectories/{foreign['counterfactual']['id']}")
+        assert response.status_code == 422
+
+    def test_read_path_rejects_descriptor_for_another_twin(self, tmp_path) -> None:
+        store, _ = foreign_twin_store(tmp_path, fixture())
+        model_id = next(iter(store.models))
+        assert TestClient(create_app(store)).get(f"/v1/models/{model_id}").status_code == 422
+
+    def test_model_list_rejects_descriptors_for_another_twin(self, tmp_path) -> None:
+        store, _ = foreign_twin_store(tmp_path, fixture())
+        assert TestClient(create_app(store)).get("/v1/models").status_code == 422
+
+    def test_canonical_store_still_serves_every_read_path(self) -> None:
+        store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")
+        client = TestClient(create_app(store))
+        scenario_id = next(iter(store.scenarios))
+        trajectory_id = store.scenarios[scenario_id]["counterfactual"]["id"]
+        model_id = next(iter(store.models))
+        for path in (
+            f"/v1/simulations/{scenario_id}",
+            f"/v1/trajectories/{trajectory_id}",
+            f"/v1/models/{model_id}",
+            "/v1/models",
+            "/v1/state",
+        ):
+            assert client.get(path).status_code == 200, path
 
     def test_fixture_descriptors_do_not_alias_scenario_applicability(self) -> None:
         store = InMemoryTwinStore.from_fixture(ROOT / "examples" / "post-meal-walk.scenario.json")

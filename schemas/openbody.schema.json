@@ -4,207 +4,1051 @@
   "title": "OpenBody Protocol 0.1",
   "type": "object",
   "oneOf": [
-    {"$ref": "#/$defs/BodyState"},
-    {"$ref": "#/$defs/BodyModel"},
-    {"$ref": "#/$defs/CounterfactualScenario"},
-    {"$ref": "#/$defs/ObservedOutcome"},
-    {"$ref": "#/$defs/CalibrationEvent"},
-    {"$ref": "#/$defs/Abstention"}
+    {
+      "$ref": "#/$defs/BodyState"
+    },
+    {
+      "$ref": "#/$defs/BodyModel"
+    },
+    {
+      "$ref": "#/$defs/CounterfactualScenario"
+    },
+    {
+      "$ref": "#/$defs/ObservedOutcome"
+    },
+    {
+      "$ref": "#/$defs/CalibrationEvent"
+    },
+    {
+      "$ref": "#/$defs/Abstention"
+    }
   ],
   "$defs": {
-    "Version": {"type": "string", "const": "0.1"},
-    "URI": {"type": "string", "format": "uri"},
-    "Timestamp": {"type": "string", "format": "date-time"},
-    "Digest": {"type": "string", "pattern": "^(?:sha256:[A-Fa-f0-9]{64}|sha512:[A-Fa-f0-9]{128})$"},
-    "Coordinate": {"type": "string", "pattern": "^ob://[a-z0-9._-]+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+(?:\\?[A-Za-z0-9._~!$&'()*+,;=:@%/?-]+)?$"},
-    "EpistemicClass": {"enum": ["observation","inference","clinical_interpretation","statistical_association","causal_estimate","mechanistic_simulation","prediction","counterfactual","hypothesis","recommendation"]},
-    "ModelFamily": {"enum": ["statistical","machine_learning","foundation","causal","mechanistic","pkpd","physiological","cellular","hybrid"]},
+    "Version": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "URI": {
+      "type": "string",
+      "format": "uri"
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^(?:sha256:[A-Fa-f0-9]{64}|sha512:[A-Fa-f0-9]{128})$"
+    },
+    "Coordinate": {
+      "type": "string",
+      "pattern": "^ob://[a-z0-9._-]+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+(?:\\?[A-Za-z0-9._~!$&'()*+,;=:@%/?-]+)?$"
+    },
+    "EpistemicClass": {
+      "enum": [
+        "observation",
+        "inference",
+        "clinical_interpretation",
+        "statistical_association",
+        "causal_estimate",
+        "mechanistic_simulation",
+        "prediction",
+        "counterfactual",
+        "hypothesis",
+        "recommendation"
+      ]
+    },
+    "ModelFamily": {
+      "enum": [
+        "statistical",
+        "machine_learning",
+        "foundation",
+        "causal",
+        "mechanistic",
+        "pkpd",
+        "physiological",
+        "cellular",
+        "hybrid"
+      ]
+    },
     "Uncertainty": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["epistemic","aleatoric","coverage","out_of_distribution","reasons"],
+      "required": [
+        "epistemic",
+        "aleatoric",
+        "coverage",
+        "out_of_distribution",
+        "reasons"
+      ],
       "properties": {
-        "epistemic": {"type": ["number","null"], "minimum": 0, "maximum": 1},
-        "aleatoric": {"type": ["number","null"], "minimum": 0, "maximum": 1},
-        "coverage": {"type": ["number","null"], "minimum": 0, "maximum": 1},
-        "interval": {"type": ["object","null"], "properties": {"lower": {"type":"number"}, "point": {"type":"number"}, "upper": {"type":"number"}}, "required":["lower","point","upper"], "additionalProperties": false},
-        "calibration_ref": {"type": ["string","null"]},
-        "out_of_distribution": {"enum": [true,false,"unknown"]},
-        "reasons": {"type":"array","items":{"type":"string"}}
+        "epistemic": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "aleatoric": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "coverage": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "interval": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "lower": {
+              "type": "number"
+            },
+            "point": {
+              "type": "number"
+            },
+            "upper": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lower",
+            "point",
+            "upper"
+          ],
+          "additionalProperties": false
+        },
+        "calibration_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "out_of_distribution": {
+          "enum": [
+            true,
+            false,
+            "unknown"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "EvidenceReference": {
-      "type":"object","additionalProperties":false,
-      "required":["id","scheme","canonical_ref","source_provenance"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "scheme",
+        "canonical_ref",
+        "source_provenance"
+      ],
       "properties": {
-        "id":{"type":"string"},
-        "scheme":{"enum":["fhir","dicom","dicomweb","ieee11073","ga4gh","openbody","uri","other"]},
-        "canonical_ref":{"type":"string"},
-        "content_digest":{"oneOf":[{"$ref":"#/$defs/Digest"},{"type":"null"}]},
-        "observed_at":{"oneOf":[{"$ref":"#/$defs/Timestamp"},{"type":"null"}]},
-        "source_provenance":{"type":"object","minProperties":1},
-        "authorization_ref":{"type":["string","null"]},
-        "subject":{"type":"string","minLength":1},
-        "scopes":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/$defs/Coordinate"}},
-        "model_refs":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
-        "claim_refs":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}}
+        "id": {
+          "type": "string"
+        },
+        "scheme": {
+          "enum": [
+            "fhir",
+            "dicom",
+            "dicomweb",
+            "ieee11073",
+            "ga4gh",
+            "openbody",
+            "uri",
+            "other"
+          ]
+        },
+        "canonical_ref": {
+          "type": "string"
+        },
+        "content_digest": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_provenance": {
+          "type": "object",
+          "minProperties": 1
+        },
+        "authorization_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Coordinate"
+          }
+        },
+        "model_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "claim_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     },
     "SimulationEvidenceReference": {
-      "allOf":[
-        {"$ref":"#/$defs/EvidenceReference"},
-        {"required":["content_digest","observed_at","subject","scopes","model_refs","claim_refs"]}
+      "allOf": [
+        {
+          "$ref": "#/$defs/EvidenceReference"
+        },
+        {
+          "required": [
+            "content_digest",
+            "observed_at",
+            "subject",
+            "scopes",
+            "model_refs",
+            "claim_refs"
+          ]
+        }
       ]
     },
     "ModelReceipt": {
-      "type":"object","additionalProperties":false,
-      "required":["model_id","model_version","family","execution_id","executed_at","input_digest","output_digest"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "model_version",
+        "family",
+        "execution_id",
+        "executed_at",
+        "input_digest",
+        "output_digest"
+      ],
       "properties": {
-        "model_id":{"type":"string","minLength":1},
-        "model_version":{"type":"string","minLength":1},
-        "family":{"$ref":"#/$defs/ModelFamily"},
-        "execution_id":{"type":"string","minLength":1},
-        "executed_at":{"$ref":"#/$defs/Timestamp"},
-        "input_digest":{"$ref":"#/$defs/Digest"},
-        "output_digest":{"$ref":"#/$defs/Digest"},
-        "environment_digest":{"oneOf":[{"$ref":"#/$defs/Digest"},{"type":"null"}]},
-        "validation_ref":{"type":["string","null"]}
+        "model_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "family": {
+          "$ref": "#/$defs/ModelFamily"
+        },
+        "execution_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "executed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "input_digest": {
+          "$ref": "#/$defs/Digest"
+        },
+        "output_digest": {
+          "$ref": "#/$defs/Digest"
+        },
+        "environment_digest": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validation_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "BodySubsystemState": {
-      "type":"object","additionalProperties":false,
-      "required":["coordinate","organizational_scale","state_vector","trend","uncertainty","evidence","model_receipt"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate",
+        "organizational_scale",
+        "state_vector",
+        "trend",
+        "uncertainty",
+        "evidence",
+        "model_receipt"
+      ],
       "properties": {
-        "coordinate":{"$ref":"#/$defs/Coordinate"},
-        "organizational_scale":{"enum":["molecular","organelle","cellular","tissue","organ","subsystem","whole_body"]},
-        "state_vector":{"type":"object","additionalProperties":{"type":"number"}},
-        "latent_state":{"type":"object","additionalProperties":{"type":"number"}},
-        "trend":{"enum":["stable","changing","indeterminate"]},
-        "uncertainty":{"$ref":"#/$defs/Uncertainty"},
-        "evidence":{"type":"array","items":{"$ref":"#/$defs/EvidenceReference"}},
-        "model_receipt":{"$ref":"#/$defs/ModelReceipt"}
+        "coordinate": {
+          "$ref": "#/$defs/Coordinate"
+        },
+        "organizational_scale": {
+          "enum": [
+            "molecular",
+            "organelle",
+            "cellular",
+            "tissue",
+            "organ",
+            "subsystem",
+            "whole_body"
+          ]
+        },
+        "state_vector": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "latent_state": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "trend": {
+          "enum": [
+            "stable",
+            "changing",
+            "indeterminate"
+          ]
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/Uncertainty"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          }
+        },
+        "model_receipt": {
+          "$ref": "#/$defs/ModelReceipt"
+        }
       }
     },
     "BodyCoupling": {
-      "type":"object","additionalProperties":false,
-      "required":["source","target","direction","mechanism_class","epistemic_class","uncertainty","model_receipt"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "target",
+        "direction",
+        "mechanism_class",
+        "epistemic_class",
+        "uncertainty",
+        "model_receipt"
+      ],
       "properties": {
-        "source":{"$ref":"#/$defs/Coordinate"},
-        "target":{"$ref":"#/$defs/Coordinate"},
-        "direction":{"enum":["directed","bidirectional"]},
-        "mechanism_class":{"enum":["neural","circulatory","endocrine","immune","biochemical","mechanical","informational","other"]},
-        "timescale":{"type":["object","null"]},
-        "strength":{"type":["number","null"]},
-        "epistemic_class":{"$ref":"#/$defs/EpistemicClass"},
-        "uncertainty":{"$ref":"#/$defs/Uncertainty"},
-        "model_receipt":{"$ref":"#/$defs/ModelReceipt"}
+        "source": {
+          "$ref": "#/$defs/Coordinate"
+        },
+        "target": {
+          "$ref": "#/$defs/Coordinate"
+        },
+        "direction": {
+          "enum": [
+            "directed",
+            "bidirectional"
+          ]
+        },
+        "mechanism_class": {
+          "enum": [
+            "neural",
+            "circulatory",
+            "endocrine",
+            "immune",
+            "biochemical",
+            "mechanical",
+            "informational",
+            "other"
+          ]
+        },
+        "timescale": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "strength": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "epistemic_class": {
+          "$ref": "#/$defs/EpistemicClass"
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/Uncertainty"
+        },
+        "model_receipt": {
+          "$ref": "#/$defs/ModelReceipt"
+        }
       }
     },
     "BodyState": {
-      "type":"object","additionalProperties":false,
-      "required":["schema_version","kind","id","subject","generated_at","state_time","subsystems","couplings","evidence","uncertainty","model_receipts"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "id",
+        "subject",
+        "generated_at",
+        "state_time",
+        "subsystems",
+        "couplings",
+        "evidence",
+        "uncertainty",
+        "model_receipts"
+      ],
       "properties": {
-        "schema_version":{"$ref":"#/$defs/Version"},
-        "kind":{"const":"BodyState"},
-        "id":{"type":"string"},
-        "subject":{"type":"string"},
-        "generated_at":{"$ref":"#/$defs/Timestamp"},
-        "state_time":{"$ref":"#/$defs/Timestamp"},
-        "valid_until":{"oneOf":[{"$ref":"#/$defs/Timestamp"},{"type":"null"}]},
-        "subsystems":{"type":"array","items":{"$ref":"#/$defs/BodySubsystemState"}},
-        "couplings":{"type":"array","items":{"$ref":"#/$defs/BodyCoupling"}},
-        "evidence":{"type":"array","items":{"$ref":"#/$defs/EvidenceReference"}},
-        "uncertainty":{"$ref":"#/$defs/Uncertainty"},
-        "model_receipts":{"type":"array","items":{"$ref":"#/$defs/ModelReceipt"}}
+        "schema_version": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "const": "BodyState"
+        },
+        "id": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "generated_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "state_time": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "valid_until": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subsystems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BodySubsystemState"
+          }
+        },
+        "couplings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BodyCoupling"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          }
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/Uncertainty"
+        },
+        "model_receipts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelReceipt"
+          }
+        }
       }
     },
     "BodyModel": {
-      "type":"object","additionalProperties":false,
-      "required":["schema_version","kind","id","version","family","provider","scopes","capabilities","required_inputs","outputs","applicability","validation","prohibited_uses","execution","dependencies"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "id",
+        "version",
+        "family",
+        "provider",
+        "scopes",
+        "capabilities",
+        "required_inputs",
+        "outputs",
+        "applicability",
+        "validation",
+        "prohibited_uses",
+        "execution",
+        "dependencies"
+      ],
       "properties": {
-        "schema_version":{"$ref":"#/$defs/Version"}, "kind":{"const":"BodyModel"},
-        "id":{"type":"string"},"version":{"type":"string"},"family":{"$ref":"#/$defs/ModelFamily"},"provider":{"type":"string"},
-        "scopes":{"type":"array","items":{"$ref":"#/$defs/Coordinate"}},
-        "capabilities":{"type":"array","items":{"enum":["state_estimation","forecast","counterfactual","explanation","calibration"]}},
-        "required_inputs":{"type":"array"},"outputs":{"type":"array"},"applicability":{"type":"object"},"validation":{"type":"object"},
-        "prohibited_uses":{"type":"array","items":{"type":"string"}},"execution":{"type":"object"},"dependencies":{"type":"array"}
+        "schema_version": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "const": "BodyModel"
+        },
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "family": {
+          "$ref": "#/$defs/ModelFamily"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Coordinate"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "state_estimation",
+              "forecast",
+              "counterfactual",
+              "explanation",
+              "calibration"
+            ]
+          }
+        },
+        "required_inputs": {
+          "type": "array"
+        },
+        "outputs": {
+          "type": "array"
+        },
+        "applicability": {
+          "type": "object"
+        },
+        "validation": {
+          "type": "object"
+        },
+        "prohibited_uses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "execution": {
+          "type": "object"
+        },
+        "dependencies": {
+          "type": "array"
+        }
       }
     },
     "BodyTrajectory": {
-      "type":"object","additionalProperties":false,
-      "required":["id","trajectory_kind","generated_at","states","uncertainty","assumptions","model_receipts"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "trajectory_kind",
+        "generated_at",
+        "states",
+        "uncertainty",
+        "assumptions",
+        "model_receipts"
+      ],
       "properties": {
-        "id":{"type":"string"},"trajectory_kind":{"enum":["observed","expected","reference","predicted","intervention"]},
-        "generated_at":{"$ref":"#/$defs/Timestamp"},"states":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/BodyState"}},
-        "uncertainty":{"$ref":"#/$defs/Uncertainty"},"assumptions":{"type":"array","items":{"type":"string"}},
-        "model_receipts":{"type":"array","items":{"$ref":"#/$defs/ModelReceipt"}}
+        "id": {
+          "type": "string"
+        },
+        "trajectory_kind": {
+          "enum": [
+            "observed",
+            "expected",
+            "reference",
+            "predicted",
+            "intervention"
+          ]
+        },
+        "generated_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/BodyState"
+          }
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/Uncertainty"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "model_receipts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelReceipt"
+          }
+        }
       }
     },
     "Perturbation": {
-      "type":"object","additionalProperties":false,
-      "required":["id","class","scope","parameters","starts_at"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "class",
+        "scope",
+        "parameters",
+        "starts_at"
+      ],
       "properties": {
-        "id":{"type":"string"},"class":{"enum":["behavior","nutrition","sleep","exercise","environment","medication","supplement","device","procedure","molecular","genetic","cellular","research"]},
-        "scope":{"$ref":"#/$defs/Coordinate"},"parameters":{"type":"object","additionalProperties":{"type":["number","string","boolean"]}},
-        "starts_at":{"$ref":"#/$defs/Timestamp"},"ends_at":{"oneOf":[{"$ref":"#/$defs/Timestamp"},{"type":"null"}]},"authority_ref":{"type":["string","null"]}
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "enum": [
+            "behavior",
+            "nutrition",
+            "sleep",
+            "exercise",
+            "environment",
+            "medication",
+            "supplement",
+            "device",
+            "procedure",
+            "molecular",
+            "genetic",
+            "cellular",
+            "research"
+          ]
+        },
+        "scope": {
+          "$ref": "#/$defs/Coordinate"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          }
+        },
+        "starts_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "ends_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "authority_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "ExpectedEffect": {
-      "type":"object","additionalProperties":false,
-      "required":["scope","metric","delta","epistemic_class","uncertainty"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "metric",
+        "delta",
+        "epistemic_class",
+        "uncertainty"
+      ],
       "properties": {
-        "scope":{"$ref":"#/$defs/Coordinate"},"metric":{"type":"string"},"delta":{"type":"number"},
-        "epistemic_class":{"$ref":"#/$defs/EpistemicClass"},"uncertainty":{"$ref":"#/$defs/Uncertainty"}
+        "scope": {
+          "$ref": "#/$defs/Coordinate"
+        },
+        "metric": {
+          "type": "string"
+        },
+        "delta": {
+          "type": "number"
+        },
+        "epistemic_class": {
+          "$ref": "#/$defs/EpistemicClass"
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/Uncertainty"
+        }
       }
     },
     "SimulationApplicability": {
-      "type":"object","additionalProperties":false,
-      "required":["mode","subject","scopes","horizon_seconds","evidence_boundary","generalizable"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "subject",
+        "scopes",
+        "horizon_seconds",
+        "evidence_boundary",
+        "generalizable"
+      ],
       "properties": {
-        "mode":{"type":"string","minLength":1},"subject":{"type":"string","minLength":1},
-        "scopes":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/$defs/Coordinate"}},
-        "horizon_seconds":{"type":"integer","minimum":1},"evidence_boundary":{"type":"string","minLength":1},
-        "generalizable":{"type":"boolean"}
+        "mode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Coordinate"
+          }
+        },
+        "horizon_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "evidence_boundary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generalizable": {
+          "type": "boolean"
+        }
       }
     },
     "Abstention": {
-      "type":"object","additionalProperties":false,
-      "required":["schema_version","kind","reason_code","reasons"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "reason_code",
+        "reasons"
+      ],
       "properties": {
-        "schema_version":{"$ref":"#/$defs/Version"},"kind":{"const":"Abstention"},
-        "reason_code":{"enum":["insufficient_evidence","stale_evidence","unsupported_scope","unsupported_perturbation","out_of_distribution","insufficient_validation","authorization_required","clinician_review_required","model_unavailable","invalid_input"]},
-        "reasons":{"type":"array","minItems":1,"items":{"type":"string"}}
+        "schema_version": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "const": "Abstention"
+        },
+        "reason_code": {
+          "enum": [
+            "insufficient_evidence",
+            "stale_evidence",
+            "unsupported_scope",
+            "unsupported_perturbation",
+            "out_of_distribution",
+            "insufficient_validation",
+            "authorization_required",
+            "clinician_review_required",
+            "model_unavailable",
+            "invalid_input"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "CounterfactualScenario": {
-      "type":"object","additionalProperties":false,
-      "required":["schema_version","kind","id","subject","generated_at","baseline","perturbation","disposition","applicability","evidence","expected_effects","assumptions","uncertainty","model_receipts"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "id",
+        "subject",
+        "generated_at",
+        "baseline",
+        "perturbation",
+        "disposition",
+        "applicability",
+        "evidence",
+        "expected_effects",
+        "assumptions",
+        "uncertainty",
+        "model_receipts"
+      ],
       "properties": {
-        "schema_version":{"$ref":"#/$defs/Version"},"kind":{"const":"CounterfactualScenario"},"id":{"type":"string"},"subject":{"type":"string"},"generated_at":{"$ref":"#/$defs/Timestamp"},
-        "baseline":{"$ref":"#/$defs/BodyTrajectory"},"perturbation":{"$ref":"#/$defs/Perturbation"},
-        "counterfactual":{"oneOf":[{"$ref":"#/$defs/BodyTrajectory"},{"type":"null"}]},
-        "disposition":{"enum":["simulated","abstained","authorization_required","clinician_review_required"]},
-        "abstention":{"oneOf":[{"$ref":"#/$defs/Abstention"},{"type":"null"}]},
-        "applicability":{"$ref":"#/$defs/SimulationApplicability"},"evidence":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/SimulationEvidenceReference"}},
-        "expected_effects":{"type":"array","items":{"$ref":"#/$defs/ExpectedEffect"}},"assumptions":{"type":"array","items":{"type":"string"}},
-        "uncertainty":{"$ref":"#/$defs/Uncertainty"},"model_receipts":{"type":"array","items":{"$ref":"#/$defs/ModelReceipt"}}
-      }
+        "schema_version": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "const": "CounterfactualScenario"
+        },
+        "id": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "generated_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "baseline": {
+          "$ref": "#/$defs/BodyTrajectory"
+        },
+        "perturbation": {
+          "$ref": "#/$defs/Perturbation"
+        },
+        "counterfactual": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BodyTrajectory"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "simulated",
+            "abstained",
+            "authorization_required",
+            "clinician_review_required"
+          ]
+        },
+        "abstention": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Abstention"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applicability": {
+          "$ref": "#/$defs/SimulationApplicability"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SimulationEvidenceReference"
+          }
+        },
+        "expected_effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExpectedEffect"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/Uncertainty"
+        },
+        "model_receipts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelReceipt"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "simulated"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
     },
     "ObservedOutcome": {
-      "type":"object","additionalProperties":false,
-      "required":["schema_version","kind","id","subject","perturbation_id","started_at","ended_at","observed_effects","evidence"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "id",
+        "subject",
+        "perturbation_id",
+        "started_at",
+        "ended_at",
+        "observed_effects",
+        "evidence"
+      ],
       "properties": {
-        "schema_version":{"$ref":"#/$defs/Version"},"kind":{"const":"ObservedOutcome"},"id":{"type":"string"},"subject":{"type":"string"},"perturbation_id":{"type":"string"},
-        "started_at":{"$ref":"#/$defs/Timestamp"},"ended_at":{"$ref":"#/$defs/Timestamp"},"observed_effects":{"type":"array","items":{"$ref":"#/$defs/ExpectedEffect"}},
-        "adherence":{"type":["number","null"],"minimum":0,"maximum":1},"burden":{"type":["number","null"],"minimum":0,"maximum":1},"evidence":{"type":"array","items":{"$ref":"#/$defs/EvidenceReference"}}
+        "schema_version": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "const": "ObservedOutcome"
+        },
+        "id": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "perturbation_id": {
+          "type": "string"
+        },
+        "started_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "ended_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "observed_effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExpectedEffect"
+          }
+        },
+        "adherence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "burden": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          }
+        }
       }
     },
     "CalibrationEvent": {
-      "type":"object","additionalProperties":false,
-      "required":["schema_version","kind","id","scenario_id","outcome_id","generated_at","absolute_errors","within_predicted_interval"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "id",
+        "scenario_id",
+        "outcome_id",
+        "generated_at",
+        "absolute_errors",
+        "within_predicted_interval"
+      ],
       "properties": {
-        "schema_version":{"$ref":"#/$defs/Version"},"kind":{"const":"CalibrationEvent"},"id":{"type":"string"},"scenario_id":{"type":"string"},"outcome_id":{"type":"string"},"generated_at":{"$ref":"#/$defs/Timestamp"},
-        "absolute_errors":{"type":"object","minProperties":1,"additionalProperties":{"type":"number","minimum":0}},"within_predicted_interval":{"type":"object","minProperties":1,"additionalProperties":{"type":"boolean"}}
+        "schema_version": {
+          "$ref": "#/$defs/Version"
+        },
+        "kind": {
+          "const": "CalibrationEvent"
+        },
+        "id": {
+          "type": "string"
+        },
+        "scenario_id": {
+          "type": "string"
+        },
+        "outcome_id": {
+          "type": "string"
+        },
+        "generated_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "absolute_errors": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "within_predicted_interval": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
       }
     }
   }
