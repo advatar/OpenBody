@@ -5,8 +5,8 @@
 - Repository: `advatar/OpenBody`
 - Pull request: [#5](https://github.com/advatar/OpenBody/pull/5)
 - Branch: `fix/openbody-0.1-hardening`
-- Qualified protocol commit (provenance patch only; see active gate): `253b65536050f7f6d65916355f55aaca175775a4`
-- State: draft, open, and unmerged — blocked on two P1 host findings
+- Qualified protocol commit: `4056647` (provenance patch `253b6553`, host trust boundary `4056647`)
+- State: draft, open, and unmerged — awaiting one final bounded review of `4056647`
 - Tracker: issue #3; issue #4 is closed as duplicate
 
 ## Latest bounded patch
@@ -30,63 +30,67 @@ Independently re-run against `253b65536050f7f6d65916355f55aaca175775a4`:
 - `git diff --check`: pass
 - GitHub `validate` CI: pass (run 31458746859, `SUCCESS`)
 
-## Final bounded review: NOT clean — two live P1 blockers
+## Latest bounded patch: host trust boundary
 
-The gate is **not** satisfied. A first pass over the patched provenance invariant reported zero findings, but that pass was scoped to the evidence/provenance class and to the invariant classes the reference suite already exercises. Sweeping the 21 not-outdated historical review threads on PR #5 against current HEAD reproduced **two P1 findings at `ee4ad24`**. Both are host trust-boundary gaps, not provenance gaps, and neither is covered by the reference suite.
+Commit `4056647` closes the two P1 findings and one P2 finding that reproduced at `ee4ad24` when the not-outdated historical review threads were swept:
 
-### P1-A — `GET /v1/simulations/{id}` does not recheck producing-model applicability
+1. **P1-A — read path did not re-substantiate producing models.** The descriptor discoverability/capability/scope/applicability gate is extracted from `_reference_simulate` into `_producing_model_defect` and now runs on `GET /v1/simulations/{id}` as well, so the two paths share one implementation instead of the read path having none. The read path fails closed with 422 rather than surfacing an unhandled validation error.
+2. **P1-B — simulated results were not bound to the hosted twin.** The candidate and baseline subjects must now equal `store.state["subject"]` on both the execute and read paths, so a self-consistent foreign store can no longer be served as successful.
+3. **P2-C — evidence could postdate its own claim.** A reference whose `observed_at` follows the scenario's `generated_at` is now rejected in both the reference validator and `tools/validate_openbody.py`.
+4. **Aliasing fix.** `from_fixture` now deep-copies `fixture["applicability"]` into each generated descriptor instead of sharing one mutable object.
 
-`get_simulation` in `reference/python/openbody_ref/host.py:207-213` calls only `semantic_validate(scenario)`. It never consults `store.models`, so it never applies the `producing_model_requirements` capability/scope/applicability gate that `_reference_simulate` applies on the write path.
+`OPENBODY.md` records the hosted-twin binding, the read-path re-substantiation duty, and the evidence recency and full-digest requirements as normative.
 
-Reproduction: load the bundled fixture, detach one descriptor's `applicability` from the aliased fixture object, set its `subject` to `subject:other` and its `scopes` to `["ob://human/cardiovascular/heart"]`, then `GET /v1/simulations/scenario-post-meal-walk-001`. The endpoint returns HTTP 200 with `disposition: simulated`. The same mutation on `POST /v1/simulations` correctly abstains with `insufficient_validation`, which confirms the read path is the gap.
+## Qualification results
 
-### P1-B — the host never binds a simulated result to the hosted twin
+Against `4056647`:
 
-`_reference_simulate` in `reference/python/openbody_ref/host.py:66-75` compares the request against `candidate`'s own baseline, but never compares `candidate["subject"]` or the baseline subject with `store.state["subject"]`.
+- Reference suite: `66 passed` (was 56; nine new regressions plus the two lineage regressions)
+- Every new regression fails against `ee4ad24`; the substantiated-read positive control passes against both
+- Conformance validator: all examples pass
+- JSON Schema / OpenAPI / MCP profile parsing: pass
+- Provenance probes from the earlier pass: all 10 still pass, so the patched per-producer invariant did not regress
+- `git diff --check`: pass
 
-Reproduction: build a fully self-consistent foreign fixture (`subject:other` in the scenario, applicability, every evidence reference, and every trajectory state), load it so the descriptors are foreign too, then graft the canonical hosted twin back as `store.state`. An exact request returns HTTP 200 with `disposition: simulated` and `subject: subject:other`, while `GET /v1/state` still reports `subject:local-demo`. A store whose descriptors remain canonical abstains, so the earlier partial check closes only the mixed-store case, not the self-consistent one.
+## Review-thread sweep: complete
 
-### Also observed (not a protocol invariant, worth folding into whichever patch lands)
+All 21 not-outdated threads are now accounted for, each against a named regression rather than by inspection:
 
-`InMemoryTwinStore.from_fixture` at `reference/python/openbody_ref/store.py:103` assigns `fixture["applicability"]` into every generated descriptor by reference rather than by copy. Every descriptor and the scenario therefore share one mutable object, so mutating a descriptor's applicability silently rewrites the scenario's. This masks descriptor-level mutation tests and should be a `deepcopy`.
+| Thread | Covering regression |
+| --- | --- |
+| duplicate trajectory / state ids | `TestTrajectoryLineageClosure` (new) |
+| client response vs. request | `test_reference_client_rejects_request_inconsistent_simulation` (4 cases, each confirmed to reject for its own reason) |
+| scenario evidence in scope closure | `test_scenario_evidence_cannot_add_unrequested_scope` |
+| expired baseline | `test_expired_baseline_abstains` |
+| producing-model capability / scope | `test_empty_model_capability_and_scope_fail_closed` |
+| full-length digests | `test_short_digest_is_rejected` (schema regex enforces 64/128 hex) |
+| per-state validity interval | `test_impossible_state_validity_interval_is_rejected` |
+| stored scenario before outcome binding | `test_poisoned_scenario_cannot_extend_outcome_window` |
+| recursive evidence placement | `test_nested_cross_subject_undigested_evidence_is_rejected` |
+| baseline `state_time` ordering | `test_baseline_cannot_start_after_perturbation` |
+| scope-less nested / trajectory producers | `test_scope_less_nested_producer_fails_closed`, `test_scope_less_trajectory_producer_fails_semantic_validation` |
+| returned baseline vs. requested state | `test_returned_baseline_must_equal_requested_state` |
+| conditional bound-evidence schema | abstention fixture validates with no evidence |
+| nested evidence placement provenance | `test_nested_evidence_must_bind_its_exact_producer` and the three per-producer regressions |
+| calibration hosted-twin subject | `test_calibration_rejects_foreign_subject_store_lineage` |
+| model applicability boundary | `test_model_applicability_must_match_subject_and_receipt_scopes` |
+| hosted-twin binding, read-path re-substantiation | `TestHostTrustBoundaryClosure` (new) |
+| evidence recency | `test_evidence_cannot_postdate_scenario_generation` (+ nested variant) |
 
-### What the first pass did establish
-
-These items were verified and remain sound; they are not in question:
-
-1. **Regressions bite.** Reverting `validation.py` to `6f422f9` while keeping the new tests fails `test_evidence_rejects_unrelated_extra_producer`, `test_disjoint_producers_require_separate_scoped_evidence`, and the tightened `test_state_evidence_must_bind_producer_for_claimed_scope`. The "must continue to pass" guard `test_single_correctly_scoped_producer_remains_valid` passes under both, so the tightening is not over-broad.
-2. **Invariant holds at every placement.** Adversarial probes confirm per-producer applicability is enforced at scenario, trajectory, state, and subsystem placements, that an unrelated *extra* producer is rejected even alongside a valid one, and that cross-trajectory provenance leakage (baseline evidence citing a counterfactual-only model) is refused. Positive controls remain valid.
-3. **No dual-implementation drift.** The tightened predicate in `reference/python/openbody_ref/validation.py` and `tools/validate_openbody.py` is logically identical, and both validators agree on accept/reject for every probe.
-4. **No masked coverage.** The `test_reference_host.py` fixture tweak preserves test intent: each `mismatch` case still rejects for its own request-response reason (`subject`, `perturbation`, `horizon`, `scopes`), not for a provenance error raised earlier in `client.simulate`.
-5. **No per-model applicability bypass.** `ModelReceipt` declares no scopes of its own, so producer scope is necessarily placement-derived; the host independently cross-checks each receipt against the discoverable `BodyModel` `scopes` and `applicability` in `_reference_simulate`.
-6. **No stale normative text.** The only remaining references to unioned scope coverage are the new prohibitions in `OPENBODY.md` and this document.
+The 16 outdated threads were not individually re-verified; they predate several rewrites of the files they annotate.
 
 ## Active gate
 
-Per the standing rule, only the two P1 findings above are the next blockers. Do not widen the patch opportunistically, and do not reopen the closed provenance work.
+One further bounded adversarial review must verify `4056647` at the same acceptance criterion: **0 unresolved in-scope P1/P2 findings** across the established OpenBody 0.1 invariant classes, without expanding into performance, deployment hardening, future protocol features, or unrelated security concerns.
 
-**Do not merge PR #5, and do not resolve the historical review threads.** 21 of the 37 unresolved threads are not outdated; at least the two above still reproduce, so a blanket resolve would bury live findings. Threads must be resolved individually, each against a verified fix.
+Reviewers should note that the two P1s closed here were both host trust-boundary gaps reachable only through a custom store, and that `create_app()` accepts custom stores by design. That boundary and both HTTP read paths deserve explicit attention; the earlier pass missed them by scoping to the provenance class and to the classes the suite already exercised.
 
-Required sequence:
+**Do not merge PR #5 and do not resolve the historical review threads until that review is clean.** When it is, resolve the threads individually against the mapping above rather than in bulk, then:
 
-1. Patch P1-A and P1-B, with a regression per finding that fails against `ee4ad24`.
-2. Re-run full qualification.
-3. Re-sweep the remaining not-outdated threads against the new head, not just the two patched ones.
-4. One further bounded review at the same zero-P1/P2 gate.
-
-Only once that gate is genuinely clean:
-
-1. Resolve the historical review threads individually.
-2. Merge PR #5.
-3. Freeze and tag the OpenBody 0.1 interoperability baseline.
-4. Rebase InVivo/Metabolog #972 onto that exact contract.
-5. Add cross-repository conformance fixtures and CI.
-
-## Review-thread sweep status
-
-The 16 outdated threads were not individually re-verified. Of the 21 not-outdated threads, the following were checked against current code and are addressed: duplicate trajectory/state IDs (`validation.py:252-257`), client request-response closure (`client.py:75-88`, all four mismatch cases confirmed to reject for their own reason), scenario-level evidence in scope closure (`validation.py:144-145`), expired-baseline abstention (`host.py:76-81`), producing-model capability/scope enforcement (`host.py:114-117`), per-state validity intervals (`validation.py:274`), stored-scenario validation before outcome binding (`store.py:122-125`), recursive evidence placement (`scenario_evidence_bindings`), baseline `state_time` ordering (`validation.py:284`), scope-less nested and trajectory producers (`store.py:30`, `validation.py:271,281`), returned-baseline digest comparison (`client.py:78`), calibration hosted-twin subject binding (`store.py:149-150`), nested-evidence placement provenance (the patched invariant), and conditional bound-evidence schema requirements (the abstention fixture validates).
-
-Not yet re-verified: full-length digest enforcement, and rejection of evidence timestamped after `generated_at`. Both are P2 and should be settled in step 3 above.
+1. Merge PR #5.
+2. Freeze and tag the OpenBody 0.1 interoperability baseline.
+3. Rebase InVivo/Metabolog #972 onto that exact contract.
+4. Add cross-repository conformance fixtures and CI.
 
 ## Local workspace hygiene
 
