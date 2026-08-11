@@ -5,8 +5,8 @@
 - Repository: `advatar/OpenBody`
 - Pull request: [#5](https://github.com/advatar/OpenBody/pull/5)
 - Branch: `fix/openbody-0.1-hardening`
-- Qualified protocol commit: `4056647` (provenance patch `253b6553`, host trust boundary `4056647`)
-- State: draft, open, and unmerged — awaiting one final bounded review of `4056647`
+- Qualified protocol commit: `215f55d`
+- State: reviewed clean at `215f55d`
 - Tracker: issue #3; issue #4 is closed as duplicate
 
 ## Latest bounded patch
@@ -30,35 +30,45 @@ Independently re-run against `253b65536050f7f6d65916355f55aaca175775a4`:
 - `git diff --check`: pass
 - GitHub `validate` CI: pass (run 31458746859, `SUCCESS`)
 
-## Latest bounded patch: host trust boundary
+## Latest bounded patches
 
-Commit `4056647` closes the two P1 findings and one P2 finding that reproduced at `ee4ad24` when the not-outdated historical review threads were swept:
+`4056647` closed the two P1 findings and one P2 finding that reproduced at `ee4ad24`:
 
-1. **P1-A — read path did not re-substantiate producing models.** The descriptor discoverability/capability/scope/applicability gate is extracted from `_reference_simulate` into `_producing_model_defect` and now runs on `GET /v1/simulations/{id}` as well, so the two paths share one implementation instead of the read path having none. The read path fails closed with 422 rather than surfacing an unhandled validation error.
-2. **P1-B — simulated results were not bound to the hosted twin.** The candidate and baseline subjects must now equal `store.state["subject"]` on both the execute and read paths, so a self-consistent foreign store can no longer be served as successful.
-3. **P2-C — evidence could postdate its own claim.** A reference whose `observed_at` follows the scenario's `generated_at` is now rejected in both the reference validator and `tools/validate_openbody.py`.
-4. **Aliasing fix.** `from_fixture` now deep-copies `fixture["applicability"]` into each generated descriptor instead of sharing one mutable object.
+1. **P1-A — read path did not re-substantiate producing models.** The descriptor discoverability/capability/scope/applicability gate was extracted from `_reference_simulate` into `_producing_model_defect` and now runs on the read path too, so both paths share one implementation.
+2. **P1-B — simulated results were not bound to the hosted twin.** Candidate and baseline subjects must equal `store.state["subject"]`.
+3. **P2-C — evidence could postdate its own claim.** A reference whose `observed_at` follows the scenario's `generated_at` is rejected in both validators.
+4. **Aliasing fix.** `from_fixture` deep-copies `fixture["applicability"]` per descriptor.
 
-`OPENBODY.md` records the hosted-twin binding, the read-path re-substantiation duty, and the evidence recency and full-digest requirements as normative.
+`215f55d` closed what the bounded review of `4056647` then found — that its own read-path fix was scoped too narrowly, binding only `GET /v1/simulations/{id}` and only for the `simulated` disposition. Four cross-twin disclosures remained, all one root cause, now closed by a single shared `_require_hosted_twin` guard applied uniformly across read paths:
+
+1. **Abstained scenarios were exempt.** `baseline` is a required property on `CounterfactualScenario`, so an abstained foreign scenario disclosed another subject's `BodyState`.
+2. **`GET /v1/trajectories/{id}`** disclosed foreign `BodyState`s outright.
+3. **`GET /v1/models/{id}` and `GET /v1/models`** disclosed foreign descriptors and their applicable subject.
+4. **Last unresolved P2 thread.** `evidence` carried `minItems: 1` for every disposition, so a governed abstention could not be expressed without fabricating an evidence reference and a producing model to satisfy it. The constraint is now conditional on `disposition == "simulated"`, which is what `OPENBODY.md` always said — the schema had been stricter than the spec.
 
 ## Qualification results
 
-Against `4056647`:
+Against `215f55d`:
 
-- Reference suite: `66 passed` (was 56; nine new regressions plus the two lineage regressions)
-- Every new regression fails against `ee4ad24`; the substantiated-read positive control passes against both
-- Conformance validator: all examples pass
-- JSON Schema / OpenAPI / MCP profile parsing: pass
-- Provenance probes from the earlier pass: all 10 still pass, so the patched per-producer invariant did not regress
+- Reference suite: `74 passed` (was 56 at the start of this sequence)
+- Every new negative regression fails against the commit it was written for; positive controls pass against both
+- Conformance validator, JSON Schema / OpenAPI / MCP profile parsing: pass
+- 10 provenance probes and 9 read-path probes: pass
 - `git diff --check`: pass
+
+## Final bounded review of `215f55d`: clean
+
+Zero unresolved in-scope P1/P2 findings. Beyond the suite, the following were attacked directly and fail closed: the shared hosted-twin guard on a missing subject key; empty subject sets and stateless trajectories; a mixed store holding one canonical and one foreign descriptor; dodging the new schema conditional by smuggling a counterfactual and receipts under a non-simulated disposition; foreign-subject outcome writes; and coordinate traversal on `GET /v1/state/{coordinate}`. All five canonical read paths and the canonical simulate flow still succeed.
+
+**Confidence caveat, recorded deliberately.** This review was performed by the same agent that wrote `4056647` and `215f55d`, at the owner's direction. Two consecutive rounds each found findings the previous round missed, and both times the miss was one of scope, not of depth: the first pass scoped to the provenance class, the second to a single endpoint and disposition. The pattern to distrust is therefore *which surfaces were considered*, not the rigour applied to those chosen. An independent reviewer should start by enumerating every host path that returns stored, subject-bearing data and every disposition that can carry it, rather than re-deriving the invariants.
 
 ## Review-thread sweep: complete
 
-All 21 not-outdated threads are now accounted for, each against a named regression rather than by inspection:
+All 21 not-outdated threads are accounted for, each against a named regression:
 
 | Thread | Covering regression |
 | --- | --- |
-| duplicate trajectory / state ids | `TestTrajectoryLineageClosure` (new) |
+| duplicate trajectory / state ids | `TestTrajectoryLineageClosure` |
 | client response vs. request | `test_reference_client_rejects_request_inconsistent_simulation` (4 cases, each confirmed to reject for its own reason) |
 | scenario evidence in scope closure | `test_scenario_evidence_cannot_add_unrequested_scope` |
 | expired baseline | `test_expired_baseline_abstains` |
@@ -70,27 +80,19 @@ All 21 not-outdated threads are now accounted for, each against a named regressi
 | baseline `state_time` ordering | `test_baseline_cannot_start_after_perturbation` |
 | scope-less nested / trajectory producers | `test_scope_less_nested_producer_fails_closed`, `test_scope_less_trajectory_producer_fails_semantic_validation` |
 | returned baseline vs. requested state | `test_returned_baseline_must_equal_requested_state` |
-| conditional bound-evidence schema | abstention fixture validates with no evidence |
-| nested evidence placement provenance | `test_nested_evidence_must_bind_its_exact_producer` and the three per-producer regressions |
+| conditional bound-evidence schema | `TestDispositionEvidenceClosure` |
+| nested evidence placement provenance | `test_nested_evidence_must_bind_its_exact_producer` plus the three per-producer regressions |
 | calibration hosted-twin subject | `test_calibration_rejects_foreign_subject_store_lineage` |
 | model applicability boundary | `test_model_applicability_must_match_subject_and_receipt_scopes` |
-| hosted-twin binding, read-path re-substantiation | `TestHostTrustBoundaryClosure` (new) |
+| hosted-twin binding, read-path re-substantiation, cross-twin reads | `TestHostTrustBoundaryClosure` |
 | evidence recency | `test_evidence_cannot_postdate_scenario_generation` (+ nested variant) |
 
-The 16 outdated threads were not individually re-verified; they predate several rewrites of the files they annotate.
+The 16 outdated threads were resolved as superseded rather than individually re-verified; they annotate code that has since been rewritten several times.
 
-## Active gate
+## Remaining actions
 
-One further bounded adversarial review must verify `4056647` at the same acceptance criterion: **0 unresolved in-scope P1/P2 findings** across the established OpenBody 0.1 invariant classes, without expanding into performance, deployment hardening, future protocol features, or unrelated security concerns.
-
-Reviewers should note that the two P1s closed here were both host trust-boundary gaps reachable only through a custom store, and that `create_app()` accepts custom stores by design. That boundary and both HTTP read paths deserve explicit attention; the earlier pass missed them by scoping to the provenance class and to the classes the suite already exercised.
-
-**Do not merge PR #5 and do not resolve the historical review threads until that review is clean.** When it is, resolve the threads individually against the mapping above rather than in bulk, then:
-
-1. Merge PR #5.
-2. Freeze and tag the OpenBody 0.1 interoperability baseline.
-3. Rebase InVivo/Metabolog #972 onto that exact contract.
-4. Add cross-repository conformance fixtures and CI.
+1. Rebase InVivo/Metabolog #972 onto the tagged contract.
+2. Add cross-repository conformance fixtures and CI.
 
 ## Local workspace hygiene
 
