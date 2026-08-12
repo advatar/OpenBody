@@ -54,9 +54,12 @@ a digest over the normative artifacts (`OPENBODY.md`, `schemas/openbody.schema.j
 `openapi/openbody.openapi.json`, `profiles/mcp/tools.json`, `registry/coordinates.json`).
 
 It MUST NOT identify the contract solely by git tag. Tags increment for reasons that are not protocol
-changes — `v0.1.0-draft.2` will exist purely to carry a clean artifact tree — and a projection asserting
-`openBodyVersion: "0.1.0-draft.2"` would imply a semantic change that did not occur. Release tags pin
-checkouts; they do not describe contracts.
+changes: `v0.1.0-draft.2` carries a clean artifact tree and a larger coordinate registry, while its
+schema, OpenAPI, and MCP profile are byte-identical to `draft.1`. A projection asserting
+`openBodyVersion: "0.1.0-draft.2"` would therefore imply a semantic change that did not occur. Where a
+projection needs to record which coordinates were registered when it was written, it carries the
+`registry_version` alongside `schema_version` — not the tag. Release tags pin checkouts; they do not
+describe contracts.
 
 ## Identity is a binding graph, never string equality
 
@@ -77,7 +80,8 @@ through this graph. A runtime proves only the path a given operation needs.
 contract, `subject` is a bare string; there is no field carrying a binding proof. OpenBody enforces that
 every object and every read path is bound to *one consistent* subject — it cannot establish that the
 subject denotes the person the caller means. Binding verification lives strictly above OpenBody, in InVivo
-and in OMBODY. Any future in-band binding proof is a 0.2 concern.
+and in OMBODY. Any future in-band binding proof is a **protocol** 0.2 concern, distinct from the
+coordinate registry's own version, which has already moved to 0.2 without changing protocol semantics.
 
 ## Authority
 
