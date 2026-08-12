@@ -136,6 +136,51 @@ layers beneath it.
 
 Then OMBODY-0.1, then BrIAn as a client of both paths.
 
+## Deployment modes and tenancy
+
+**One isolated logical authority per user, never one physical host per user.** Requiring
+an iPhone plus an always-on Mac would be a deployment accident, not an architectural
+requirement. Any client implementing the authenticated contracts qualifies — macOS, web,
+Android, another agent — which is why digest canonicalisation is specified
+implementation-independently and pinned by a cross-language golden vector.
+
+| Mode | Always-on personal hardware | Capabilities |
+| --- | --- | --- |
+| Managed | no | full remote access and synchronisation |
+| Self-hosted | yes, user-selected host | full control and availability |
+| Device-only | no | private local use; no reliable remote access while offline |
+
+Device-only is **not a degraded twin**. The whole loop — state, scenario, outcome,
+calibration — runs with no server, and every object it produces is conformant. What it
+loses is remote model discovery and federation, not correctness.
+
+### The catalogue and the subject APIs deploy on different schedules
+
+A `BodyModel` descriptor's only subject-bearing field is `applicability.subject`, which is
+why a public catalogue can be forced to `CATALOGUE_SUBJECT` and carry no personal data at
+all. So the model catalogue is shared, multi-tenant, and deployable immediately.
+
+Subject APIs are not, because **the reference host is single-tenant by construction**.
+`store.state["subject"]` is the hosted twin, and every read path binds to it: a stored
+object for another subject is refused. Managed multi-tenancy therefore has two honest
+routes.
+
+1. **One lightweight instance per user behind a shared gateway.** Preserves the
+   single-tenant invariant exactly as implemented. Isolation is process- and
+   store-level, which is the strongest form available without new code.
+2. **A tenancy layer** provisioning isolated namespaces, keys, backups, and runtime
+   contexts, where the bound subject becomes the *authenticated* subject per request.
+   This weakens a guarantee currently enforced structurally, and is only safe if the
+   subject binding is proven on every request rather than configured once at startup.
+
+Route 1 is the default until route 2's per-request binding exists. A shared process whose
+hosted subject is configured rather than authenticated would turn a structural guarantee
+into a deployment assumption.
+
+Note that a host being multi-tenant across *projects* — several services, one operator —
+is a different isolation problem from being multi-tenant across *users*. The two must not
+be conflated when assessing whether an existing host is suitable.
+
 ## Protocol 0.2 requirements
 
 Recorded here because each is a concession `draft.2` makes knowingly, and a concession
