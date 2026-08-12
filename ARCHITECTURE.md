@@ -134,7 +134,17 @@ Then OMBODY-0.1, then BrIAn as a client of both paths.
 
 ## Tag policy
 
-`v0.1.0-draft.1` is immutable. It accidentally contains ignored Python bytecode under `__pycache__`,
-untracked in `e039385`; this does not affect any normative artifact. The next intentionally qualified
-baseline becomes `v0.1.0-draft.2` at a clean commit. A tag is never moved, and artifact removal is never
-described as a protocol change.
+A tag is never moved, and artifact removal is never described as a protocol change.
+
+- **`v0.1.0-draft.1`** (`d8d841e`) is immutable. It accidentally contains ignored Python bytecode
+  under `__pycache__`, untracked in `e039385`; this does not affect any normative artifact.
+- **`v0.1.0-draft.2`** (`5ae6398`) is the current baseline. Coordinate registry `0.2` grows coverage
+  from 21 to 61 coordinates, additively: every `draft.1` document remains valid, and all five InVivo
+  conformance fixtures validate unchanged. Schema, OpenAPI, and MCP profile are byte-identical to
+  `draft.1`, so no normative protocol semantics changed.
+
+Registry growth is deliberately *not* a semantic version bump of the protocol. `OPENBODY.md` sanctions
+coordinate extension through registries, and a consumer that tolerates unknown coordinates — which the
+spec requires — is unaffected by additions. What a new tag buys is a nameable pin for consumers who
+need the new coordinates to be *registered*, since a cross-repository gate should fail on an
+unregistered coordinate rather than warn.
