@@ -8,11 +8,44 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 
 from .store import InMemoryTwinStore, producing_model_requirements
-from .validation import parse_timestamp, scenario_evidence_references, scenario_horizon_seconds, semantic_validate, validate_definition
+from .validation import canonical_digest, parse_timestamp, scenario_evidence_references, scenario_horizon_seconds, semantic_validate, validate_definition
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FIXTURE = ROOT / "examples" / "post-meal-walk.scenario.json"
 ABSTENTION_FIXTURE = ROOT / "examples" / "insufficient-evidence.abstention.json"
+
+
+NORMATIVE_ARTIFACTS = (
+    "OPENBODY.md",
+    "schemas/openbody.schema.json",
+    "openapi/openbody.openapi.json",
+    "profiles/mcp/tools.json",
+    "registry/coordinates.json",
+)
+
+
+def contract_identity() -> dict[str, Any]:
+    """What contract this host actually serves.
+
+    Identified by `schema_version` and `registry_version`, plus a digest over the
+    normative artifacts — never by a release tag. Tags increment for reasons that
+    are not protocol changes, so a tag cannot tell a consumer whether the contract
+    it validated against is the one being served. The registry version is reported
+    separately because coordinate registries grow additively without changing
+    protocol semantics.
+    """
+    registry = json.loads((ROOT / "registry" / "coordinates.json").read_text())
+    digests: dict[str, str] = {}
+    for artifact in NORMATIVE_ARTIFACTS:
+        path = ROOT / artifact
+        if path.exists():
+            digests[artifact] = canonical_digest(path.read_text())
+    return {
+        "schema_version": "0.1",
+        "registry_version": registry.get("registry_version"),
+        "coordinate_count": len(registry.get("coordinates", [])),
+        "artifact_digests": digests,
+    }
 
 
 def _capabilities() -> dict[str, Any]:
@@ -28,6 +61,7 @@ def _capabilities() -> dict[str, Any]:
             "calibrations.write",
         ],
         "authorization": {"schemes": []},
+        "contract": contract_identity(),
     }
 
 
@@ -177,9 +211,94 @@ def _reference_simulate(store: InMemoryTwinStore, request: dict[str, Any]) -> di
     return result
 
 
-def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
+#: The only subject a publicly discoverable descriptor may declare.
+#:
+#: OpenBody applicability is per-subject, so a descriptor normally names the twin it
+#: applies to — which means publishing descriptors verbatim would disclose that
+#: identifier. A catalogue answers "which models exist and what are they competent
+#: for", a question that needs no subject at all.
+CATALOGUE_SUBJECT = "subject:catalogue"
+
+
+def load_model_directory(directory: Path, public: bool = False) -> dict[str, dict[str, Any]]:
+    """Load `BodyModel` descriptors from disk, refusing to start on an invalid one.
+
+    Fails closed at startup rather than per request. A host that serves an invalid
+    descriptor makes every scenario citing that model unsubstantiable, and the
+    failure would surface far from its cause — so an unservable directory is a
+    startup error, not a runtime surprise.
+    """
+    models: dict[str, dict[str, Any]] = {}
+    for path in sorted(directory.glob("*.json")):
+        descriptor = json.loads(path.read_text())
+        if descriptor.get("kind") != "BodyModel":
+            raise ValueError(f"{path.name} is not a BodyModel descriptor")
+        semantic_validate(descriptor)
+        model_id = descriptor["id"]
+        if model_id in models:
+            raise ValueError(f"duplicate model id {model_id}")
+        if public:
+            # Refuse at startup rather than leak per request. A descriptor naming a
+            # real twin cannot be served publicly, because applicability.subject is
+            # an identifier for a person.
+            subject = descriptor.get("applicability", {}).get("subject")
+            if subject != CATALOGUE_SUBJECT:
+                raise ValueError(
+                    f"{path.name} declares applicability.subject {subject!r}; a public "
+                    f"catalogue may only declare {CATALOGUE_SUBJECT!r}"
+                )
+        models[model_id] = descriptor
+    return models
+
+
+def create_app(
+    store: InMemoryTwinStore | None = None,
+    model_directory: Path | None = None,
+    discovery_only: bool = False,
+) -> FastAPI:
+    """Build the reference host.
+
+    `model_directory` serves a validated descriptor set read-only, which is the
+    deployable discovery configuration: it makes models *discoverable* and asserts
+    nothing about clinical validity. Each descriptor carries its own maturity,
+    validation status, and prohibited uses, so a research baseline stays labelled as
+    one wherever it is served.
+
+    `discovery_only` mounts **only** the model-discovery surface: health, the
+    well-known document, capabilities, and models. No subject-bearing endpoint
+    exists at all — not `/v1/state`, not `/v1/simulations`, not outcomes or
+    calibrations.
+
+    In this mode every descriptor must declare `CATALOGUE_SUBJECT`. A descriptor
+    normally names the twin it applies to, so serving one verbatim would disclose that
+    person's identifier through `applicability.subject`. The host refuses to start
+    rather than leak it per request.
+
+    That distinction matters for anywhere a discovery host is actually deployed. The
+    default configuration is backed by the bundled demo twin, so exposing it would
+    publish a `BodyState` for `subject:local-demo` and invite a reader to mistake a
+    fixture for a person's data. A model descriptor carries no subject data; a
+    `BodyState` is nothing but subject data. Omitting the routes is a stronger
+    guarantee than guarding them, because a route that does not exist cannot be
+    misconfigured into existence.
+    """
     store = store or InMemoryTwinStore.from_fixture(DEFAULT_FIXTURE)
-    app = FastAPI(title="OpenBody Reference Host", version="0.1.0-draft.1")
+    if model_directory is not None:
+        store.models = load_model_directory(model_directory, public=discovery_only)
+    app = FastAPI(title="OpenBody Reference Host", version="0.1.0-draft.2")
+
+    @app.get("/healthz")
+    def healthz() -> dict[str, Any]:
+        """Operational liveness, outside the protocol surface.
+
+        Reports the contract being served so a deployment check can detect a host
+        running a different contract than the consumer validated against.
+        """
+        return {
+            "status": "ok",
+            "contract": contract_identity(),
+            "models": len(store.models),
+        }
 
     @app.get("/.well-known/openbody")
     def well_known() -> dict[str, Any]:
@@ -188,6 +307,41 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
     @app.get("/v1/capabilities")
     def capabilities() -> dict[str, Any]:
         return _capabilities()
+
+    @app.get("/v1/models")
+    def list_models() -> list[dict[str, Any]]:
+        models = list(store.models.values())
+        try:
+            for model in models:
+                validate_definition("BodyModel", model)
+            if not discovery_only:
+                # A twin host must not disclose a descriptor for another twin. A
+                # catalogue host has no hosted twin: its stricter rule is that every
+                # descriptor declares CATALOGUE_SUBJECT, enforced at startup.
+                _require_hosted_twin(
+                    store, {model.get("applicability", {}).get("subject") for model in models}
+                )
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return models
+
+    @app.get("/v1/models/{model_id}")
+    def get_model(model_id: str) -> dict[str, Any]:
+        model = store.models.get(model_id)
+        if model is None:
+            raise HTTPException(status_code=404, detail="model not found")
+        try:
+            semantic_validate(model)
+            if not discovery_only:
+                _require_hosted_twin(store, {model.get("applicability", {}).get("subject")})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return model
+
+    if discovery_only:
+        # Everything below discloses or accepts subject data. On a discovery
+        # deployment those routes must not exist.
+        return app
 
     @app.get("/v1/state")
     def get_state() -> dict[str, Any]:
@@ -202,29 +356,6 @@ def create_app(store: InMemoryTwinStore | None = None) -> FastAPI:
                 validate_definition("BodySubsystemState", subsystem)
                 return subsystem
         raise HTTPException(status_code=404, detail="OpenBody coordinate not present in current state")
-
-    @app.get("/v1/models")
-    def list_models() -> list[dict[str, Any]]:
-        models = list(store.models.values())
-        try:
-            for model in models:
-                validate_definition("BodyModel", model)
-            _require_hosted_twin(store, {model.get("applicability", {}).get("subject") for model in models})
-        except Exception as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return models
-
-    @app.get("/v1/models/{model_id}")
-    def get_model(model_id: str) -> dict[str, Any]:
-        model = store.models.get(model_id)
-        if model is None:
-            raise HTTPException(status_code=404, detail="model not found")
-        try:
-            semantic_validate(model)
-            _require_hosted_twin(store, {model.get("applicability", {}).get("subject")})
-        except Exception as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return model
 
     @app.get("/v1/trajectories/{trajectory_id}")
     def get_trajectory(trajectory_id: str) -> dict[str, Any]:
