@@ -136,6 +136,39 @@ layers beneath it.
 
 Then OMBODY-0.1, then BrIAn as a client of both paths.
 
+## Protocol 0.2 requirements
+
+Recorded here because each is a concession `draft.2` makes knowingly, and a concession
+nobody wrote down becomes a permanent design.
+
+**Type `applicability`.** It is `{"type": "object"}` today, which is why InVivo can carry
+`evidence_requirements` inside it without a schema change. That buys schema-legality at
+the cost of contract validation: nothing checks the shape of a requirement, so two
+providers could express the same bar differently and both validate. `SimulationApplicability`
+should become the typed schema for model applicability too, with evidence requirements as
+named members.
+
+**Define verification outcomes explicitly.** Attestation verification has at least four
+distinguishable results, and collapsing them is unsafe:
+
+| Outcome | Meaning | Admissible |
+| --- | --- | --- |
+| `verified` | an authenticated artefact establishes the attestation | yes |
+| `unverified` | no attestation artefact was presented | no |
+| `invalid` | an artefact was presented and failed authentication | no, and it is a finding |
+| `unresolvable` | verification could not complete, e.g. a registry timeout | no, but it is transient |
+
+A transient registry outage must not be indistinguishable from a bad signature. Both
+refuse admission, but `invalid` is evidence of a problem with the evidence while
+`unresolvable` is evidence of a problem with the check. A provider that reports them
+identically cannot tell a forged report from an unreachable directory.
+
+**Name the authentication axis correctly.** Whether an attestation is authenticated is
+independent of who asserted it: a laboratory's cryptographic signature is necessarily
+asserted by that laboratory and is authenticated. The distinction that matters is
+authenticated evidence versus an unverified label, never self-assertion versus
+third-party assertion.
+
 ## Tag policy
 
 A tag is never moved, and artifact removal is never described as a protocol change.
