@@ -7,6 +7,10 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "reference" / "python"))
+
+from openbody_ref.clinical_reference import FIXTURE_BUNDLE_PATH, validate_fixture_bundle
+
 SCHEMA = ROOT / "schemas" / "openbody.schema.json"
 REGISTRY = ROOT / "registry" / "coordinates.json"
 
@@ -301,6 +305,8 @@ def main(paths):
 
     for raw in paths:
         path = Path(raw)
+        if path.resolve() == FIXTURE_BUNDLE_PATH.resolve():
+            continue
         doc = load(path)
         schema_errors = sorted(validator.iter_errors(doc), key=lambda e: list(e.absolute_path))
         custom_errors = invariant_errors(doc)
@@ -317,6 +323,18 @@ def main(paths):
             print(f"PASS {path}")
         for coordinate in unknown:
             print(f"  WARN unregistered coordinate: {coordinate}")
+
+    for result in validate_fixture_bundle(ROOT):
+        if result.passed:
+            detail = result.actual if result.actual == "accepted" else f"{result.actual} ({result.actual_error_code})"
+            print(f"PASS clinical-reference fixture {result.name}: {detail}")
+        else:
+            failed = True
+            print(
+                f"FAIL clinical-reference fixture {result.name}: "
+                f"expected {result.expected}/{result.expected_error_code}, "
+                f"got {result.actual}/{result.actual_error_code}"
+            )
 
     return 1 if failed else 0
 

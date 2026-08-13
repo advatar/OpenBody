@@ -1,0 +1,221 @@
+{
+  "$id": "https://schemas.advatar.systems/openbody/clinical-assertion-reference/v1/schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "abstention": {"$ref": "#/$defs/abstention"},
+    "applicability": {"$ref": "#/$defs/applicability"},
+    "canonical_ref": {"format": "uri", "type": "string"},
+    "content_digest": {"$ref": "#/$defs/digest"},
+    "contract": {"$ref": "#/$defs/contractIdentity"},
+    "epistemic_class": {"$ref": "#/$defs/epistemicClass"},
+    "evidence_lineage": {
+      "items": {"$ref": "#/$defs/evidenceReference"},
+      "minItems": 1,
+      "type": "array"
+    },
+    "object_kind": {
+      "enum": ["BodyState", "BodySubsystemState", "BodyTrajectory", "CounterfactualScenario", "ExpectedEffect", "Abstention"],
+      "type": "string"
+    },
+    "producer": {"$ref": "#/$defs/producer"},
+    "projection_class": {"const": "openbody_reference"},
+    "reference_id": {"$ref": "#/$defs/nonempty"},
+    "scope": {"$ref": "#/$defs/scopes"},
+    "schema_version": {"const": "openbody.clinical-assertion-reference/1.0"},
+    "subject": {"pattern": "^subject:[^\\s]+$", "type": "string"},
+    "subject_binding": {"$ref": "#/$defs/subjectBinding"},
+    "summary": {"$ref": "#/$defs/nonempty"},
+    "uncertainty": {"$ref": "#/$defs/uncertainty"},
+    "validity": {"$ref": "#/$defs/validity"}
+  },
+  "required": [
+    "schema_version",
+    "projection_class",
+    "reference_id",
+    "object_kind",
+    "canonical_ref",
+    "content_digest",
+    "subject",
+    "subject_binding",
+    "scope",
+    "contract",
+    "producer",
+    "evidence_lineage",
+    "epistemic_class",
+    "applicability",
+    "uncertainty",
+    "validity",
+    "abstention",
+    "summary"
+  ],
+  "title": "OpenBody clinical assertion reference v1",
+  "type": "object",
+  "$defs": {
+    "abstention": {
+      "oneOf": [
+        {
+          "properties": {"status": {"const": "not_abstained"}},
+          "required": ["status"],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "reason_code": {"$ref": "#/$defs/nonempty"},
+            "reasons": {"items": {"$ref": "#/$defs/nonempty"}, "minItems": 1, "type": "array"},
+            "status": {"const": "abstained"}
+          },
+          "required": ["status", "reason_code", "reasons"],
+          "type": "object"
+        }
+      ]
+    },
+    "applicability": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_at": {"$ref": "#/$defs/timestamp"},
+        "reasons": {"items": {"$ref": "#/$defs/nonempty"}, "type": "array"},
+        "scopes": {"$ref": "#/$defs/scopes"},
+        "status": {
+          "enum": ["applicable", "unknown", "insufficient", "contradictory", "inapplicable", "out_of_distribution"],
+          "type": "string"
+        },
+        "subject": {"pattern": "^subject:[^\\s]+$", "type": "string"}
+      },
+      "required": ["status", "subject", "scopes", "evaluated_at", "reasons"],
+      "type": "object"
+    },
+    "contractIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "coordinate_registry_version": {"$ref": "#/$defs/nonempty"},
+        "openbody_schema_digest": {"$ref": "#/$defs/digest"},
+        "openbody_schema_version": {"const": "0.1"}
+      },
+      "required": ["openbody_schema_version", "openbody_schema_digest", "coordinate_registry_version"],
+      "type": "object"
+    },
+    "digest": {"pattern": "^sha256:[0-9a-f]{64}$", "type": "string"},
+    "epistemicClass": {
+      "enum": ["inference", "clinical_interpretation", "statistical_association", "causal_estimate", "mechanistic_simulation", "prediction", "counterfactual", "hypothesis", "recommendation"],
+      "type": "string"
+    },
+    "evidenceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_ref": {"$ref": "#/$defs/nonempty"},
+        "content_digest": {"$ref": "#/$defs/digest"},
+        "model_refs": {"items": {"$ref": "#/$defs/nonempty"}, "minItems": 1, "type": "array"},
+        "observed_at": {"$ref": "#/$defs/timestamp"},
+        "scopes": {"$ref": "#/$defs/scopes"},
+        "subject": {"pattern": "^subject:[^\\s]+$", "type": "string"}
+      },
+      "required": ["canonical_ref", "content_digest", "observed_at", "subject", "scopes", "model_refs"],
+      "type": "object"
+    },
+    "interval": {
+      "additionalProperties": false,
+      "properties": {
+        "lower": {"type": "number"},
+        "point": {"type": "number"},
+        "upper": {"type": "number"}
+      },
+      "required": ["lower", "point", "upper"],
+      "type": "object"
+    },
+    "nonempty": {"minLength": 1, "type": "string"},
+    "producer": {
+      "additionalProperties": false,
+      "properties": {
+        "execution_id": {"$ref": "#/$defs/nonempty"},
+        "executed_at": {"$ref": "#/$defs/timestamp"},
+        "family": {"$ref": "#/$defs/nonempty"},
+        "input_digest": {"$ref": "#/$defs/digest"},
+        "model_id": {"$ref": "#/$defs/nonempty"},
+        "model_version": {"$ref": "#/$defs/nonempty"},
+        "output_digest": {"$ref": "#/$defs/digest"},
+        "receipt_ref": {"format": "uri", "type": "string"}
+      },
+      "required": ["model_id", "model_version", "family", "execution_id", "executed_at", "input_digest", "output_digest", "receipt_ref"],
+      "type": "object"
+    },
+    "scopes": {
+      "items": {"pattern": "^ob://", "type": "string"},
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "subjectBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "binding_ref": {"format": "uri", "type": "string"},
+        "expires_at": {"$ref": "#/$defs/timestamp"},
+        "issuer": {"$ref": "#/$defs/nonempty"},
+        "proof_digest": {"$ref": "#/$defs/digest"},
+        "revocation_ref": {"format": "uri", "type": "string"},
+        "status": {"enum": ["verified", "unverified", "invalid", "unresolvable"], "type": "string"},
+        "verification_reason": {"type": "string"},
+        "verified_at": {"$ref": "#/$defs/timestamp"}
+      },
+      "required": ["status", "binding_ref", "issuer", "verified_at", "revocation_ref", "proof_digest"],
+      "type": "object"
+    },
+    "timestamp": {"format": "date-time", "type": "string"},
+    "uncertainty": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "aleatoric": {"maximum": 1, "minimum": 0, "type": "number"},
+            "calibration_ref": {"type": ["string", "null"]},
+            "coverage": {"maximum": 1, "minimum": 0, "type": "number"},
+            "epistemic": {"maximum": 1, "minimum": 0, "type": "number"},
+            "interval": {"oneOf": [{"$ref": "#/$defs/interval"}, {"type": "null"}]},
+            "out_of_distribution": {"type": "boolean"},
+            "reasons": {"items": {"$ref": "#/$defs/nonempty"}, "type": "array"},
+            "status": {"const": "known"}
+          },
+          "required": ["status", "epistemic", "aleatoric", "coverage", "interval", "calibration_ref", "out_of_distribution", "reasons"],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "reasons": {"items": {"$ref": "#/$defs/nonempty"}, "minItems": 1, "type": "array"},
+            "status": {"enum": ["unknown", "insufficient"], "type": "string"}
+          },
+          "required": ["status", "reasons"],
+          "type": "object"
+        }
+      ]
+    },
+    "validity": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "valid"}}},
+          "then": {"required": ["valid_until"]}
+        },
+        {
+          "if": {"properties": {"status": {"const": "retracted"}}},
+          "then": {"required": ["retracted_at", "retraction_ref"]}
+        },
+        {
+          "if": {"properties": {"status": {"const": "superseded"}}},
+          "then": {"required": ["superseded_by"]}
+        }
+      ],
+      "properties": {
+        "assessed_at": {"$ref": "#/$defs/timestamp"},
+        "retracted_at": {"$ref": "#/$defs/timestamp"},
+        "retraction_ref": {"format": "uri", "type": "string"},
+        "status": {"enum": ["valid", "stale", "retracted", "superseded", "invalid", "unknown"], "type": "string"},
+        "superseded_by": {"format": "uri", "type": "string"},
+        "valid_until": {"$ref": "#/$defs/timestamp"},
+        "validity_ref": {"format": "uri", "type": "string"}
+      },
+      "required": ["status", "assessed_at", "validity_ref"],
+      "type": "object"
+    }
+  }
+}

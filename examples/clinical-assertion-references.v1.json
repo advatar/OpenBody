@@ -1,0 +1,221 @@
+{
+  "base_reference": {
+    "abstention": {"status": "not_abstained"},
+    "applicability": {
+      "evaluated_at": "2026-08-13T10:00:00Z",
+      "reasons": [],
+      "scopes": ["ob://human/metabolic/glucose_regulation"],
+      "status": "applicable",
+      "subject": "subject:local-demo"
+    },
+    "canonical_ref": "https://fixtures.openbody.dev/objects/scenario-post-meal-walk-001",
+    "content_digest": "sha256:d8ba3e3a423e8b4fd41f7671b860dda3c85c5c7a5c188b1dfc797f206208264d",
+    "contract": {
+      "coordinate_registry_version": "0.2",
+      "openbody_schema_digest": "sha256:713a5e517ddfefdcd392022fdfa86d9c16b8e28a709439e2e43333bf19e26411",
+      "openbody_schema_version": "0.1"
+    },
+    "epistemic_class": "statistical_association",
+    "evidence_lineage": [
+      {
+        "canonical_ref": "local://cgm/meal-response-set-001",
+        "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "model_refs": ["post-meal-walk-personal-difference"],
+        "observed_at": "2026-08-09T18:00:00Z",
+        "scopes": ["ob://human/metabolic/glucose_regulation"],
+        "subject": "subject:local-demo"
+      }
+    ],
+    "object_kind": "CounterfactualScenario",
+    "producer": {
+      "executed_at": "2026-08-10T06:30:00Z",
+      "execution_id": "exec-walk-001",
+      "family": "statistical",
+      "input_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "model_id": "post-meal-walk-personal-difference",
+      "model_version": "1.0.0",
+      "output_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "receipt_ref": "https://fixtures.openbody.dev/receipts/exec-walk-001"
+    },
+    "projection_class": "openbody_reference",
+    "reference_id": "clinical-ref-post-meal-walk-001",
+    "schema_version": "openbody.clinical-assertion-reference/1.0",
+    "scope": ["ob://human/metabolic/glucose_regulation"],
+    "subject": "subject:local-demo",
+    "subject_binding": {
+      "binding_ref": "https://identity.advatar.systems/bindings/local-demo-providehr",
+      "expires_at": "2026-08-14T10:00:00Z",
+      "issuer": "Advatar Identity",
+      "proof_digest": "sha256:abababababababababababababababababababababababababababababababab",
+      "revocation_ref": "https://identity.advatar.systems/bindings/local-demo-providehr/status",
+      "status": "verified",
+      "verified_at": "2026-08-13T09:59:00Z"
+    },
+    "summary": "Model-derived post-meal glucose trajectory reference for clinical review.",
+    "uncertainty": {
+      "aleatoric": 0.2,
+      "calibration_ref": null,
+      "coverage": 0.8,
+      "epistemic": 0.55,
+      "interval": null,
+      "out_of_distribution": false,
+      "reasons": ["Observed within-person differences can remain confounded"],
+      "status": "known"
+    },
+    "validity": {
+      "assessed_at": "2026-08-13T10:00:00Z",
+      "status": "valid",
+      "valid_until": "2026-08-14T10:00:00Z",
+      "validity_ref": "https://fixtures.openbody.dev/validity/scenario-post-meal-walk-001"
+    }
+  },
+  "cases": [
+    {
+      "expected": "accepted",
+      "name": "positive-applicable-known-valid",
+      "patch": {},
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "applicability_insufficient",
+      "expected": "rejected",
+      "name": "unknown-insufficient",
+      "patch": {
+        "applicability": {"reasons": ["Required calibration evidence is unavailable."], "status": "insufficient"},
+        "uncertainty": {
+          "aleatoric": null,
+          "calibration_ref": null,
+          "coverage": null,
+          "epistemic": null,
+          "interval": null,
+          "out_of_distribution": null,
+          "reasons": ["Uncertainty cannot be estimated from available evidence."],
+          "status": "unknown"
+        }
+      },
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "applicability_contradictory",
+      "expected": "rejected",
+      "name": "contradictory",
+      "patch": {
+        "applicability": {"reasons": ["The model scope and current subject evidence disagree."], "status": "contradictory"}
+      },
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "out_of_distribution",
+      "expected": "rejected",
+      "name": "inapplicable-out-of-distribution",
+      "patch": {
+        "applicability": {"reasons": ["Subject falls outside the model validation distribution."], "status": "out_of_distribution"},
+        "uncertainty": {"out_of_distribution": true, "reasons": ["Distribution-shift detector exceeded its reviewed threshold."]}
+      },
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "abstained",
+      "expected": "rejected",
+      "name": "abstained",
+      "patch": {
+        "abstention": {
+          "reason_code": "insufficient_evidence",
+          "reasons": ["No counterfactual effect was generated."],
+          "status": "abstained"
+        },
+        "applicability": {"reasons": ["Required evidence was insufficient."], "status": "insufficient"},
+        "canonical_ref": "https://fixtures.openbody.dev/objects/insufficient-evidence-abstention",
+        "content_digest": "sha256:4104e4394b4792b9c05697957937cd5ec1634c68c78f71dbb42c4e15f3167ac7",
+        "epistemic_class": "hypothesis",
+        "object_kind": "Abstention",
+        "producer": {
+          "executed_at": "2026-08-13T10:00:00Z",
+          "execution_id": "exec-abstention-001",
+          "family": "statistical",
+          "input_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "model_id": "post-meal-walk-personal-difference",
+          "model_version": "1.0.0",
+          "output_digest": "sha256:4104e4394b4792b9c05697957937cd5ec1634c68c78f71dbb42c4e15f3167ac7",
+          "receipt_ref": "https://fixtures.openbody.dev/receipts/exec-abstention-001"
+        },
+        "summary": "OpenBody abstained because evidence was insufficient.",
+        "uncertainty": {
+          "aleatoric": null,
+          "calibration_ref": null,
+          "coverage": null,
+          "epistemic": null,
+          "interval": null,
+          "out_of_distribution": null,
+          "reasons": ["No physiological estimate was produced."],
+          "status": "insufficient"
+        },
+        "validity": {
+          "validity_ref": "https://fixtures.openbody.dev/validity/insufficient-evidence-abstention"
+        }
+      },
+      "resolved_object": "examples/insufficient-evidence.abstention.json"
+    },
+    {
+      "error_code": "stale",
+      "expected": "rejected",
+      "name": "stale",
+      "patch": {
+        "validity": {"status": "stale", "valid_until": "2026-08-13T10:30:00Z"}
+      },
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "retracted",
+      "expected": "rejected",
+      "name": "retracted",
+      "patch": {
+        "validity": {
+          "retracted_at": "2026-08-13T11:00:00Z",
+          "retraction_ref": "https://fixtures.openbody.dev/retractions/scenario-post-meal-walk-001",
+          "status": "retracted",
+          "valid_until": null
+        }
+      },
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "superseded",
+      "expected": "rejected",
+      "name": "superseded",
+      "patch": {
+        "validity": {
+          "status": "superseded",
+          "superseded_by": "https://fixtures.openbody.dev/clinical-references/clinical-ref-post-meal-walk-002",
+          "valid_until": null
+        }
+      },
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "content_digest_mismatch",
+      "expected": "rejected",
+      "name": "digest-mismatch",
+      "patch": {"content_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "subject_binding_unresolvable",
+      "expected": "rejected",
+      "name": "unresolved-subject",
+      "patch": {
+        "subject_binding": {"status": "unresolvable", "verification_reason": "Binding registry timeout."}
+      },
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    },
+    {
+      "error_code": "not_openbody_reference",
+      "expected": "rejected",
+      "name": "source-observation-is-not-derived-assertion",
+      "patch": {"object_kind": "BodyObservation", "projection_class": "source_observation"},
+      "resolved_object": "examples/post-meal-walk.scenario.json"
+    }
+  ],
+  "evaluated_at": "2026-08-13T12:00:00Z",
+  "schema_version": "openbody.clinical-assertion-reference-fixtures/1.0"
+}

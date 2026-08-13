@@ -103,6 +103,11 @@ that can be re-resolved against the producing host. Claim promotion MUST record 
 promotion of a retracted assertion into durable memory MUST fail closed. Retraction propagation is a
 first-class requirement of OMBODY-0.1, not a later refinement.
 
+The executable projection contract, current-validity rules, and shared consumer fixture matrix are
+defined in [`docs/CLINICAL_ASSERTION_REFERENCES.md`](docs/CLINICAL_ASSERTION_REFERENCES.md),
+[`schemas/clinical-assertion-reference.schema.json`](schemas/clinical-assertion-reference.schema.json),
+and [`examples/clinical-assertion-references.v1.json`](examples/clinical-assertion-references.v1.json).
+
 ## OMBODY-0.1 scope
 
 OMBODY specifies the OpenMind-facing bridge, not body semantics. It references OpenBody's schema and copies

@@ -36,11 +36,14 @@ Observation -> BodyState -> Trajectory -> Perturbation
 
 - [`OPENBODY.md`](OPENBODY.md) — normative protocol draft.
 - [`schemas/openbody.schema.json`](schemas/openbody.schema.json) — JSON Schema 2020-12 definitions for the core state/model/simulation/outcome objects.
+- [`schemas/clinical-assertion-reference.schema.json`](schemas/clinical-assertion-reference.schema.json) — fail-closed consumer projection contract for model-derived clinical references.
 - [`registry/coordinates.json`](registry/coordinates.json) — initial machine-readable `ob://` biological coordinate registry.
 - [`openapi/openbody.openapi.json`](openapi/openbody.openapi.json) — OpenAPI 3.1 HTTP profile.
 - [`profiles/mcp/tools.json`](profiles/mcp/tools.json) — agent/MCP semantic capability profile.
 - [`examples/post-meal-walk.scenario.json`](examples/post-meal-walk.scenario.json) — first end-to-end simulated scenario, aligned with the InVivo personal CGM/walking model.
 - [`examples/insufficient-evidence.abstention.json`](examples/insufficient-evidence.abstention.json) — fail-closed response example.
+- [`examples/clinical-assertion-references.v1.json`](examples/clinical-assertion-references.v1.json) — executable admission/rejection fixtures for clinical consumers.
+- [`docs/CLINICAL_ASSERTION_REFERENCES.md`](docs/CLINICAL_ASSERTION_REFERENCES.md) — projection, subject-binding, uncertainty, applicability, and retraction semantics.
 - [`tools/validate_openbody.py`](tools/validate_openbody.py) — schema + protocol-invariant conformance validator.
 
 ## Validate locally
@@ -49,7 +52,7 @@ Observation -> BodyState -> Trajectory -> Perturbation
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-python tools/validate_openbody.py
+PYTHONPATH=reference/python python tools/validate_openbody.py
 ```
 
 CI runs the same conformance path on every pull request and push to `main`.
@@ -61,6 +64,7 @@ The validator currently enforces structural JSON Schema conformance plus semanti
 - an explicit `abstained` scenario must contain an `Abstention`;
 - an `ObservedOutcome` cannot end before it starts;
 - OpenBody coordinates referenced by fixtures are checked against the registry and unknown coordinates are reported.
+- clinical assertion references verify schema/registry identity, content digest, subject binding, scope, producer/evidence lineage, applicability, uncertainty, abstention, and current validity using stable rejection codes.
 
 ## Status
 
