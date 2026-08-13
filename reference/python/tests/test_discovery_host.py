@@ -205,6 +205,23 @@ class TestDiscoveryOnlySurface:
             assert client.get(path).status_code == 200, path
         assert client.get("/v1/models/model-a").status_code == 200
 
+    def test_discovery_only_advertises_its_actual_surface(self, tmp_path) -> None:
+        client = self.client(tmp_path)
+        expected = ["models.discover"]
+        assert client.get("/.well-known/openbody").json()["capabilities"] == expected
+        assert client.get("/v1/capabilities").json()["capabilities"] == expected
+
+    def test_full_host_still_advertises_runtime_capabilities(self) -> None:
+        capabilities = TestClient(create_app()).get("/v1/capabilities").json()["capabilities"]
+        assert capabilities == [
+            "state.read",
+            "models.discover",
+            "simulation.execute",
+            "simulation.read",
+            "outcomes.write",
+            "calibrations.write",
+        ]
+
     def test_no_subject_bearing_route_exists(self, tmp_path) -> None:
         client = self.client(tmp_path)
         # Omitted rather than guarded: a route that does not exist cannot be

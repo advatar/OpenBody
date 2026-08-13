@@ -48,18 +48,21 @@ def contract_identity() -> dict[str, Any]:
     }
 
 
-def _capabilities() -> dict[str, Any]:
-    return {
-        "protocol": "openbody",
-        "versions": ["0.1"],
-        "capabilities": [
+def _capabilities(discovery_only: bool = False) -> dict[str, Any]:
+    capabilities = ["models.discover"]
+    if not discovery_only:
+        capabilities = [
             "state.read",
             "models.discover",
             "simulation.execute",
             "simulation.read",
             "outcomes.write",
             "calibrations.write",
-        ],
+        ]
+    return {
+        "protocol": "openbody",
+        "versions": ["0.1"],
+        "capabilities": capabilities,
         "authorization": {"schemes": []},
         "contract": contract_identity(),
     }
@@ -302,11 +305,11 @@ def create_app(
 
     @app.get("/.well-known/openbody")
     def well_known() -> dict[str, Any]:
-        return _capabilities() | {"base_url": "/v1"}
+        return _capabilities(discovery_only=discovery_only) | {"base_url": "/v1"}
 
     @app.get("/v1/capabilities")
     def capabilities() -> dict[str, Any]:
-        return _capabilities()
+        return _capabilities(discovery_only=discovery_only)
 
     @app.get("/v1/models")
     def list_models() -> list[dict[str, Any]]:
