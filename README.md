@@ -4,20 +4,27 @@
 
 OpenBody is a model-neutral protocol for discovering, querying, composing, simulating, and exchanging uncertainty-aware computational representations of human biological state.
 
-OpenBody is **not** a replacement for FHIR, DICOM, IEEE 11073, GA4GH, or other domain standards. Those standards remain authoritative for healthcare records, imaging, device communication, genomics, and related data. OpenBody sits above them and standardizes the missing computational layer: biological state, model provenance, cross-system coupling, trajectories, counterfactual simulation, outcomes, calibration, and abstention.
+OpenBody is **not** a replacement for FHIR, DICOM, IEEE 11073, GA4GH, or other domain standards. Those standards remain authoritative for healthcare records, imaging, device communication, genomics, and related data. OpenBody sits above them and standardizes the missing computational layer: biological state, model provenance, cross-system coupling, trajectories, counterfactual simulation, outcomes, calibration, abstention, and the evidence needed to understand why a model should or should not be trusted.
 
 The long-term objective is a patient-controlled, continuously calibrated digital twin that can be read by authorized AI systems, clinicians, hospitals, researchers, and specialist biological models without requiring any one institution or vendor to own the complete human model.
 
 ## Core loop
 
 ```text
-Observation -> BodyState -> Trajectory -> Perturbation
-                                      -> CounterfactualScenario
-                                      -> Intervention / real-world action
-                                      -> ObservedOutcome
-                                      -> Calibration
-                                      -> BodyState
+Observation
+  -> Evidence validation
+  -> BodyState
+  -> Trajectory / CounterfactualScenario
+  -> Disagreement + uncertainty detection
+  -> External verification where available
+  -> Separately authorized action
+  -> Verified execution
+  -> ObservedOutcome
+  -> Calibration
+  -> BodyState
 ```
+
+The additional assurance steps are deliberate. A simulation, recommendation, agent consensus, or successful model call is not proof that a real-world clinical action is safe or authorized.
 
 ## First principles
 
@@ -29,8 +36,40 @@ Observation -> BodyState -> Trajectory -> Perturbation
 6. **Multi-scale by construction.** Molecular, cellular, tissue, organ, subsystem, and whole-body models may coexist and compose.
 7. **Existing standards remain authoritative for their domains.** OpenBody references them instead of inventing replacement payload formats.
 8. **Simulation does not imply authority.** A model may simulate or propose; authorization to disclose data or cause a real-world intervention belongs to a separate authority layer.
-9. **Fail closed.** Unsupported, stale, out-of-distribution, insufficiently calibrated, or unauthorized requests produce explicit abstention rather than fabricated results.
+9. **Fail closed.** Unsupported, stale, out-of-distribution, insufficiently calibrated, unauthorized, invalidly verified, or unresolvable requests produce explicit abstention or escalation rather than fabricated certainty.
 10. **Objectives belong to the person.** The protocol does not define a universal "optimal human." Goals and acceptable trade-offs are external, authorized inputs.
+11. **Consensus is not truth.** Agreement among agents or models may trigger routing or reduce uncertainty, but it is not by itself verification, authority, or permission to act.
+12. **Oversight is not assurance unless it can be characterized.** A checker must declare what it checks, what authority it has, what independent standard it uses where applicable, and how independent it is from the system it checks.
+13. **Prefer simpler external checks when they exist.** Deterministic constraints, authoritative standards, exact evidence/version checks, policy predicates, and formal invariants are generally stronger control primitives than asking another generative model to agree.
+14. **Spend attention on disagreement.** Additional compute and human review should concentrate on contradiction, missing evidence, invalid/unresolvable verification, uncertainty, and consequential decisions rather than universal debate.
+
+## Society of Organs + assurance plane
+
+OpenBody's model federation is intentionally not a hierarchy in which the highest-level AI becomes the safety authority.
+
+```text
+specialist biological models
+          |
+          v
+whole-body synthesis
+          |
+          v
+candidate state / trajectory / counterfactual
+          |
+          +--> evidence validation
+          +--> contradiction & uncertainty detection
+          +--> external verification / deterministic constraints
+          |
+          v
+separate authority boundary
+          |
+          v
+real-world action
+```
+
+The model federation provides biological intelligence. The assurance and authority path determines what can safely become consequential action.
+
+See [`OVERSIGHT.md`](OVERSIGHT.md) for the clinical multi-agent oversight profile and the protocol-0.2 design candidates derived from the 2026 literature on clinical AI oversight.
 
 ## Executable 0.1 artifacts
 
@@ -42,6 +81,7 @@ Observation -> BodyState -> Trajectory -> Perturbation
 - [`examples/post-meal-walk.scenario.json`](examples/post-meal-walk.scenario.json) — first end-to-end simulated scenario, aligned with the InVivo personal CGM/walking model.
 - [`examples/insufficient-evidence.abstention.json`](examples/insufficient-evidence.abstention.json) — fail-closed response example.
 - [`tools/validate_openbody.py`](tools/validate_openbody.py) — schema + protocol-invariant conformance validator.
+- [`OVERSIGHT.md`](OVERSIGHT.md) — clinical multi-agent oversight architecture and protocol-0.2 design record.
 
 ## Validate locally
 
@@ -67,3 +107,5 @@ The validator currently enforces structural JSON Schema conformance plus semanti
 Version: **OpenBody Protocol 0.1.0-draft.1**
 
 Status: **Pre-standardization working draft. Not a clinical standard and not a medical device specification.**
+
+The 0.1 wire contract remains intentionally stable on this branch. The new oversight taxonomy is recorded as an architecture/profile layer and protocol-0.2 candidate rather than silently changing the frozen 0.1 schema.
