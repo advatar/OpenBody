@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .store import InMemoryTwinStore
-from .validation import semantic_validate
+from .validation import semantic_validate, validate_definition
 
 
 STORE_SCHEMA = "openbody.reference-twin-store.v1"
@@ -80,13 +80,25 @@ class DurableTwinStore(InMemoryTwinStore):
             raise ValueError("durable twin store payload has unknown or missing fields")
 
         semantic_validate(payload["state"])
-        for collection in ("models", "trajectories", "scenarios", "outcomes", "calibrations"):
+        definitions = {
+            "models": "BodyModel",
+            "trajectories": "BodyTrajectory",
+            "scenarios": "CounterfactualScenario",
+            "outcomes": "ObservedOutcome",
+            "calibrations": "CalibrationEvent",
+        }
+        for collection, definition in definitions.items():
             if not isinstance(payload[collection], dict):
                 raise ValueError(f"durable twin store {collection} must be an object map")
             for object_id, value in payload[collection].items():
                 if not isinstance(value, dict) or value.get("id") != object_id:
                     raise ValueError(f"durable twin store {collection} identity mismatch")
-                semantic_validate(value)
+                if collection == "trajectories":
+                    # BodyTrajectory is a nested protocol definition rather than
+                    # one of the root objects accepted by semantic_validate.
+                    validate_definition(definition, value)
+                else:
+                    semantic_validate(value)
 
         return cls(
             state=payload["state"],
