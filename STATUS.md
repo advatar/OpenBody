@@ -13,3 +13,7 @@ Branch: `feat/13-cognitive-health-demo`
 Boundary: synthetic demonstration only. No clinical validation claim, raw personal data disclosure, authority bypass, or production-security claim.
 
 Implementation progress (2026-09-02): the shared event ABI is pinned. The durable reference twin now exposes `/v1/demo/compose`; three exact specialist results produce a schema-valid BodyState, while missing, duplicated, substituted, or tampered receipts produce an abstention. Minimized clinical assertion emission remains open.
+
+## M5 deployment follow-up
+
+- [x] Keep repository schemas and fixtures discoverable in the installed demo image (AdvatarDemo #3).
