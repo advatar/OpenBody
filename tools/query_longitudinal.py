@@ -24,7 +24,7 @@ def main() -> int:
     except (OSError, json.JSONDecodeError, QueryError, ValueError) as exc:
         print(f"query rejected: {exc}", file=sys.stderr)
         return 2
-    rendered = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    rendered = json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n"
     if args.out:
         args.out.write_text(rendered)
     else:
