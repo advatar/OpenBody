@@ -52,17 +52,26 @@ def _rate(numerator: int, denominator: int) -> float | None:
 
 
 def _metrics(rows: Iterable[tuple[dict[str, Any], dict[str, Any] | None]]) -> dict[str, Any]:
-    total = answered = correct = 0
+    total = answered = correct = explicit_abstentions = missing_predictions = execution_errors = 0
     for item, prediction in rows:
         total += 1
-        if prediction is None or prediction.get("abstain") is True:
+        if prediction is None:
+            missing_predictions += 1
+            continue
+        if prediction.get("abstain") is True:
+            explicit_abstentions += 1
+            continue
+        if prediction.get("error") is True:
+            execution_errors += 1
             continue
         answered += 1
         correct += prediction["answer"] == item["answer"]
     return {
         "total": total,
         "answered": answered,
-        "abstained": total - answered,
+        "abstained": explicit_abstentions,
+        "missing_predictions": missing_predictions,
+        "execution_errors": execution_errors,
         "coverage": _rate(answered, total),
         "accuracy_on_answered": _rate(correct, answered),
         "accuracy_with_abstentions_incorrect": _rate(correct, total),
@@ -70,9 +79,16 @@ def _metrics(rows: Iterable[tuple[dict[str, Any], dict[str, Any] | None]]) -> di
     }
 
 
-def evaluate(dataset_path: Path, predictions_path: Path) -> dict[str, Any]:
+def evaluate(dataset_path: Path, predictions_path: Path, manifest_path: Path) -> dict[str, Any]:
     dataset = _read_jsonl(dataset_path)
     predictions = _read_jsonl(predictions_path)
+    try:
+        manifest = json.loads(manifest_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("run manifest is invalid JSON") from exc
+    required_manifest = {"system", "revision", "prompt_tool_policy", "seed", "adapter_version"}
+    if not isinstance(manifest, dict) or not required_manifest.issubset(manifest):
+        raise ValueError("run manifest lacks required execution fields")
     required = {"id", "answer", "reasoning_group", "signal", "category"}
     ids: set[str] = set()
     for item in dataset:
@@ -91,15 +107,16 @@ def evaluate(dataset_path: Path, predictions_path: Path) -> dict[str, Any]:
             raise ValueError(f"prediction references unknown id: {prediction_id}")
         if prediction_id in by_id:
             raise ValueError(f"duplicate prediction id: {prediction_id}")
-        allowed = {"id", "answer", "abstain", "reason", "provenance"}
+        allowed = {"id", "answer", "abstain", "error", "reason", "provenance"}
         if set(prediction) - allowed:
             raise ValueError(f"prediction {prediction_id} contains unsupported fields")
         abstain = prediction.get("abstain") is True
+        error = prediction.get("error") is True
         answer = prediction.get("answer")
         has_answer = isinstance(answer, str) and answer in LETTERS
-        if abstain == has_answer:
-            raise ValueError(f"prediction {prediction_id} must contain exactly one of answer or abstain=true")
-        if not abstain and not has_answer:
+        if sum((abstain, error, has_answer)) != 1:
+            raise ValueError(f"prediction {prediction_id} must contain exactly one of answer, abstain=true or error=true")
+        if not abstain and not error and not has_answer:
             raise ValueError(f"prediction {prediction_id} has an invalid answer")
         by_id[prediction_id] = prediction
 
@@ -116,6 +133,8 @@ def evaluate(dataset_path: Path, predictions_path: Path) -> dict[str, Any]:
         "status": "research_evaluation_only",
         "dataset_digest": _digest(dataset_path),
         "predictions_digest": _digest(predictions_path),
+        "run_manifest": manifest,
+        "run_manifest_digest": _digest(manifest_path),
         "overall": _metrics(paired),
         "by_axis": {
             axis: {name: _metrics(rows) for name, rows in sorted(values.items())}
@@ -123,7 +142,8 @@ def evaluate(dataset_path: Path, predictions_path: Path) -> dict[str, Any]:
         },
         "warnings": [
             "Multiple-choice accuracy is not clinical validity.",
-            "Missing predictions are counted as abstentions.",
+            "Missing predictions are reported separately from explicit abstentions.",
+            "Execution errors are reported separately from missing predictions and abstentions.",
             "Compare systems at matched coverage; selective accuracy alone is insufficient.",
         ],
     }
@@ -133,10 +153,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--predictions", type=Path, required=True)
+    parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
-    report = evaluate(args.dataset, args.predictions)
-    rendered = json.dumps(report, indent=2, sort_keys=True) + "\n"
+    report = evaluate(args.dataset, args.predictions, args.manifest)
+    rendered = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
     if args.out:
         args.out.write_text(rendered)
     else:
