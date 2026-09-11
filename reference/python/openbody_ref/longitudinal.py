@@ -9,7 +9,7 @@ from typing import Any, Iterable
 from .validation import canonical_digest, parse_timestamp
 
 
-ALGORITHM_VERSION = "openbody-longitudinal-query/0.1"
+ALGORITHM_VERSION = "openbody-longitudinal-query/0.2"
 SUPPORTED_OPERATIONS = frozenset({"summary", "trend", "lagged_correlation", "excursions", "recovery"})
 
 
@@ -75,14 +75,20 @@ def _points(request: dict[str, Any], metric: str, minimum_quality: float = 0.0) 
         values = observation.get("values")
         if not isinstance(values, dict):
             raise QueryError("every observation requires a values object")
+        for name, raw_value in values.items():
+            if not isinstance(name, str) or not name:
+                raise QueryError("observation metric names must be non-empty strings")
+            if raw_value is not None:
+                _finite_number(raw_value, f"observation value for {name}")
         if metric not in values or values[metric] is None:
             continue
-        quality = observation.get("quality", 1.0)
-        quality = _finite_number(quality, "observation quality")
-        if quality < 0 or quality > 1:
-            raise QueryError("observation quality must be between 0 and 1")
+        quality = observation.get("quality")
+        if quality is not None:
+            quality = _finite_number(quality, "observation quality")
+            if quality < 0 or quality > 1:
+                raise QueryError("observation quality must be between 0 and 1")
         value = _finite_number(values[metric], f"observation value for {metric}")
-        if quality < minimum_quality:
+        if minimum_quality > 0 and (quality is None or quality < minimum_quality):
             continue
         if timestamp in seen:
             raise QueryError("duplicate timestamp for metric; resolve competing sources before querying")
@@ -118,6 +124,36 @@ def _pearson(xs: list[float], ys: list[float]) -> float | None:
     return numerator / denominator if denominator else None
 
 
+def _ranks(values: list[float]) -> list[float]:
+    ordered = sorted(range(len(values)), key=values.__getitem__)
+    ranks = [0.0] * len(values)
+    index = 0
+    while index < len(ordered):
+        end = index + 1
+        while end < len(ordered) and values[ordered[end]] == values[ordered[index]]:
+            end += 1
+        rank = (index + end - 1) / 2 + 1
+        for position in ordered[index:end]:
+            ranks[position] = rank
+        index = end
+    return ranks
+
+
+def _correlation(xs: list[float], ys: list[float], method: str) -> float | None:
+    return _pearson(_ranks(xs), _ranks(ys)) if method == "spearman" else _pearson(xs, ys)
+
+
+def _assert_finite(value: Any) -> None:
+    if isinstance(value, float) and not math.isfinite(value):
+        raise QueryError("numerical computation produced a non-finite result")
+    if isinstance(value, dict):
+        for nested in value.values():
+            _assert_finite(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            _assert_finite(nested)
+
+
 def _abstention(request: dict[str, Any], reason_code: str, reason: str, sample_count: int = 0) -> dict[str, Any]:
     return {
         "kind": "LongitudinalQueryResult",
@@ -144,6 +180,7 @@ def _provenance(request: dict[str, Any], sample_count: int) -> dict[str, Any]:
 
 
 def _computed(request: dict[str, Any], result: dict[str, Any], sample_count: int) -> dict[str, Any]:
+    _assert_finite(result)
     return {
         "kind": "LongitudinalQueryResult",
         "version": "0.1",
@@ -161,7 +198,7 @@ def _unique_sample_count(*point_sets: Iterable[Point]) -> int:
     return len({(point.timestamp, point.source_id) for points in point_sets for point in points})
 
 
-def execute_query(request: dict[str, Any]) -> dict[str, Any]:
+def _execute_query(request: dict[str, Any]) -> dict[str, Any]:
     """Execute a deterministic query without attaching clinical meaning to it."""
     _validate_request(request)
     parameters = request.get("parameters", {})
@@ -170,7 +207,7 @@ def execute_query(request: dict[str, Any]) -> dict[str, Any]:
     operation_parameters = {
         "summary": set(),
         "trend": set(),
-        "lagged_correlation": {"other_metric", "max_lag"},
+        "lagged_correlation": {"other_metric", "max_lag", "correlation_method", "minimum_pair_fraction"},
         "excursions": {"baseline_start", "baseline_end", "threshold_mad"},
         "recovery": {"baseline_start", "baseline_end", "event_time", "tolerance", "consecutive_samples"},
     }
@@ -194,6 +231,13 @@ def execute_query(request: dict[str, Any]) -> dict[str, Any]:
         max_lag = parameters.get("max_lag", 0)
         if isinstance(max_lag, bool) or not isinstance(max_lag, int) or max_lag < 0 or max_lag > 30:
             raise QueryError("max_lag must be an integer from 0 to 30")
+        method = parameters.get("correlation_method", "pearson")
+        if method not in {"pearson", "spearman"}:
+            raise QueryError("correlation_method must be pearson or spearman")
+        minimum_pair_fraction = _finite_number(parameters.get("minimum_pair_fraction", 0.8),
+                                               "minimum_pair_fraction")
+        if minimum_pair_fraction <= 0 or minimum_pair_fraction > 1:
+            raise QueryError("minimum_pair_fraction must be in (0, 1]")
         start, end = _bounds(parameters)
         first = {p.timestamp: p for p in _window(_points(request, metric, minimum_quality), start, end)}
         second = {p.timestamp: p for p in _window(_points(request, other_metric, minimum_quality), start, end)}
@@ -207,14 +251,20 @@ def execute_query(request: dict[str, Any]) -> dict[str, Any]:
                 if match is not None:
                     xs.append(point.value)
                     ys.append(match.value)
-            correlation = _pearson(xs, ys)
-            if correlation is not None and len(xs) >= minimum:
+            correlation = _correlation(xs, ys, method)
+            if correlation is not None:
                 candidates.append((correlation, lag, len(xs)))
+        maximum_support = max((candidate[2] for candidate in candidates), default=0)
+        required_support = max(minimum, math.ceil(maximum_support * minimum_pair_fraction))
+        candidates = [candidate for candidate in candidates if candidate[2] >= required_support]
         if not candidates:
             return _abstention(request, "insufficient_data", "No lag has enough paired, varying samples")
         correlation, lag, count = max(candidates, key=lambda item: (abs(item[0]), -abs(item[1]), -item[1]))
         return _computed(request, {"metric": metric, "other_metric": other_metric, "lag_days": lag,
-                                   "pearson_r": correlation, "pair_count": count}, count)
+                                   "correlation": correlation, "correlation_method": method,
+                                   "lag_convention": "positive means metric leads other_metric",
+                                   "pair_count": count, "required_pair_count": required_support,
+                                   "candidate_support": {str(item[1]): item[2] for item in candidates}}, count)
 
     points = _points(request, metric, minimum_quality)
     start, end = _bounds(parameters)
@@ -243,6 +293,10 @@ def execute_query(request: dict[str, Any]) -> dict[str, Any]:
 
     if operation == "excursions":
         baseline_start, baseline_end = _bounds(parameters, "baseline_")
+        if baseline_start is None or baseline_end is None or start is None:
+            raise QueryError("excursions requires explicit baseline_start, baseline_end, and start")
+        if baseline_end >= start:
+            raise QueryError("excursion baseline must end before the evaluation window")
         baseline = _window(points, baseline_start, baseline_end)
         if len(baseline) < minimum:
             return _abstention(request, "insufficient_baseline", "Too few baseline observations", len(baseline))
@@ -265,6 +319,10 @@ def execute_query(request: dict[str, Any]) -> dict[str, Any]:
     if operation == "recovery":
         event_time = _timestamp(parameters.get("event_time"), "event_time")
         baseline_start, baseline_end = _bounds(parameters, "baseline_")
+        if baseline_start is None or baseline_end is None:
+            raise QueryError("recovery requires explicit baseline_start and baseline_end")
+        if baseline_end >= event_time:
+            raise QueryError("recovery baseline must end before event_time")
         baseline = _window(points, baseline_start, baseline_end)
         if len(baseline) < minimum:
             return _abstention(request, "insufficient_baseline", "Too few baseline observations", len(baseline))
@@ -290,3 +348,11 @@ def execute_query(request: dict[str, Any]) -> dict[str, Any]:
                            _unique_sample_count(after, baseline))
 
     raise AssertionError("validated operation was not implemented")
+
+
+def execute_query(request: dict[str, Any]) -> dict[str, Any]:
+    """Execute a query and convert arithmetic failures into deterministic rejection."""
+    try:
+        return _execute_query(request)
+    except ArithmeticError as exc:
+        raise QueryError("numerical computation failed") from exc
