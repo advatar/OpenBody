@@ -45,7 +45,7 @@ Every computed or abstained result includes:
 - unique sample count used by the computation;
 - explicit disposition and reason code.
 
-Malformed timestamps, non-finite values, unsupported fields or parameters, invalid quality thresholds, duplicate timestamps from competing sources and cross-subject observations are rejected rather than converted into plausible-looking results. An explicit minimum-quality parameter can filter observations before calculation.
+Malformed timestamps, non-finite values or results, unsupported fields or parameters, invalid quality thresholds, duplicate timestamps from competing sources and cross-subject observations are rejected rather than converted into plausible-looking results. Missing quality is unknown rather than perfect: it cannot pass a positive minimum-quality threshold. Excursion and recovery baselines must be explicit and must end before the evaluation window or event.
 
 ## WearableQA integration
 
@@ -58,7 +58,7 @@ Malformed timestamps, non-finite values, unsupported fields or parameters, inval
 - per-category results;
 - dataset and prediction digests.
 
-The scorer treats missing predictions as abstentions and warns that multiple-choice accuracy is not clinical validity. This prevents an apparently strong selective score from hiding very low coverage.
+The scorer reports missing predictions and execution errors separately from explicit abstentions, requires a run manifest, and warns that multiple-choice accuracy is not clinical validity. This prevents runner failures or an apparently strong selective score from hiding very low coverage.
 
 ### Dataset preflight
 
@@ -69,7 +69,22 @@ The official structured release was inspected at content digest `sha256:73dedd72
 - 2,402 cross-signal and 1,682 single-signal questions;
 - 3,154 population-grounded and 930 literature-grounded questions.
 
-The current primitives align directly with `signal_summary`, `trend_shape`, `signed_correlation`, `excursion_count`, and `recovery_time`. They do not yet resolve the benchmark's natural-language answer choices. That requires an explicit adapter and independently reviewed semantic mapping; silently parsing question text into executable parameters would collapse the deterministic and generative layers this work is intended to separate.
+Compatibility is deliberately narrower than category-name similarity suggests:
+
+| WearableQA category | Current compatibility | Required before support |
+|---|---|---|
+| `signal_summary` | Supported by the narrow adapter for five allowlisted templates | Independent review of visibility, rounding and insufficient-data rules |
+| `excursion_count` | Mathematical primitive is close | Exact first/second-half partition, missingness and option semantics |
+| `signed_correlation` | Not supported | Benchmark uses Spearman plus categorical stability rules; the generic engine now exposes a Spearman mode but does not implement those rules |
+| `trend_shape` | Not supported | Ten-class shape detection rather than a linear slope |
+| `recovery_time` | Not supported | Detection of the largest multi-day event and benchmark-specific recovery classification |
+
+The first narrow adapter is implemented in `openbody_ref.wearableqa`. It answers only the structured `signal_summary` category using an explicit semantic allowlist: mean RHR, mean/median steps, mean sleep duration and DHRPS composed from separate RHR and step summaries. Before execution it creates an immutable visibility projection containing only the requested date window and metrics; ground truth, future history, cohort data and unrelated or hidden metrics cannot reach the query layer. Unsupported categories become explicit abstentions. Run it and score the resulting predictions with:
+
+```bash
+python tools/run_wearableqa_adapter.py --raw WearableQA_raw.json --out predictions.jsonl --manifest-out manifest.json
+python tools/evaluate_wearableqa.py --dataset WearableQA.jsonl --predictions predictions.jsonl --manifest manifest.json
+```
 
 The dataset is not vendored because it is large, distributed via Git LFS, and licensed CC BY-NC 4.0. Users supply their own authorized copy to the scorer.
 
@@ -79,7 +94,7 @@ The dataset is not vendored because it is large, distributed via Git LFS, and li
 2. Add unit-aware coordinates; raw metric names are not an interoperability contract.
 3. Define sampling cadence, aggregation and duplicate-resolution semantics.
 4. Add property tests for timezone offsets, missingness, irregular sampling and adversarial numeric inputs.
-5. Build a reviewed WearableQA adapter for the supported deterministic categories.
+5. Independently review the narrow `signal_summary` adapter, then add categories only when their benchmark semantics match versioned query operations exactly.
 6. Compare end-to-end assistants with and without tool use at matched coverage.
 7. Add free-response, unsupported-question and clinically unsafe-advice tests; multiple choice alone is insufficient.
 8. Only then propose an additive protocol-0.2 HTTP/MCP surface.
