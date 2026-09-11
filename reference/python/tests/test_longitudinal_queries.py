@@ -42,7 +42,8 @@ def test_summary_and_trend_are_deterministic_and_digest_bound() -> None:
 def test_lagged_correlation_uses_paired_samples() -> None:
     result = execute_query(_request("lagged_correlation", other_metric="steps", max_lag=2))
     assert result["disposition"] == "computed"
-    assert result["result"]["pearson_r"] == pytest.approx(1.0)
+    assert result["result"]["correlation"] == pytest.approx(1.0)
+    assert result["result"]["correlation_method"] == "pearson"
     assert result["result"]["lag_days"] == 0
     assert result["result"]["pair_count"] == 7
 
@@ -124,3 +125,53 @@ def test_minimum_quality_filters_before_computation() -> None:
     result = execute_query(request)
     assert result["disposition"] == "abstained"
     assert result["provenance"]["sample_count"] == 0
+
+
+def test_unknown_quality_does_not_pass_a_positive_threshold() -> None:
+    request = _request("summary", minimum_quality=0.5)
+    for observation in request["observations"]:
+        observation.pop("quality")
+    result = execute_query(request)
+    assert result["disposition"] == "abstained"
+
+
+def test_baselines_cannot_overlap_evaluation_or_event() -> None:
+    excursion = _request(
+        "excursions",
+        start="2026-01-04T00:00:00Z",
+        baseline_start="2026-01-01T00:00:00Z",
+        baseline_end="2026-01-04T00:00:00Z",
+    )
+    with pytest.raises(QueryError, match="baseline must end before"):
+        execute_query(excursion)
+
+    recovery = _request(
+        "recovery",
+        event_time="2026-01-04T00:00:00Z",
+        baseline_start="2026-01-01T00:00:00Z",
+        baseline_end="2026-01-05T00:00:00Z",
+        tolerance=1,
+    )
+    with pytest.raises(QueryError, match="baseline must end before"):
+        execute_query(recovery)
+
+
+def test_non_finite_intermediate_result_is_rejected() -> None:
+    request = _request("trend")
+    for index, observation in enumerate(request["observations"]):
+        observation["values"]["rhr"] = 1e308 if index == 0 else -1e308
+    with pytest.raises(QueryError, match="numerical"):
+        execute_query(request)
+
+
+def test_spearman_and_pair_support_are_explicit() -> None:
+    result = execute_query(_request(
+        "lagged_correlation",
+        other_metric="steps",
+        max_lag=2,
+        correlation_method="spearman",
+        minimum_pair_fraction=0.8,
+    ))
+    assert result["result"]["correlation_method"] == "spearman"
+    assert result["result"]["lag_convention"] == "positive means metric leads other_metric"
+    assert result["result"]["required_pair_count"] == 6
