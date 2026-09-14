@@ -1,0 +1,29 @@
+# Status
+
+## Active — G2 admitted clinical observation bridge — 2026-09-14
+
+Issue: https://github.com/advatar/OpenBody/issues/16
+Working branch: `feat/16-admitted-observations`; this work is not on `main`.
+The initial repository sync fetched all remotes and pulled main at `2a9a398`.
+Other unmerged work exists on `feat/longitudinal-query-wearableqa` and
+`feat/13-cognitive-health-demo`; neither is evidence that G2 is complete.
+
+Current source audit: the 0.1 reference host has no observation ingestion
+capability and the core schema has no Observation definition. Clinical assertion
+references already represent separately typed model-derived evidence.
+
+- [ ] Define a versioned admitted-observation profile carrying exact source,
+  canonical code/value/unit/time, patient binding, normalization rule lineage
+  and uncertainty, with no inferred authority or certainty.
+- [ ] Enforce the profile in the reference host/store/client ingestion and read
+  paths, including idempotency and rejection of cross-patient/conflicting input.
+- [ ] Wire ProvidEHR's actual admitted-fact producer and verify its output through
+  the OpenBody host. Dependency: advatar/ProvidEHR#523 / PR #519.
+- [ ] Verify the separate model-derived assertion return path and negative tests
+  proving observation, inference, simulation and clinical assertion stay distinct.
+- [ ] Run conformance and producer/consumer tests, record exact version bindings,
+  and merge only after the integrated G2 evidence passes.
+
+The full PRODUCTION.md program (G1–G18) and integrated closure scenario remain
+unfinished. A schema or isolated adapter alone does not close this gate. The
+stable core 0.1 contract must not be silently redefined by this profile.
