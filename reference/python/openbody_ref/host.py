@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import copy
 import json
+import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 
+from .observation import ObservationError, ObservationSource, PROFILE as OBSERVATION_PROFILE, validate_locator, validate_observation
 from .store import InMemoryTwinStore, producing_model_requirements
 from .validation import canonical_digest, parse_timestamp, scenario_evidence_references, scenario_horizon_seconds, semantic_validate, validate_definition
 
@@ -48,7 +51,7 @@ def contract_identity() -> dict[str, Any]:
     }
 
 
-def _capabilities(discovery_only: bool = False) -> dict[str, Any]:
+def _capabilities(discovery_only: bool = False, observations_enabled: bool = False, observations_only: bool = False) -> dict[str, Any]:
     capabilities = ["models.discover"]
     if not discovery_only:
         capabilities = [
@@ -59,13 +62,20 @@ def _capabilities(discovery_only: bool = False) -> dict[str, Any]:
             "outcomes.write",
             "calibrations.write",
         ]
-    return {
+    if observations_enabled and not discovery_only:
+        capabilities = ([] if observations_only else capabilities) + ["observations.ingest", "observations.read"]
+    result = {
         "protocol": "openbody",
         "versions": ["0.1"],
         "capabilities": capabilities,
         "authorization": {"schemes": []},
         "contract": contract_identity(),
     }
+    if observations_enabled and not discovery_only:
+        from .observation import SCHEMA
+        result["profiles"] = [{"id": OBSERVATION_PROFILE, "schema_digest": canonical_digest(SCHEMA),
+                               "schema_url": "/v1/observations/profile"}]
+    return result
 
 
 def _abstention(reason_code: str, reason: str) -> dict[str, Any]:
@@ -258,8 +268,18 @@ def create_app(
     store: InMemoryTwinStore | None = None,
     model_directory: Path | None = None,
     discovery_only: bool = False,
+    observation_source: ObservationSource | None = None,
+    observations_only: bool = False,
+    lifespan=None,
 ) -> FastAPI:
     """Build the reference host.
+
+    `observation_source` enables the admitted-observation profile using a
+    configured authoritative resolver. With no resolver, observation routes do
+    not exist. Ingestion accepts only exact source-version locators. The source
+    is resolved again on reads, so a cached projection cannot bypass denied or
+    unavailable source access. This reference host still requires a separately
+    authorized/private deployment boundary before serving real clinical data.
 
     `model_directory` serves a validated descriptor set read-only, which is the
     deployable discovery configuration: it makes models *discoverable* and asserts
@@ -285,10 +305,12 @@ def create_app(
     guarantee than guarding them, because a route that does not exist cannot be
     misconfigured into existence.
     """
+    if observations_only and (discovery_only or store is None or observation_source is None):
+        raise ValueError("observation-only hosting requires an explicit subject store and source resolver")
     store = store or InMemoryTwinStore.from_fixture(DEFAULT_FIXTURE)
     if model_directory is not None:
         store.models = load_model_directory(model_directory, public=discovery_only)
-    app = FastAPI(title="OpenBody Reference Host", version="0.1.0-draft.2")
+    app = FastAPI(title="OpenBody Reference Host", version="0.1.0-draft.2", lifespan=lifespan)
 
     @app.get("/healthz")
     def healthz() -> dict[str, Any]:
@@ -305,11 +327,11 @@ def create_app(
 
     @app.get("/.well-known/openbody")
     def well_known() -> dict[str, Any]:
-        return _capabilities(discovery_only=discovery_only) | {"base_url": "/v1"}
+        return _capabilities(discovery_only=discovery_only, observations_enabled=observation_source is not None, observations_only=observations_only) | {"base_url": "/v1"}
 
     @app.get("/v1/capabilities")
     def capabilities() -> dict[str, Any]:
-        return _capabilities(discovery_only=discovery_only)
+        return _capabilities(discovery_only=discovery_only, observations_enabled=observation_source is not None, observations_only=observations_only)
 
     @app.get("/v1/models")
     def list_models() -> list[dict[str, Any]]:
@@ -344,6 +366,49 @@ def create_app(
     if discovery_only:
         # Everything below discloses or accepts subject data. On a discovery
         # deployment those routes must not exist.
+        return app
+
+    if observation_source is not None:
+        def resolve_observation(locator: dict[str, str]) -> dict[str, Any]:
+            validate_locator(locator)
+            value = observation_source.resolve(copy.deepcopy(locator))
+            validate_observation(value, subject=store.state["subject"])
+            if value["source"]["clinical_version"] != locator:
+                raise ObservationError("version_mismatch", "Source returned another clinical version")
+            return value
+
+        def observation_http_error(error: ObservationError) -> HTTPException:
+            status = 503 if error.code == "source_unavailable" else 422
+            return HTTPException(status_code=status, detail={"code": error.code, "message": str(error)})
+
+        @app.get("/v1/observations/profile")
+        def observation_profile() -> dict[str, Any]:
+            from .observation import SCHEMA
+            return {"profile": OBSERVATION_PROFILE, "schema": SCHEMA}
+
+        @app.post("/v1/observations")
+        def ingest_observation(locator: dict[str, Any]) -> dict[str, Any]:
+            try:
+                value = resolve_observation(locator)
+                store.put_observation(value)
+                return store.observation(value["id"])
+            except ObservationError as error:
+                raise observation_http_error(error) from error
+
+        @app.get("/v1/observations/{observation_id}")
+        def read_observation(observation_id: str) -> dict[str, Any]:
+            try:
+                stored_observation = store.observation(observation_id)
+                current = resolve_observation(stored_observation["source"]["clinical_version"])
+                if current != stored_observation:
+                    raise ObservationError("source_changed", "The source no longer confirms this stored observation")
+                return current
+            except KeyError as error:
+                raise HTTPException(status_code=404, detail="observation not found") from error
+            except ObservationError as error:
+                raise observation_http_error(error) from error
+
+    if observations_only:
         return app
 
     @app.get("/v1/state")
@@ -421,6 +486,35 @@ def create_app(
         return value
 
     return app
+
+
+def create_observation_host_from_env() -> FastAPI:
+    """Uvicorn factory for source-backed ingestion without a fabricated Twin.
+
+    Start with `uvicorn openbody_ref.host:create_observation_host_from_env --factory`.
+    The private deployment's access boundary remains the operator's responsibility,
+    exactly as for the existing reference host. This factory never uses a demo state.
+    """
+    from .observation import ProvidEHRObservationSource
+    names = ("OPENBODY_SOURCE_URL", "OPENBODY_SOURCE_TOKEN_FILE", "OPENBODY_SOURCE_TENANT", "OPENBODY_SOURCE_EHR")
+    configuration = {name: os.environ.get(name, "") for name in names}
+    if not all(configuration.values()):
+        raise ValueError("source URL, token file, tenant and EHR are required for observation hosting")
+    with Path(configuration["OPENBODY_SOURCE_TOKEN_FILE"]).open("rb") as token_file:
+        token = token_file.read(8193)
+    if not token or len(token) > 8192:
+        raise ValueError("source token file must contain a bounded credential")
+    source = ProvidEHRObservationSource(configuration["OPENBODY_SOURCE_URL"], token.decode("utf-8").strip(),
+                                       configuration["OPENBODY_SOURCE_TENANT"], configuration["OPENBODY_SOURCE_EHR"])
+    store = InMemoryTwinStore(state={"subject": f"subject:providehr:ehr:{configuration['OPENBODY_SOURCE_EHR']}"})
+    @asynccontextmanager
+    async def source_lifespan(app):
+        try:
+            yield
+        finally:
+            source.close()
+
+    return create_app(store=store, observation_source=source, observations_only=True, lifespan=source_lifespan)
 
 
 app = create_app()

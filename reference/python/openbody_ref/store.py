@@ -6,6 +6,9 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
+from threading import RLock
+
+from .observation import ObservationError, validate_observation
 
 from .validation import parse_timestamp, scenario_horizon_seconds, semantic_validate
 
@@ -69,6 +72,26 @@ class InMemoryTwinStore:
     scenarios: dict[str, dict[str, Any]] = field(default_factory=dict)
     outcomes: dict[str, dict[str, Any]] = field(default_factory=dict)
     calibrations: dict[str, dict[str, Any]] = field(default_factory=dict)
+    observations: dict[str, dict[str, Any]] = field(default_factory=dict)
+    _observation_lock: Any = field(default_factory=RLock, init=False, repr=False, compare=False)
+
+    def put_observation(self, value: dict[str, Any]) -> None:
+        candidate = deepcopy(value)
+        validate_observation(candidate, subject=self.state["subject"])
+        with self._observation_lock:
+            existing = self.observations.get(candidate["id"])
+            if existing is not None and existing != candidate:
+                raise ObservationError("observation_conflict", "An immutable observation version already has different content")
+            self.observations[candidate["id"]] = candidate
+
+    def observation(self, observation_id: str) -> dict[str, Any]:
+        with self._observation_lock:
+            value = deepcopy(self.observations.get(observation_id))
+        if value is None:
+            raise KeyError(observation_id)
+        validate_observation(value, subject=self.state["subject"])
+        return value
+
 
     @classmethod
     def from_fixture(cls, path: Path) -> "InMemoryTwinStore":
