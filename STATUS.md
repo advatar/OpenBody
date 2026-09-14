@@ -21,9 +21,9 @@ references already represent separately typed model-derived evidence.
   and uncertainty, with no inferred authority or certainty.
 - [x] Enforce the profile in the reference host/store/client ingestion and read
   paths, including idempotency and rejection of cross-patient/conflicting input.
-- [ ] Wire ProvidEHR's actual admitted-fact producer and verify its output through
+- [x] Wire ProvidEHR's actual admitted-fact producer and verify its output through
   the OpenBody host. Dependency: advatar/ProvidEHR#523 / PR #519.
-- [ ] Verify the separate model-derived assertion return path and negative tests
+- [x] Verify the separate model-derived assertion return path and negative tests
   proving observation, inference, simulation and clinical assertion stay distinct.
 - [ ] Run conformance and producer/consumer tests, record exact version bindings,
   and merge only after the integrated G2 evidence passes.
@@ -58,3 +58,18 @@ synthetic EHR and test clock; it does not claim to execute a model on the new
 observation. ProvidEHR is adding the shared subject mapping, exact workforce
 scopes and read-time reference validation. The 172 Python tests still pass;
 this expanded integration remains pending at the pinned producer/consumer pair.
+
+Verified bidirectional execution (2026-09-14): ProvidEHR run `34902892696`
+passes at producer `9199f30c599029c32a64e9c95ffc43e760ecfb83` and this consumer's
+functional revision `228de15f5676dcad6eb6a3d747c9ecfe5d2c87b3`. One actual live
+integration test ran: worker -> ClinicalStore -> enforced API -> OpenBody HTTP
+ingestion/read/replay, followed by the separately typed synthetic model-reference
+return. Physician admission, nurse denial, patient/type/expiry rejection,
+read/replay rejection of corrupted durable records, and unchanged original
+clinical compositions all pass. This remains synthetic/in-memory execution
+evidence; it does not qualify model physiology or a live vendor deployment.
+
+OpenBody CI run `34902726178` and all 172 local reference tests pass. PR #17 is
+ready for merge after the tracking update's checks. G2's joint release remains
+open until ProvidEHR PR #519's remaining release/policy gates are resolved.
+G3/G4 consumption and model qualification are tracked by Metabolog#1129.
