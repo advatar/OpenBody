@@ -7,6 +7,8 @@ or clinical payloads. This runner does not emulate the source API or admission.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+from datetime import datetime, timezone, timedelta
 import json
 from pathlib import Path
 import socket
@@ -25,7 +27,68 @@ from openbody_ref.client import OpenBodyClient
 from openbody_ref.host import create_app
 from openbody_ref.observation import ProvidEHRObservationSource, validate_locator
 from openbody_ref.store import InMemoryTwinStore
-from openbody_ref.validation import validate_definition
+from openbody_ref.clinical_reference import validate_clinical_reference
+from openbody_ref.validation import canonical_digest, semantic_validate, validate_definition
+
+
+def synthetic_model_reference(subject):
+    """Rebind a test-only scenario to the synthetic EHR and current test clock.
+
+    This is transport/type evidence, not a model consuming the new observation.
+    G3/G4 must supply actual model execution and qualification separately.
+    """
+    bundle = json.loads((ROOT / "examples/clinical-assertion-references.v1.json").read_text())
+    scenario = json.loads((ROOT / "examples/post-meal-walk.scenario.json").read_text())
+    old_subject = bundle["base_reference"]["subject"]
+    now = datetime.now(timezone.utc)
+    shift = now - datetime.fromisoformat(bundle["evaluated_at"].replace("Z", "+00:00"))
+
+    def bind(value):
+        if isinstance(value, dict):
+            return {k: bind(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [bind(v) for v in value]
+        if value == old_subject:
+            return subject
+        if isinstance(value, str) and len(value) >= 20 and value[10:11] == "T" and value.endswith("Z"):
+            return (datetime.fromisoformat(value.replace("Z", "+00:00")) + shift).isoformat().replace("+00:00", "Z")
+        return value
+
+    reference, resolved = bind(bundle["base_reference"]), bind(scenario)
+    reference["content_digest"] = canonical_digest(resolved)
+    semantic_validate(resolved)
+    validate_clinical_reference(reference, resolved, evaluated_at=now)
+    return reference, resolved
+
+
+def verify_model_return(configuration, observation):
+    ehr = configuration["admitted"]["ehr_id"]
+    reference, resolved = synthetic_model_reference(observation["subject"])
+    payload = {"ehr_id": ehr, "reference": reference, "resolved_object": resolved}
+    prefix = f"/v1/ehr/{ehr}/openbody"
+    with httpx.Client(base_url=configuration["source_url"],
+                      headers={"Authorization": f"Bearer {configuration['source_token']}"}) as api:
+        response = api.post(f"{prefix}/admissions", json=payload)
+        assert response.status_code == 201, response.text
+        assert response.json()["admission"]["reference"]["object_kind"] == "CounterfactualScenario"
+        assert response.json()["admission"]["resolved_object"] == resolved
+        assert api.post(f"{prefix}/admissions", json=payload).json()["replayed"] is True
+        assert api.post(f"{prefix}/simulations", json=payload).status_code == 201
+        state = api.get(f"{prefix}/state")
+        assert state.status_code == 200
+        assert len(state.json()["projections"]) == 1
+        assert state.json()["projections"][0]["reference"]["epistemic_class"] == "statistical_association"
+        forged = deepcopy(payload)
+        forged["reference"]["subject"] = "subject:providehr:ehr:another"
+        assert api.post(f"{prefix}/admissions", json=forged).status_code == 422
+        assert api.post(f"{prefix}/admissions", json=payload | {"reference": observation, "resolved_object": observation}).status_code == 422
+        expired = deepcopy(payload)
+        expired["reference"]["validity"]["valid_until"] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        assert api.post(f"{prefix}/admissions", json=expired).status_code == 422
+        wrong_kind = deepcopy(payload)
+        wrong_kind["reference"]["object_kind"] = "BodyState"
+        assert api.post(f"{prefix}/simulations", json=wrong_kind).status_code == 422
+    print("PASS separately typed synthetic model-reference return, replay, EHR binding, expiry and Observation rejection")
 
 
 def verify(configuration):
@@ -78,6 +141,8 @@ def verify(configuration):
         else:
             raise AssertionError("Observation became BodyState without a model")
         assert len(store.observations) == 1
+        if configuration.get("verify_model_return"):
+            verify_model_return(configuration, value)
         print("PASS live ProvidEHR worker -> authorized version API -> OpenBody HTTP ingestion/read/replay; partial/review/type/scope rejection")
     finally:
         server.should_exit = True

@@ -50,3 +50,11 @@ OpenBody's required `subject:` identifier convention for normal UUID EHRs.
 Correcting and testing this production binding remains part of G2, alongside
 required CI and the integrated assertion return path. See
 [profile and operational boundaries](docs/ADMITTED_OBSERVATIONS.md).
+
+Follow-up (advatar/ProvidEHR#525): the live verifier now includes a synthetic
+model-reference return through the authorized runtime, with replay and
+subject/type/expiry negatives. It rebases the existing test scenario to the
+synthetic EHR and test clock; it does not claim to execute a model on the new
+observation. ProvidEHR is adding the shared subject mapping, exact workforce
+scopes and read-time reference validation. The 172 Python tests still pass;
+this expanded integration remains pending at the pinned producer/consumer pair.

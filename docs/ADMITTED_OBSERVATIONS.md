@@ -98,6 +98,12 @@ transport; it is execution-path evidence, not a live vendor deployment claim.
 Record the exact producer/consumer revisions and successful CI run before
 claiming this cross-repository check passed.
 
-The reverse model-derived assertion runtime still needs verification against
-this explicit EHR/subject convention. Neither the fixture nor the forward
-bridge alone closes G2.
+The integration runner can also exercise the separately typed model-reference
+return through ProvidEHR's admission and simulation endpoints. It uses the
+existing synthetic scenario rebound to the synthetic EHR/test clock, preserving
+its `statistical_association` class and uncertainty. That proves transport and
+type separation; it does not execute a model on the new observation. The
+producer enforces physician admission/record grants and clinical read grants,
+and revalidates stored EHR/tenant/subject/digest/current validity on reads.
+Execution of this expanded check is tracked in advatar/ProvidEHR#525. Neither
+the fixture nor the forward bridge alone closes G2.

@@ -38,7 +38,7 @@ def validate_locator(value: Any) -> None:
     if any(not component.fullmatch(value[key]) or "::" in value[key] for key in ("ehr_id", "composition_uid")):
         raise ObservationError("invalid_source_locator", "Clinical identifiers must be canonical URI-safe components")
     parts = value["version_uid"].split("::")
-    if len(parts) != 3 or parts[0] != value["composition_uid"] or not component.fullmatch(parts[1]) or not re.fullmatch(r"[1-9][0-9]{0,19}", parts[2], re.ASCII) or int(parts[2]) > 2**64 - 1:
+    if len(parts) != 3 or parts[0] != value["composition_uid"] or not component.fullmatch(parts[1]) or not re.fullmatch(r"[1-9][0-9]{0,9}", parts[2], re.ASCII) or int(parts[2]) > 2**32 - 1:
         raise ObservationError("invalid_source_locator", "Clinical version does not belong to the requested composition")
 
 
