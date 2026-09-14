@@ -1,9 +1,10 @@
 # Status
 
-## Active — G2 admitted clinical observation bridge — 2026-09-14
+## Implemented — G2 admitted clinical observation bridge; joint release pending — 2026-09-14
 
 Issue: https://github.com/advatar/OpenBody/issues/16
-Working branch: `feat/16-admitted-observations`; this work is not on `main`.
+Implementation branch: `feat/16-admitted-observations`, PR #17. The PR records
+its merge state; joint release also requires ProvidEHR PR #519.
 The initial repository sync fetched all remotes and pulled main at `2a9a398`.
 Other unmerged work exists on `feat/longitudinal-query-wearableqa` and
 `feat/13-cognitive-health-demo`; neither is evidence that G2 is complete.
@@ -25,8 +26,8 @@ references already represent separately typed model-derived evidence.
   the OpenBody host. Dependency: advatar/ProvidEHR#523 / PR #519.
 - [x] Verify the separate model-derived assertion return path and negative tests
   proving observation, inference, simulation and clinical assertion stay distinct.
-- [ ] Run conformance and producer/consumer tests, record exact version bindings,
-  and merge only after the integrated G2 evidence passes.
+- [x] Run conformance and producer/consumer tests and record exact version bindings.
+- [ ] Complete joint G2 release after ProvidEHR required checks and merge.
 
 The full PRODUCTION.md program (G1–G18) and integrated closure scenario remain
 unfinished. A schema or isolated adapter alone does not close this gate. The
