@@ -9,8 +9,8 @@ bounds, abstention rules, prohibited uses, dependencies and qualification eviden
 A descriptor or a nonempty evidence reference does not establish qualification.
 
 The reference executor supports **current state estimation** (horizon zero) and
-explicitly registered **forecasts** (positive horizons). Intervention
-counterfactuals, multi-model composition, native model call sites and the
+explicitly registered **forecasts** and **intervention counterfactuals** (positive
+horizons). Multi-model composition, native model call sites and the
 production DG authority adapter remain unfinished G3/G4 work. Synthetic
 arithmetic in the tests verifies software enforcement, not physiology or clinical
 utility. This profile neither qualifies existing Model Plane labels nor supplies
@@ -54,8 +54,8 @@ boundary.
    behavioral bounds and valid uncertainty. Model failures abstain.
 5. Re-resolve the source objects and qualification after execution. A change,
    revocation, expiry or unavailability prevents returning the result.
-6. Construct a separately typed core `BodyState`, or a `ModelForecast` envelope
-   containing a frozen-core `BodyTrajectory`. Observations keep their source,
+6. Construct a separately typed core `BodyState`, a `ModelForecast` envelope containing a frozen-core `BodyTrajectory`, or a
+   `ModelCounterfactual` containing a frozen-core scenario and comparison forecast. Observations keep their source,
    normalization and unknown uncertainty in evidence provenance; no source value
    is rewritten. Unknown input uncertainty either causes abstention or propagates
    as unknown in the output, according to the qualified contract.
@@ -88,7 +88,7 @@ routes.
 | Discover profile/capabilities | `GET /v1/capabilities` |
 | Read exact schema | `GET /v1/model-families/profile` |
 | Discover registered contracts | `GET /v1/model-families` |
-| Execute current state estimation or forecast | `POST /v1/model-executions` |
+| Execute qualified state, forecast or counterfactual | `POST /v1/model-executions` |
 | Revalidate retained result | `GET /v1/model-executions/{id}` |
 | Create inert adaptation candidate | `POST /v1/model-adaptation-candidates` |
 
@@ -111,8 +111,8 @@ admitted inputs, bounded adaptation parameters and the exact qualified horizon.
 Its contract permits only positive horizons; an ordinary `ModelRegistration`
 permits only `[0]`. The same execution/read routes return `$defs.ForecastResult`
 with kind `ModelForecast`. The client rejects a future forecast returned as a
-current-state result. No intervention or perturbation can be smuggled into this
-request: counterfactual simulation needs its own contract and authority boundary.
+current-state result. An ordinary forecast request cannot carry a perturbation. Counterfactual
+simulation requires the explicit contract and registration described below.
 
 The callable returns `ForecastEvaluation`: 2–512 ordered `ForecastPoint` values,
 each with a `ModelEvaluation`, aggregate uncertainty and bounded assumptions.
@@ -139,5 +139,55 @@ check; extracting a nested state does not confer independent authority.
 The schema's trajectory reference resolves against the frozen core schema supplied
 locally to the validator; verification requires no network schema retrieval.
 Forecast tests execute deterministic synthetic arithmetic, not a physiological
-forecast or clinical qualification. Native source integration and governed
-counterfactual execution remain required for the post-meal family.
+forecast or clinical qualification. Native source integration and qualified model registration remain required for
+the post-meal family. Execution results now expose the exact purpose, population
+and question alongside the request digest; those fields are receipt-bound.
+
+## Qualified intervention counterfactuals
+
+The optional contract `counterfactual` section declares exact permitted
+perturbation IDs, classes, scope, required numeric parameters and units, parameter
+bounds and per-metric effect bounds. Its timing policy is `execution_time`: this
+version simulates an intervention starting at model invocation. Scheduled starts
+are not supported. A `CounterfactualModelRegistration` is required; ordinary
+state/forecast registrations cannot consume or advertise this contract.
+
+Requests use `$defs.CounterfactualRequest`. Callers select a perturbation ID and
+bounded parameters. The host derives its class, scope and start time from the
+qualified contract and clock. Supplied authority references, alternative scopes,
+classes, timing or extra parameters are refused before the model runs. This
+qualification permits simulation only and grants no authority to carry out an
+intervention; DG/Mandamus still govern those effects separately.
+
+The actual callable returns `CounterfactualEvaluation`: a control forecast,
+intervention forecast, uncertainty for each declared effect, overall uncertainty
+and bounded assumptions. Both forecasts must have the same initial model state,
+time grid and exact horizon, and satisfy all forecast metric, uncertainty and
+size limits. The runtime computes each effect as intervention minus control at
+the final shared time and enforces its effect bounds. It does not subtract the
+present baseline from a future intervention outcome or synthesize confidence
+intervals by assuming independence. Unknown source, arm or effect uncertainty
+remains unknown in effects and the overall scenario.
+
+`$defs.CounterfactualResult` has kind `ModelCounterfactual`. Its `scenario` is a
+frozen-core `CounterfactualScenario` with an initial-state baseline and an
+intervention trajectory. The core baseline represents state at or before the
+perturbation; the future no-intervention comparison therefore remains explicitly
+available as `comparison_forecast`. Results label effects as `counterfactual`,
+carry `generalizable: false`, and never turn estimates into observations or
+clinical assertions.
+
+Both arms retain the same admitted source evidence and qualification revision,
+with distinct execution/state identities and explicit scenario claim references.
+The aggregate receipt binds the complete comparison, context, perturbation,
+effects, uncertainty, time and qualification expiry. Clients verify these bindings,
+including the same-horizon differences, and reject a lone forecast returned for a
+counterfactual request. Existing source/qualification checks run after construction
+and on every retained read. Counterfactual output is limited to 12 MiB before the
+runtime's total execution and retention bounds are applied.
+
+The 42 counterfactual tests exercise the actual callable and HTTP path with
+synthetic arithmetic and a fixture authority. They establish software enforcement,
+not physiological validity, causal identification, clinical efficacy or DG
+intervention approval. Production authority resolution and native model/source
+integration remain unfinished G3/G4 work.

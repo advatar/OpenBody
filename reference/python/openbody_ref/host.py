@@ -33,7 +33,7 @@ def create_model_execution_host(runtime) -> FastAPI:
     @app.get("/v1/capabilities")
     def execution_capabilities():
         return {"protocol": "openbody", "versions": ["0.1"], "contract": contract_identity(),
-                "capabilities": ["model-families.discover", "model-executions.execute", "model-executions.read", "model-forecasts.execute", "model-adaptations.propose"],
+                "capabilities": ["model-families.discover", "model-executions.execute", "model-executions.read", "model-forecasts.execute", "model-counterfactuals.execute", "model-adaptations.propose"],
                 "profiles": [{"id": PROFILE, "schema_digest": canonical_digest(SCHEMA), "schema_url": "/v1/model-families/profile"}]}
 
     @app.get("/v1/model-families/profile")
@@ -50,7 +50,8 @@ def create_model_execution_host(runtime) -> FastAPI:
             value = operation()
         except ModelExecutionError as error:
             reasons = {"invalid_request": "invalid_input", "subject_mismatch": "authorization_required", "model_unavailable": "model_unavailable",
-                       "missing_evidence": "insufficient_evidence", "stale_evidence": "stale_evidence", "out_of_distribution": "out_of_distribution"}
+                       "missing_evidence": "insufficient_evidence", "stale_evidence": "stale_evidence", "out_of_distribution": "out_of_distribution",
+                       "unsupported_perturbation": "unsupported_perturbation"}
             value = {"schema_version": "0.1", "kind": "Abstention", "reason_code": reasons.get(error.code, "insufficient_validation"), "reasons": [str(error)]}
             # Operational failure codes are carried in a response header, keeping
             # the frozen typed abstention vocabulary intact.

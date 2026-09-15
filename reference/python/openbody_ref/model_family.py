@@ -28,6 +28,7 @@ PROFILE = "openbody.model-family-contract.v1"
 REGISTRY = {row["coordinate"]: row["scale"] for row in json.loads((ROOT / "registry/coordinates.json").read_text())["coordinates"]}
 VALIDATOR = Draft202012Validator(SCHEMA, format_checker=FormatChecker())
 REQUEST_VALIDATOR = Draft202012Validator(SCHEMA["$defs"]["ExecutionRequest"], format_checker=FormatChecker())
+COUNTERFACTUAL_REQUEST_VALIDATOR = Draft202012Validator(SCHEMA["$defs"]["CounterfactualRequest"], format_checker=FormatChecker())
 
 
 class ModelExecutionError(ValueError):
@@ -65,6 +66,19 @@ def validate_contract(contract: Any) -> None:
     kinds = {row["kind"] for row in contract["qualification_evidence"]}
     for purpose, kind in (("software_test", "software"), ("research", "research"), ("clinical_decision_support", "clinical")):
         require(purpose not in contract["context_of_use"] or kind in kinds, "invalid_contract", "Context of use lacks its qualification evidence class")
+    if "counterfactual" in contract:
+        boundary = contract["counterfactual"]
+        perturbations = boundary["perturbations"]
+        effects = boundary["effect_bounds"]
+        require(len({row["id"] for row in perturbations}) == len(perturbations), "invalid_contract", "Duplicate perturbation identity")
+        require({row["name"] for row in effects} == {row["name"] for row in contract["behavioral_envelope"]} and
+                len({row["name"] for row in effects}) == len(effects), "invalid_contract", "Effect bounds must cover every declared metric once")
+        for perturbation in perturbations:
+            require(perturbation["scope"] == contract["model"]["coordinate"], "invalid_contract", "Perturbation exceeds model scope")
+            require(len({row["name"] for row in perturbation["parameters"]}) == len(perturbation["parameters"]), "invalid_contract", "Duplicate perturbation parameter")
+        for row in effects + [row for perturbation in perturbations for row in perturbation["parameters"]]:
+            require(finite(row["minimum"]) and finite(row["maximum"]) and row["minimum"] <= row["maximum"],
+                    "invalid_contract", "Invalid perturbation or effect bounds")
 
 
 @dataclass(frozen=True)
@@ -129,6 +143,20 @@ class ForecastModelRegistration(ModelRegistration):
     evaluate: Callable[[dict[str, list[dict[str, Any]]], dict[str, float], int], ForecastEvaluation]
 
 
+@dataclass(frozen=True)
+class CounterfactualEvaluation:
+    control: ForecastEvaluation
+    intervention: ForecastEvaluation
+    effect_uncertainty: dict[str, dict[str, Any]]
+    uncertainty: dict[str, Any]
+    assumptions: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class CounterfactualModelRegistration(ModelRegistration):
+    evaluate: Callable[[dict[str, list[dict[str, Any]]], dict[str, float], dict[str, Any], int], CounterfactualEvaluation]
+
+
 class QualifiedModelRuntime:
     def __init__(self, subject: str, tenant_id: str, source: ObservationSource, authority: QualificationAuthority,
                  models: list[ModelRegistration], *, clock: Callable[[], datetime] | None = None):
@@ -143,11 +171,13 @@ class QualifiedModelRuntime:
         for registration in models:
             contract = deepcopy(registration.contract)
             validate_contract(contract)
-            require(type(registration) in (ModelRegistration, ForecastModelRegistration), "invalid_configuration", "Unsupported executable registration")
+            require(type(registration) in (ModelRegistration, ForecastModelRegistration, CounterfactualModelRegistration), "invalid_configuration", "Unsupported executable registration")
             horizons = contract["prediction_horizon_seconds"]
             require(all(type(value) is int for value in horizons), "invalid_configuration", "Horizons must be integer seconds")
-            require(all(value > 0 for value in horizons) if isinstance(registration, ForecastModelRegistration) else horizons == [0],
+            require(all(value > 0 for value in horizons) if type(registration) is not ModelRegistration else horizons == [0],
                     "invalid_configuration", "Registration kind differs from declared prediction horizons")
+            require(("counterfactual" in contract) == isinstance(registration, CounterfactualModelRegistration),
+                    "invalid_configuration", "Counterfactual contracts require explicit counterfactual registration")
             identity = contract["model"]
             require(identity["id"] not in self._models, "invalid_configuration", "Duplicate model registration")
             require("sha256:" + hashlib.sha256(registration.artifact).hexdigest() == identity["artifact_digest"], "invalid_configuration", "Loaded artifact differs from qualified model identity")
@@ -157,7 +187,9 @@ class QualifiedModelRuntime:
         return [deepcopy(row.contract) for row in self._models.values()]
 
     def _request(self, request: Any) -> tuple[ModelRegistration, dict[str, float]]:
-        require(REQUEST_VALIDATOR.is_valid(request), "invalid_request", "Unsupported model execution request")
+        model = self._request_model(request)
+        validator = COUNTERFACTUAL_REQUEST_VALIDATOR if isinstance(model, CounterfactualModelRegistration) else REQUEST_VALIDATOR
+        require(validator.is_valid(request), "invalid_request", "Unsupported model execution request")
         require(request["subject"] == self.subject, "subject_mismatch", "Request does not represent the hosted Twin")
         model = self._models.get(request["model_id"])
         require(model is not None, "model_unavailable", "Model is not registered")
@@ -170,7 +202,15 @@ class QualifiedModelRuntime:
         require(set(request["adaptation"]) <= set(parameters), "adaptation_requires_review", "New adaptation parameters require DG review")
         values = {name: request["adaptation"].get(name, row["default"]) for name, row in parameters.items()}
         require(all(finite(value) and parameters[name]["minimum"] <= value <= parameters[name]["maximum"] for name, value in values.items()), "adaptation_requires_review", "Adaptation exceeds the qualified envelope")
+        if isinstance(model, CounterfactualModelRegistration):
+            from .model_counterfactual import validate_perturbation_request
+            validate_perturbation_request(contract, request["perturbation"])
         return model, values
+
+    def _request_model(self, request: Any):
+        if isinstance(request, dict) and isinstance(request.get("model_id"), str):
+            return self._models.get(request["model_id"])
+        return None
 
     def _lease(self, model: ModelRegistration, request: dict[str, Any]) -> QualificationLease:
         contract = model.contract
@@ -238,7 +278,13 @@ class QualifiedModelRuntime:
         lease = self._lease(model, request)
         inputs = self._observations(model, request)
         try:
-            if isinstance(model, ForecastModelRegistration):
+            if isinstance(model, CounterfactualModelRegistration):
+                from .model_counterfactual import build_counterfactual, execution_perturbation
+                origin = self._clock()
+                perturbation = execution_perturbation(model.contract, request["perturbation"], origin)
+                evaluation = deepcopy(model.evaluate(deepcopy(inputs), deepcopy(parameters), deepcopy(perturbation), request["horizon_seconds"]))
+                state = build_counterfactual(self, model, request, inputs, parameters, evaluation, lease, origin, perturbation)
+            elif isinstance(model, ForecastModelRegistration):
                 from .model_forecast import build_forecast
                 origin = self._clock()
                 evaluation = deepcopy(model.evaluate(deepcopy(inputs), deepcopy(parameters), request["horizon_seconds"]))
@@ -291,7 +337,8 @@ class QualifiedModelRuntime:
 
     def adaptation_candidate(self, request: dict[str, Any]) -> dict[str, Any]:
         # An inert proposal, never an update of the registered contract or model.
-        require(REQUEST_VALIDATOR.is_valid(request) and request["subject"] == self.subject, "invalid_request", "Invalid adaptation proposal")
+        validator = COUNTERFACTUAL_REQUEST_VALIDATOR if isinstance(self._request_model(request), CounterfactualModelRegistration) else REQUEST_VALIDATOR
+        require(validator.is_valid(request) and request["subject"] == self.subject, "invalid_request", "Invalid adaptation proposal")
         model = self._models.get(request["model_id"])
         require(model is not None, "model_unavailable", "Model is not registered")
         require(all(finite(value) for value in request["adaptation"].values()), "invalid_request", "Adaptation values must be finite")

@@ -24,6 +24,7 @@ def forecast_output(value):
     trajectory = value["trajectory"]
     return {"forecast_origin": value["forecast_origin"], "horizon_seconds": value["horizon_seconds"],
             "request_digest": value["request_digest"], "qualification_valid_until": value["qualification_valid_until"],
+            "execution_context": value["execution_context"],
             "states": trajectory["states"], "uncertainty": trajectory["uncertainty"],
             "assumptions": trajectory["assumptions"]}
 
@@ -33,7 +34,7 @@ def unknown_uncertainty(value):
             "reasons": value["reasons"] + ["Forecast evidence or point uncertainty is unknown; aggregate uncertainty is not quantified"]}
 
 
-def build_forecast(runtime, model, request, inputs, parameters, evaluation, lease, origin):
+def build_forecast(runtime, model, request, inputs, parameters, evaluation, lease, origin, *, generated_at=None):
     require(isinstance(evaluation, ForecastEvaluation), "invalid_output", "Forecast model returned another result type")
     require(type(evaluation.points) in (tuple, list) and 2 <= len(evaluation.points) <= 512,
             "invalid_output", "A forecast requires 2 to 512 bounded time points")
@@ -49,7 +50,7 @@ def build_forecast(runtime, model, request, inputs, parameters, evaluation, leas
     require(type(evaluation.assumptions) in (tuple, list) and len(evaluation.assumptions) <= 64 and
             all(isinstance(item, str) and 0 < len(item) <= 2048 for item in evaluation.assumptions),
             "invalid_output", "Forecast assumptions exceed the output boundary")
-    now = runtime._clock().isoformat().replace("+00:00", "Z")
+    now = generated_at or runtime._clock().isoformat().replace("+00:00", "Z")
     states, state_bytes = [], 0
     for point in evaluation.points:
         state = runtime._state(model, request, inputs, parameters, point.evaluation, lease,
@@ -66,6 +67,7 @@ def build_forecast(runtime, model, request, inputs, parameters, evaluation, leas
               "subject": request["subject"], "generated_at": now, "forecast_origin": origin.isoformat().replace("+00:00", "Z"),
               "horizon_seconds": request["horizon_seconds"], "contract_digest": canonical_digest(model.contract),
               "request_digest": canonical_digest(request),
+              "execution_context": {key: request[key] for key in ("purpose", "population", "question")},
               "qualification_valid_until": lease.valid_until.isoformat().replace("+00:00", "Z"),
               "trajectory": {"id": identity, "trajectory_kind": "predicted", "generated_at": now, "states": states,
                              "uncertainty": uncertainty, "assumptions": list(evaluation.assumptions), "model_receipts": []}}
@@ -86,9 +88,14 @@ def validate_forecast(value, contract, subject, *, request=None):
     require(type(value["horizon_seconds"]) is int and value["horizon_seconds"] > 0 and
             value["horizon_seconds"] in contract["prediction_horizon_seconds"],
             "invalid_output", "Forecast horizon exceeds the model contract")
+    require(all(value["execution_context"][key] in contract[allowed] for key, allowed in
+                (("purpose", "context_of_use"), ("population", "supported_population"), ("question", "supported_question"))),
+            "invalid_output", "Forecast execution context exceeds qualification")
     if request is not None:
         require(value["request_digest"] == canonical_digest(request) and value["horizon_seconds"] == request["horizon_seconds"],
                 "invalid_output", "Forecast does not bind the exact execution request")
+        require(all(value["execution_context"][key] == request[key] for key in value["execution_context"]),
+                "invalid_output", "Forecast context differs from request")
     trajectory = value["trajectory"]
     require(trajectory["id"] == value["id"] and trajectory["trajectory_kind"] == "predicted" and
             trajectory["generated_at"] == value["generated_at"] and 2 <= len(trajectory["states"]) <= 512 and

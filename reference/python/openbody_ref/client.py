@@ -40,9 +40,9 @@ class OpenBodyClient:
         return values
 
     def execute_model(self, request: dict[str, Any], *, contract: dict[str, Any]) -> dict[str, Any]:
-        from .model_family import REQUEST_VALIDATOR, validate_contract
+        from .model_family import REQUEST_VALIDATOR, COUNTERFACTUAL_REQUEST_VALIDATOR, validate_contract
         validate_contract(contract)
-        REQUEST_VALIDATOR.validate(request)
+        (COUNTERFACTUAL_REQUEST_VALIDATOR if "counterfactual" in contract else REQUEST_VALIDATOR).validate(request)
         if request["model_id"] != contract["model"]["id"]:
             raise ValueError("requested model differs from pinned contract")
         response = self._client.post("/v1/model-executions", json=request)
@@ -62,6 +62,9 @@ class OpenBodyClient:
 
     @staticmethod
     def _checked_model_result(value, contract, subject, *, request=None):
+        if "counterfactual" in contract and value.get("kind") != "Abstention":
+            from .model_counterfactual import validate_counterfactual
+            return validate_counterfactual(value, contract, subject, request=request)
         if value.get("kind") == "ModelForecast":
             from .model_forecast import validate_forecast
             return validate_forecast(value, contract, subject, request=request)

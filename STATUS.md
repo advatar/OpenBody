@@ -6,6 +6,17 @@ Issue: https://github.com/advatar/OpenBody/issues/18
 Branch: `feat/18-model-family-contract`; native consumers remain on
 Metabolog `feat/1129-openbody-twin-protocol` / issues #1129 and #1130.
 
+Qualified counterfactual execution is now implemented in the reference runtime.
+Contracts pin perturbation class/scope, numeric dose/timing and effect bounds;
+explicit counterfactual callables produce matched control/intervention forecasts.
+The runtime derives same-horizon effects and returns a ModelCounterfactual with
+a frozen-core scenario plus explicit no-intervention comparison. Sources,
+qualification, unknown uncertainty, context, receipts and time remain bound and
+revalidated. No action authority is emitted. Local tests: 328 total, including
+42 new counterfactual cases, plus core/clinical-reference conformance. Hosted CI
+for this addition remains pending; native physiological/clinical qualification
+and model/source integration are not established by these synthetic tests.
+
 Forecast implementation is now added: explicit positive-horizon registrations,
 a separately typed ModelForecast envelope around frozen-core BodyTrajectory,
 ordered bounded points, source/qualification rechecks, uncertainty propagation,
@@ -16,8 +27,7 @@ predicted physiological time; no authority is extended to reach a future point.
 Local verification passes 286 reference tests (45 new forecast cases), frozen
 core and clinical-reference fixtures. Forecast tests execute only deterministic
 synthetic arithmetic. This does not qualify the native post-meal model, establish
-CGM/walking source lineage, implement intervention counterfactuals or provide a
-production DG authority. Hosted conformance `34916946185` passes at functional
+CGM/walking source lineage, provide a production DG authority or native qualified counterfactual integration. Hosted conformance `34916946185` passes at functional
 forecast head `5859a4672304df094160c8e2075615661444e10e`.
 
 Add a versioned model-family contract alongside the frozen core schema, then
@@ -26,8 +36,8 @@ and dependencies, admitted source resolution, context/population/question/horizo
 required observations, uncertainty, output bounds and adaptation. Recheck source
 and qualification after execution so revocation cannot leave a reusable result.
 Out-of-envelope adaptation creates a DG review candidate, never activation.
-The executor supports state estimation and forecasts; counterfactuals and native
-runtime composition remain follow-up work, not implied completion.
+The reference executor supports state estimation, forecasts and counterfactuals;
+native runtime composition remains follow-up work, not implied completion.
 
 The host must receive a trusted qualification resolver and verified model
 registration from deployment configuration. Client-supplied descriptors,
@@ -57,8 +67,7 @@ Local verification passes all 241 reference tests (69 new model-family cases),
 core protocol fixtures and clinical-reference conformance, plus diff checks.
 Tests execute a bounded synthetic arithmetic callable with a fixture authority;
 they do not establish physiological or clinical qualification. Production DG
-qualification, native model call-site wiring, counterfactual execution,
-multi-model composition and durable cross-repository revocation remain open.
+qualification, native model call-site wiring, multi-model composition and durable cross-repository revocation remain open.
 See `docs/MODEL_FAMILY_CONTRACTS.md` for exact trust and digest boundaries.
 
 ## Implemented — G2 admitted clinical observation bridge; joint release pending — 2026-09-14
