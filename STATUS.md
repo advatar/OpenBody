@@ -1,4 +1,88 @@
+Tracking current DG authority migration: https://github.com/advatar/OpenBody/issues/20
+
+Documentation cleanup is complete on this feature branch: current DG resolution,
+EUWallet and credential inputs replace the retired gateway terminology.
+Validation: scoped reference scan and git diff --check pass; no runtime change.
+
+## Active — current DG authority architecture (2026-09-15)
+
+Remove the superseded external capability gateway throughout this repository.
+EUWallet and verifiable credentials provide inputs; DG resolves current authority
+for each exact action and context, verified immediately before effect.
+Use local unit tests and skip hosted CI. Track implementation and remaining
+production composition honestly; capability discovery never grants permission.
+
 # Status
+
+## Active — G3/G4 model-family execution boundary — 2026-09-15
+
+Issue: https://github.com/advatar/OpenBody/issues/18
+Branch: `feat/18-model-family-contract`; native consumers remain on
+Metabolog `feat/1129-openbody-twin-protocol` / issues #1129 and #1130.
+
+Qualified counterfactual execution is now implemented in the reference runtime.
+Contracts pin perturbation class/scope, numeric dose/timing and effect bounds;
+explicit counterfactual callables produce matched control/intervention forecasts.
+The runtime derives same-horizon effects and returns a ModelCounterfactual with
+a frozen-core scenario plus explicit no-intervention comparison. Sources,
+qualification, unknown uncertainty, context, receipts and time remain bound and
+revalidated. No action authority is emitted. Local tests: 328 total, including
+42 new counterfactual cases, plus core/clinical-reference conformance. Hosted CI
+for this addition remains pending; native physiological/clinical qualification
+and model/source integration are not established by these synthetic tests.
+
+Forecast implementation is now added: explicit positive-horizon registrations,
+a separately typed ModelForecast envelope around frozen-core BodyTrajectory,
+ordered bounded points, source/qualification rechecks, uncertainty propagation,
+full trajectory/request receipts and matching host/client verification. Current
+state registration remains horizon zero. Qualification expiry stays separate from
+predicted physiological time; no authority is extended to reach a future point.
+
+Local verification passes 286 reference tests (45 new forecast cases), frozen
+core and clinical-reference fixtures. Forecast tests execute only deterministic
+synthetic arithmetic. This does not qualify the native post-meal model, establish
+CGM/walking source lineage, provide a production DG authority or native qualified counterfactual integration. Hosted conformance `34916946185` passes at functional
+forecast head `5859a4672304df094160c8e2075615661444e10e`.
+
+Add a versioned model-family contract alongside the frozen core schema, then
+apply it to an actual model call in the reference host: current qualification
+and dependencies, admitted source resolution, context/population/question/horizon,
+required observations, uncertainty, output bounds and adaptation. Recheck source
+and qualification after execution so revocation cannot leave a reusable result.
+Out-of-envelope adaptation creates a DG review candidate, never activation.
+The reference executor supports state estimation, forecasts and counterfactuals;
+native runtime composition remains follow-up work, not implied completion.
+
+The host must receive a trusted qualification resolver and verified model
+registration from deployment configuration. Client-supplied descriptors,
+qualification labels and observation bodies cannot authorize execution. Synthetic
+tests prove software behavior only; a production DG authority adapter and governed
+physiological/clinical qualification evidence are still required.
+
+Reconciled branches after fetching/pruning main: `feat/16-admitted-observations`
+was merged and its remote branch deleted. Older executable/reference-host work is
+already represented on main; longitudinal query, adaptive state and cognitive
+health demo work remain separate and are not silently merged into this boundary.
+
+Implementation checkpoint: the additive contract, bounded current-state executor,
+explicit reference HTTP host and client are implemented. Exact artifact identity,
+host tenant/subject, current qualification context/evidence/dependency lease,
+source admission/recency/uncertainty, output bounds and adaptation are enforced.
+Source and qualification are checked again after the actual model call and on
+retained-result reads. Unknown measurement uncertainty stays unknown. Out-of-
+envelope adaptation produces an inert DG-review candidate without activation.
+
+Hosted conformance `34914384357` passes at functional source
+`6b0f7f496e9bfa3769b9fe83bd6b238f331e197b`, draft PR #19. The implementation
+remains on its feature branch while native model integration and trusted
+qualification resolution continue. It has not been merged or released.
+
+Local verification passes all 241 reference tests (69 new model-family cases),
+core protocol fixtures and clinical-reference conformance, plus diff checks.
+Tests execute a bounded synthetic arithmetic callable with a fixture authority;
+they do not establish physiological or clinical qualification. Production DG
+qualification, native model call-site wiring, multi-model composition and durable cross-repository revocation remain open.
+See `docs/MODEL_FAMILY_CONTRACTS.md` for exact trust and digest boundaries.
 
 ## Implemented — G2 admitted clinical observation bridge; joint release pending — 2026-09-14
 
@@ -74,3 +158,68 @@ OpenBody CI run `34902726178` and all 172 local reference tests pass. PR #17 is
 ready for merge after the tracking update's checks. G2's joint release remains
 open until ProvidEHR PR #519's remaining release/policy gates are resolved.
 G3/G4 consumption and model qualification are tracked by Metabolog#1129.
+
+
+G3/G4 next execution step (2026-09-15, issue #18): connect retained qualified
+model executions to the existing clinical assertion reference profile. An
+explicit host-configured publisher will require clinical-purpose qualification,
+current independently verified tenant/EHR subject binding, exact source and
+qualification rechecks, and known supported uncertainty before returning an
+admission packet. State inference and counterfactual simulation stay distinct.
+Software/research outputs cannot be relabeled as clinical; forecasts without a
+compatible standalone clinical object profile must abstain. Verify actual model
+call -> retained result -> publisher HTTP -> clinical-reference validation, with
+revocation, expiry, binding, source changes and type negatives. This is not a
+production DG/identity adapter or a native app integration claim.
+
+Counterfactual revision `42b4b37` passed hosted CI `34919089702` (328 local
+reference tests plus core and clinical-reference conformance).
+
+Clinical publication implemented (2026-09-15): explicit
+`QualifiedClinicalReferencePublisher` and opt-in reference/object GET routes
+consume actual retained state/counterfactual executions. Publication requires the
+original clinical-purpose lease and current exact independent subject binding;
+software/research purposes and unknown uncertainty abstain. Source, dependency,
+qualification and binding changes prevent return; identical reads retain a
+stable immutable reference ID. Counterfactual receipts still reference the
+complete control/intervention execution. No clinical action is submitted.
+
+Validation: 383 reference tests pass locally, including 55 new actual-call/HTTP
+publication and negative tests. Core and clinical-reference conformance pass.
+Hosted checks are pending the commit. Production DG/identity adapters, native
+callers, admission of these new packets through ProvidEHR, and downstream
+transitive use-time revalidation remain open.
+
+G3/G17 live integration follow-up (ProvidEHR#527, OpenBody#18): extend the
+actual worker/API verifier to execute the qualified counterfactual runtime and
+clinical publisher. Preserve the real worker observation's unknown uncertainty
+and prove it cannot become a clinically admitted result. A separate explicitly
+synthetic known-input observation will test positive runtime publication, actual
+ProvidEHR admission/replay/read and issuer revocation. That positive fixture is
+not evidence of qualified COSMIC measurement uncertainty. The gateway's fixed
+trusted issuer must re-resolve all current uses and leave historical records
+intact after denial.
+
+Live verifier update implemented: the actual qualified counterfactual runtime and
+authenticated publisher now serve the fixed issuer expected by ProvidEHR#527.
+The real worker observation retains unknown uncertainty and cannot be published
+clinically. A distinct synthetic known-input source exercises positive runtime
+publication, admission/replay/state/simulation/A2UI reads and current issuer
+qualification/dependency/identity/source revocation. All 384 local reference
+tests and conformance pass. A local actual Python publisher -> real Rust clinical
+admission crate + production HTTP resolver smoke passes, including revocation
+denial. Full worker/gateway integration is pending ProvidEHR's updated CI pin;
+this local smoke does not substitute for that gateway test or clinical evidence.
+
+Verified full live integration (2026-09-15): ProvidEHR `ed4df64` with OpenBody
+`38e8cb1` passed `34921269684`. The actual COSMIC worker -> admitted clinical
+source API -> qualified counterfactual runtime preserves unknown uncertainty and
+refuses clinical publication. A distinct synthetic known-input observation
+passes actual model/publisher -> enforced gateway admission/replay/read/A2UI;
+qualification, dependency, identity and source changes deny further use while
+historical records and original clinical compositions remain intact. This
+replaces the earlier fixture-only model-reference return with actual callable
+execution evidence. It still does not establish clinical efficacy, qualified
+COSMIC uncertainty, native callers, production DG/identity or full G17 graph
+propagation. The publisher/known-source authorities in this verifier are
+explicitly synthetic, test-only configuration.
