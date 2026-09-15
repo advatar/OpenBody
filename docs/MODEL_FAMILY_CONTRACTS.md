@@ -8,9 +8,10 @@ population, question, horizon, allowed adaptation, behavioral and uncertainty
 bounds, abstention rules, prohibited uses, dependencies and qualification evidence.
 A descriptor or a nonempty evidence reference does not establish qualification.
 
-The first reference executor supports **current state estimation only** (horizon
-zero). Forecasts, counterfactuals, multi-model composition, native model call sites
-and the production DG authority adapter remain unfinished G3/G4 work. Synthetic
+The reference executor supports **current state estimation** (horizon zero) and
+explicitly registered **forecasts** (positive horizons). Intervention
+counterfactuals, multi-model composition, native model call sites and the
+production DG authority adapter remain unfinished G3/G4 work. Synthetic
 arithmetic in the tests verifies software enforcement, not physiology or clinical
 utility. This profile neither qualifies existing Model Plane labels nor supplies
 a default model or permissive authority.
@@ -53,7 +54,8 @@ boundary.
    behavioral bounds and valid uncertainty. Model failures abstain.
 5. Re-resolve the source objects and qualification after execution. A change,
    revocation, expiry or unavailability prevents returning the result.
-6. Construct a separately typed core `BodyState`. Observations keep their source,
+6. Construct a separately typed core `BodyState`, or a `ModelForecast` envelope
+   containing a frozen-core `BodyTrajectory`. Observations keep their source,
    normalization and unknown uncertainty in evidence provenance; no source value
    is rewritten. Unknown input uncertainty either causes abstention or propagates
    as unknown in the output, according to the qualified contract.
@@ -86,7 +88,7 @@ routes.
 | Discover profile/capabilities | `GET /v1/capabilities` |
 | Read exact schema | `GET /v1/model-families/profile` |
 | Discover registered contracts | `GET /v1/model-families` |
-| Execute current state estimation | `POST /v1/model-executions` |
+| Execute current state estimation or forecast | `POST /v1/model-executions` |
 | Revalidate retained result | `GET /v1/model-executions/{id}` |
 | Create inert adaptation candidate | `POST /v1/model-adaptation-candidates` |
 
@@ -101,3 +103,41 @@ current qualification. An out-of-envelope request is refused. Proposal returns
 `$defs.AdaptationCandidate`, with `activated: false` and `dg_review_required`.
 It neither mutates the registered model nor publishes a DG decision. Submission,
 review, activation and native adaptation storage remain G4/G7 follow-up work.
+
+## Forecast execution and time semantics
+
+A `ForecastModelRegistration` binds verified artifact bytes to a callable receiving
+admitted inputs, bounded adaptation parameters and the exact qualified horizon.
+Its contract permits only positive horizons; an ordinary `ModelRegistration`
+permits only `[0]`. The same execution/read routes return `$defs.ForecastResult`
+with kind `ModelForecast`. The client rejects a future forecast returned as a
+current-state result. No intervention or perturbation can be smuggled into this
+request: counterfactual simulation needs its own contract and authority boundary.
+
+The callable returns `ForecastEvaluation`: 2–512 ordered `ForecastPoint` values,
+each with a `ModelEvaluation`, aggregate uncertainty and bounded assumptions.
+Offsets begin at zero and end at the exact requested horizon. Every point must
+satisfy the metric, uncertainty and out-of-distribution rules. The origin is
+captured before execution; completion after the final prediction time abstains.
+Accumulated serialized states are bounded to 8 MiB before further points are built,
+with the existing overall execution/retention bounds still applied.
+
+The output uses `trajectory_kind: predicted`. Source uncertainty propagates to
+each point; unknown point uncertainty also prevents a quantified aggregate. Each
+point keeps its source versions and qualification revision. The aggregate receipt
+binds origin, horizon, exact request digest, qualification expiry, ordered complete
+states, uncertainty and assumptions. Clients check those bindings, consistent
+source/qualification across points, bounds, time order and exact execution ID.
+
+`qualification_valid_until` describes permission to execute/read, which may end
+before a predicted future time. It is carried separately on the forecast envelope.
+Nested states omit the core `valid_until` field, whose meaning concerns the state's
+physiological time. The runtime never extends qualification to reach a forecast
+horizon. Reusing a retained forecast still requires a fresh source and qualification
+check; extracting a nested state does not confer independent authority.
+
+The schema's trajectory reference resolves against the frozen core schema supplied
+locally to the validator; verification requires no network schema retrieval.
+Forecast tests execute deterministic synthetic arithmetic, not a physiological
+forecast or clinical qualification. Native source integration and governed
+counterfactual execution remain required for the post-meal family.

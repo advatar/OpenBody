@@ -505,6 +505,70 @@
           "const": false
         }
       }
+    },
+    "ForecastResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "schema_version",
+        "kind",
+        "id",
+        "subject",
+        "generated_at",
+        "forecast_origin",
+        "horizon_seconds",
+        "contract_digest",
+        "trajectory",
+        "request_digest",
+        "qualification_valid_until"
+      ],
+      "properties": {
+        "profile": {
+          "const": "openbody.model-family-contract.v1"
+        },
+        "schema_version": {
+          "const": "0.1"
+        },
+        "kind": {
+          "const": "ModelForecast"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "forecast_origin": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "horizon_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "contract_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "trajectory": {
+          "$ref": "https://openbody.dev/schemas/0.1/openbody.schema.json#/$defs/BodyTrajectory"
+        },
+        "request_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "qualification_valid_until": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     }
   }
 }

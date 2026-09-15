@@ -1,4 +1,4 @@
-"""Qualified state-estimation boundary; authority and model code are host configuration.
+"""Qualified state-estimation and forecast boundary; authority and model code are host configuration.
 
 This module supplies enforcement, not qualification evidence. No permissive
 authority implementation is shipped. The frozen core protocol stays unchanged.
@@ -111,6 +111,24 @@ class ModelRegistration:
     evaluate: Callable[[dict[str, list[dict[str, Any]]], dict[str, float]], ModelEvaluation]
 
 
+@dataclass(frozen=True)
+class ForecastPoint:
+    offset_seconds: int
+    evaluation: ModelEvaluation
+
+
+@dataclass(frozen=True)
+class ForecastEvaluation:
+    points: tuple[ForecastPoint, ...]
+    uncertainty: dict[str, Any]
+    assumptions: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ForecastModelRegistration(ModelRegistration):
+    evaluate: Callable[[dict[str, list[dict[str, Any]]], dict[str, float], int], ForecastEvaluation]
+
+
 class QualifiedModelRuntime:
     def __init__(self, subject: str, tenant_id: str, source: ObservationSource, authority: QualificationAuthority,
                  models: list[ModelRegistration], *, clock: Callable[[], datetime] | None = None):
@@ -125,11 +143,15 @@ class QualifiedModelRuntime:
         for registration in models:
             contract = deepcopy(registration.contract)
             validate_contract(contract)
-            require(contract["prediction_horizon_seconds"] == [0], "invalid_configuration", "This executor supports current state estimation only")
+            require(type(registration) in (ModelRegistration, ForecastModelRegistration), "invalid_configuration", "Unsupported executable registration")
+            horizons = contract["prediction_horizon_seconds"]
+            require(all(type(value) is int for value in horizons), "invalid_configuration", "Horizons must be integer seconds")
+            require(all(value > 0 for value in horizons) if isinstance(registration, ForecastModelRegistration) else horizons == [0],
+                    "invalid_configuration", "Registration kind differs from declared prediction horizons")
             identity = contract["model"]
             require(identity["id"] not in self._models, "invalid_configuration", "Duplicate model registration")
             require("sha256:" + hashlib.sha256(registration.artifact).hexdigest() == identity["artifact_digest"], "invalid_configuration", "Loaded artifact differs from qualified model identity")
-            self._models[identity["id"]] = ModelRegistration(contract, bytes(registration.artifact), registration.evaluate)
+            self._models[identity["id"]] = type(registration)(contract, bytes(registration.artifact), registration.evaluate)
 
     def contracts(self) -> list[dict[str, Any]]:
         return [deepcopy(row.contract) for row in self._models.values()]
@@ -216,27 +238,21 @@ class QualifiedModelRuntime:
         lease = self._lease(model, request)
         inputs = self._observations(model, request)
         try:
-            evaluation = deepcopy(model.evaluate(deepcopy(inputs), deepcopy(parameters)))
-            require(isinstance(evaluation, ModelEvaluation), "invalid_output", "Model returned an unsupported result type")
-            bounds = {row["name"]: row for row in model.contract["behavioral_envelope"]}
-            require(set(evaluation.metrics) == set(bounds), "invalid_output", "Model output does not match the qualified metrics")
-            require(all(finite(value) and bounds[name]["minimum"] <= value <= bounds[name]["maximum"] for name, value in evaluation.metrics.items()), "invalid_output", "Model output exceeds its behavioral envelope")
-            validate_definition("Uncertainty", evaluation.uncertainty)
-            require(evaluation.uncertainty["out_of_distribution"] is not True, "out_of_distribution", "Model abstained outside its distribution")
-            require(type(evaluation.uncertainty["out_of_distribution"]) is bool or evaluation.uncertainty["out_of_distribution"] == "unknown", "invalid_output", "Invalid model distribution verdict")
-            # Validate finite values even where JSON Schema's Python comparison
-            # semantics would otherwise accept NaN, or booleans in numeric enums.
-            require(all(value is None or finite(value) for key, value in evaluation.uncertainty.items() if key in ("epistemic", "aleatoric", "coverage")), "invalid_output", "Invalid model uncertainty")
-            interval = evaluation.uncertainty.get("interval")
-            if interval is not None:
-                require(all(finite(value) for value in interval.values()) and interval["lower"] <= interval["point"] <= interval["upper"], "invalid_output", "Invalid model uncertainty interval")
+            if isinstance(model, ForecastModelRegistration):
+                from .model_forecast import build_forecast
+                origin = self._clock()
+                evaluation = deepcopy(model.evaluate(deepcopy(inputs), deepcopy(parameters), request["horizon_seconds"]))
+                state = build_forecast(self, model, request, inputs, parameters, evaluation, lease, origin)
+            else:
+                evaluation = deepcopy(model.evaluate(deepcopy(inputs), deepcopy(parameters)))
+                self._validate_evaluation(model, evaluation)
+                state = self._state(model, request, inputs, parameters, evaluation, lease)
         except ModelExecutionError:
             raise
         except Exception as error:
             raise ModelExecutionError("invalid_output", "Model execution did not produce a valid bounded result") from error
         require(self._observations(model, request) == inputs, "source_changed", "Source evidence changed during model execution")
         require(self._lease(model, request) == lease, "unqualified", "Qualification changed during model execution")
-        state = self._state(model, request, inputs, parameters, evaluation, lease)
         retained_size = len(json.dumps([request, inputs, state], allow_nan=False).encode())
         require(retained_size <= 16 * 1024 * 1024, "invalid_output", "Execution result exceeds retention bound")
         with self._lock:
@@ -246,6 +262,22 @@ class QualifiedModelRuntime:
                 _, evicted = self._results.popitem(last=False)
                 self._retained_bytes -= evicted[-1]
         return state
+
+    @staticmethod
+    def _validate_evaluation(model: ModelRegistration, evaluation: ModelEvaluation) -> None:
+        require(isinstance(evaluation, ModelEvaluation), "invalid_output", "Model returned an unsupported result type")
+        bounds = {row["name"]: row for row in model.contract["behavioral_envelope"]}
+        require(set(evaluation.metrics) == set(bounds), "invalid_output", "Model output does not match the qualified metrics")
+        require(all(finite(value) and bounds[name]["minimum"] <= value <= bounds[name]["maximum"] for name, value in evaluation.metrics.items()), "invalid_output", "Model output exceeds its behavioral envelope")
+        validate_definition("Uncertainty", evaluation.uncertainty)
+        require(evaluation.uncertainty["out_of_distribution"] is not True, "out_of_distribution", "Model abstained outside its distribution")
+        require(type(evaluation.uncertainty["out_of_distribution"]) is bool or evaluation.uncertainty["out_of_distribution"] == "unknown", "invalid_output", "Invalid model distribution verdict")
+        # Validate finite values even where JSON Schema's Python comparison
+        # semantics would otherwise accept NaN, or booleans in numeric enums.
+        require(all(value is None or finite(value) for key, value in evaluation.uncertainty.items() if key in ("epistemic", "aleatoric", "coverage")), "invalid_output", "Invalid model uncertainty")
+        interval = evaluation.uncertainty.get("interval")
+        if interval is not None:
+            require(all(finite(value) for value in interval.values()) and interval["lower"] <= interval["point"] <= interval["upper"], "invalid_output", "Invalid model uncertainty interval")
 
     def read(self, execution_id: str) -> dict[str, Any]:
         with self._lock:
@@ -268,8 +300,8 @@ class QualifiedModelRuntime:
                 "requested_parameters": deepcopy(request["adaptation"]), "status": "dg_review_required", "activated": False}
 
     def _state(self, model: ModelRegistration, request: dict[str, Any], inputs: dict[str, Any], parameters: dict[str, float],
-               evaluation: ModelEvaluation, lease: QualificationLease) -> dict[str, Any]:
-        now = self._clock().isoformat().replace("+00:00", "Z")
+               evaluation: ModelEvaluation, lease: QualificationLease, *, state_time: str | None = None, generated_at: str | None = None) -> dict[str, Any]:
+        now = generated_at or self._clock().isoformat().replace("+00:00", "Z")
         identity = model.contract["model"]
         state_id = "model-execution:" + str(uuid4())
         uncertainty = deepcopy(evaluation.uncertainty)
@@ -289,10 +321,15 @@ class QualifiedModelRuntime:
                                            "contract_digest": canonical_digest(model.contract), "qualification_revision": lease.revision}}
                     for row in sorted(unique.values(), key=lambda row: row["id"])]
         state = {"schema_version": "0.1", "kind": "BodyState", "id": state_id, "subject": self.subject, "generated_at": now,
-                 "state_time": now, "valid_until": lease.valid_until.isoformat().replace("+00:00", "Z"),
+                 "state_time": state_time or now, "valid_until": lease.valid_until.isoformat().replace("+00:00", "Z"),
                  "subsystems": [{"coordinate": identity["coordinate"], "organizational_scale": REGISTRY[identity["coordinate"]],
                                  "state_vector": deepcopy(evaluation.metrics), "trend": "indeterminate", "uncertainty": uncertainty,
                                  "evidence": evidence, "model_receipt": receipt}],
                  "couplings": [], "evidence": evidence, "uncertainty": uncertainty, "model_receipts": [receipt]}
+        if state_time is not None:
+            # Core state validity is physiological time, whereas the qualification
+            # lease expires in execution/use time. The forecast envelope carries
+            # that expiry separately; never stretch it to the prediction horizon.
+            state.pop("valid_until")
         semantic_validate(state)
         return state

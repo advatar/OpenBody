@@ -47,17 +47,28 @@ class OpenBodyClient:
             raise ValueError("requested model differs from pinned contract")
         response = self._client.post("/v1/model-executions", json=request)
         response.raise_for_status()
-        return self._checked_model_state(response.json(), contract, request["subject"])
+        value = self._checked_model_result(response.json(), contract, request["subject"], request=request)
+        return value
 
     def model_execution(self, execution_id: str, *, subject: str, contract: dict[str, Any]) -> dict[str, Any]:
         from .model_family import validate_contract
         validate_contract(contract)
         response = self._client.get(f"/v1/model-executions/{quote(execution_id, safe='')}")
         response.raise_for_status()
-        value = self._checked_model_state(response.json(), contract, subject)
-        if value["kind"] == "BodyState" and value["id"] != execution_id:
+        value = self._checked_model_result(response.json(), contract, subject)
+        if value["kind"] != "Abstention" and value["id"] != execution_id:
             raise ValueError("model result identity differs from requested execution")
         return value
+
+    @staticmethod
+    def _checked_model_result(value, contract, subject, *, request=None):
+        if value.get("kind") == "ModelForecast":
+            from .model_forecast import validate_forecast
+            return validate_forecast(value, contract, subject, request=request)
+        if value.get("kind") != "Abstention" and (contract["prediction_horizon_seconds"] != [0] or
+                                                 request is not None and request["horizon_seconds"] != 0):
+            raise ValueError("a nonzero forecast cannot be returned as current state")
+        return OpenBodyClient._checked_model_state(value, contract, subject)
 
     @staticmethod
     def _checked_model_state(value: dict[str, Any], contract: dict[str, Any], subject: str) -> dict[str, Any]:

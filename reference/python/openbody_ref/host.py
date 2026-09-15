@@ -33,7 +33,7 @@ def create_model_execution_host(runtime) -> FastAPI:
     @app.get("/v1/capabilities")
     def execution_capabilities():
         return {"protocol": "openbody", "versions": ["0.1"], "contract": contract_identity(),
-                "capabilities": ["model-families.discover", "model-executions.execute", "model-executions.read", "model-adaptations.propose"],
+                "capabilities": ["model-families.discover", "model-executions.execute", "model-executions.read", "model-forecasts.execute", "model-adaptations.propose"],
                 "profiles": [{"id": PROFILE, "schema_digest": canonical_digest(SCHEMA), "schema_url": "/v1/model-families/profile"}]}
 
     @app.get("/v1/model-families/profile")
