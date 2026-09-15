@@ -222,7 +222,7 @@ An accepted `ObservedOutcome` MUST bind to the represented subject and to a know
 Abstention is a successful protocol response, not a transport error. Reasons include insufficient/stale evidence, unsupported scope/perturbation, out-of-distribution input, insufficient validation, authorization required, clinician review required, model unavailable, and invalid input.
 
 ### AuthorityReference
-An opaque reference to external authorization such as OAuth/OIDC, capabilities, Mandamus, or future systems. OpenBody objects MUST NOT embed reusable credentials or secrets.
+An opaque reference to external authorization such as OAuth/OIDC, capabilities, DG, or future systems. OpenBody objects MUST NOT embed reusable credentials or secrets.
 
 A host that advertises no enforced authorization scheme MUST fail closed when any authority reference is non-null, including both transport-level request authority and authority embedded in a perturbation. An opaque reference is never self-authenticating.
 
@@ -391,7 +391,7 @@ These layers MAY be deployed independently.
 7. Clinical-action profile and regulator-facing validation levels.
 8. Streaming state updates for ECG/EEG/CGM and molecular sensors.
 9. FHIR/DICOM/GA4GH implementation guides.
-10. MCP/A2A agent and Mandamus authority profiles.
+10. MCP/A2A agent and DG authority profiles.
 
 ## 21. Design doctrine
 

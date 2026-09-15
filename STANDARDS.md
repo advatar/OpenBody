@@ -20,7 +20,7 @@ Use GA4GH standards for genomic data representation, genomic knowledge, discover
 
 ## Authorization
 
-OpenBody keeps authority external. OAuth/OIDC, capability systems, Mandamus, or future authorization mechanisms may provide the grant referenced by `AuthorityReference`. Installation/discovery of a model is never itself a grant.
+OpenBody keeps authority external. OAuth/OIDC, capability systems, DG, or future authorization mechanisms may provide the grant referenced by `AuthorityReference`. Installation/discovery of a model is never itself a grant.
 
 ## Principle
 

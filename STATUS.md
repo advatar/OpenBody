@@ -1,3 +1,17 @@
+Tracking current DG authority migration: https://github.com/advatar/OpenBody/issues/20
+
+Documentation cleanup is complete on this feature branch: current DG resolution,
+EUWallet and credential inputs replace the retired gateway terminology.
+Validation: scoped reference scan and git diff --check pass; no runtime change.
+
+## Active — current DG authority architecture (2026-09-15)
+
+Remove the superseded external capability gateway throughout this repository.
+EUWallet and verifiable credentials provide inputs; DG resolves current authority
+for each exact action and context, verified immediately before effect.
+Use local unit tests and skip hosted CI. Track implementation and remaining
+production composition honestly; capability discovery never grants permission.
+
 # Status
 
 ## Active — G3/G4 model-family execution boundary — 2026-09-15

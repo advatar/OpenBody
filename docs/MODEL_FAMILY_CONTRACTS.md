@@ -37,7 +37,7 @@ Purpose is a machine code (`software_test`, `research`, or
 `clinical_decision_support`), not an unrestricted prompt. Each purpose requires
 its corresponding evidence class in the contract and matching current authority.
 A software qualification cannot satisfy clinical use. A clinical approval does
-not by itself authorize an intervention; that remains a separate DG/Mandamus
+not by itself authorize an intervention; that remains a separate DG
 boundary.
 
 ## Execution and retained results
@@ -157,7 +157,7 @@ bounded parameters. The host derives its class, scope and start time from the
 qualified contract and clock. Supplied authority references, alternative scopes,
 classes, timing or extra parameters are refused before the model runs. This
 qualification permits simulation only and grants no authority to carry out an
-intervention; DG/Mandamus still govern those effects separately.
+intervention; DG still govern those effects separately.
 
 The actual callable returns `CounterfactualEvaluation`: a control forecast,
 intervention forecast, uncertainty for each declared effect, overall uncertainty
