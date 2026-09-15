@@ -1,0 +1,103 @@
+# Model-family execution profile v1
+
+Issue #18 implements an additive `openbody.model-family-contract.v1` profile
+alongside the frozen OpenBody core 0.1 schema. Its schema is
+`schemas/model-family-contract.schema.json`. Required fields cover exact model
+artifact identity and coordinate, context of use, required admitted observations,
+population, question, horizon, allowed adaptation, behavioral and uncertainty
+bounds, abstention rules, prohibited uses, dependencies and qualification evidence.
+A descriptor or a nonempty evidence reference does not establish qualification.
+
+The first reference executor supports **current state estimation only** (horizon
+zero). Forecasts, counterfactuals, multi-model composition, native model call sites
+and the production DG authority adapter remain unfinished G3/G4 work. Synthetic
+arithmetic in the tests verifies software enforcement, not physiology or clinical
+utility. This profile neither qualifies existing Model Plane labels nor supplies
+a default model or permissive authority.
+
+## Trusted inputs and qualification
+
+`QualifiedModelRuntime` requires an explicit hosted subject and tenant,
+`ObservationSource`, `QualificationAuthority`, and registered executable models.
+The loader supplies the exact artifact bytes and callable; their artifact digest
+must match the contract. The loader is trusted to execute those bytes with only
+the declared dependencies. It is not a sandbox for arbitrary model code.
+
+`QualificationAuthority.resolve` must obtain a current verified decision from
+the host's trusted governance registry. Its lease binds the exact contract and
+artifact, tenant/subject, purpose, population, question, horizon, evidence and
+dependency digests, revision and validity window. The adapter must verify the
+underlying qualification evidence, subject/population attestations, approval
+authority and transitive dependency status. No such production DG adapter is
+shipped in this slice. The fixed authority in tests is only a synthetic fixture.
+There is no HTTP field for supplying a qualification lease or executable model.
+
+Purpose is a machine code (`software_test`, `research`, or
+`clinical_decision_support`), not an unrestricted prompt. Each purpose requires
+its corresponding evidence class in the contract and matching current authority.
+A software qualification cannot satisfy clinical use. A clinical approval does
+not by itself authorize an intervention; that remains a separate DG/Mandamus
+boundary.
+
+## Execution and retained results
+
+1. Validate the contract, request and artifact identity. Check subject, tenant,
+   allowed use, population, question, horizon and adaptation bounds.
+2. Resolve current qualification/dependency evidence from the trusted authority.
+3. Resolve each exact clinical locator through the configured source. Reject
+   source mismatch, cross-tenant/patient records, duplicate compositions, missing
+   inputs, unsupported canonical code/unit/value, stale/future timestamps and
+   source out-of-distribution status. Only required inputs reach the model.
+4. Execute the registered callable with copies of the admitted facts and bounded
+   parameters. Require exactly the declared metrics, finite numeric values,
+   behavioral bounds and valid uncertainty. Model failures abstain.
+5. Re-resolve the source objects and qualification after execution. A change,
+   revocation, expiry or unavailability prevents returning the result.
+6. Construct a separately typed core `BodyState`. Observations keep their source,
+   normalization and unknown uncertainty in evidence provenance; no source value
+   is rewritten. Unknown input uncertainty either causes abstention or propagates
+   as unknown in the output, according to the qualified contract.
+
+The model receipt's `input_digest` covers the request, selected full observations
+and effective parameters. `output_digest` covers the emitted state vector and
+uncertainty. `environment_digest` binds the complete model-family contract,
+including artifact/dependency/evidence identities. `validation_ref` identifies the
+current authoritative qualification decision; source provenance retains its
+revision. None of these digests substitutes for authentication or authority.
+
+Retained results are in-memory reference state, bounded to 512 executions and
+32 MiB of serialized retained content. Each result read repeats source and lease
+checks; possession of an old result ID is insufficient authority. Responses use
+`Cache-Control: no-store`. Consumers must revalidate before future use. Durable
+cross-repository revocation, latest-version reconciliation and downstream action
+invalidation remain part of G17; an immutable historical source endpoint alone
+cannot establish that a newer record has not revoked its use.
+
+## Reference HTTP surface
+
+`create_model_execution_host(runtime)` mounts only the explicit execution
+profile. It does not enable fixture replay, public patient state or default
+qualification. The embedding host must provide authenticated transport and the
+trusted configured resolvers. Public discovery startup does not mount these
+routes.
+
+| Operation | Route |
+|---|---|
+| Discover profile/capabilities | `GET /v1/capabilities` |
+| Read exact schema | `GET /v1/model-families/profile` |
+| Discover registered contracts | `GET /v1/model-families` |
+| Execute current state estimation | `POST /v1/model-executions` |
+| Revalidate retained result | `GET /v1/model-executions/{id}` |
+| Create inert adaptation candidate | `POST /v1/model-adaptation-candidates` |
+
+Execution requests follow `$defs.ExecutionRequest`. Source locators, not caller
+observation bodies, select input evidence. Unsupported requests and failed
+execution return core `Abstention`; `OpenBody-Execution-Reason` carries a bounded
+operational reason code. The client verifies returned type, subject, producer,
+contract, output scope, bounds, digest and retained execution identity.
+
+An adaptation within the declared parameter envelope can execute under the
+current qualification. An out-of-envelope request is refused. Proposal returns
+`$defs.AdaptationCandidate`, with `activated: false` and `dg_review_required`.
+It neither mutates the registered model nor publishes a DG decision. Submission,
+review, activation and native adaptation storage remain G4/G7 follow-up work.

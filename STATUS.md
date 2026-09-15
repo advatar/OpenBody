@@ -1,5 +1,47 @@
 # Status
 
+## Active — G3/G4 model-family execution boundary — 2026-09-15
+
+Issue: https://github.com/advatar/OpenBody/issues/18
+Branch: `feat/18-model-family-contract`; native consumers remain on
+Metabolog `feat/1129-openbody-twin-protocol` / issues #1129 and #1130.
+
+Add a versioned model-family contract alongside the frozen core schema, then
+apply it to an actual model call in the reference host: current qualification
+and dependencies, admitted source resolution, context/population/question/horizon,
+required observations, uncertainty, output bounds and adaptation. Recheck source
+and qualification after execution so revocation cannot leave a reusable result.
+Out-of-envelope adaptation creates a DG review candidate, never activation.
+The first bounded executor supports state estimation; other model families and
+native runtime composition remain follow-up work, not implied completion.
+
+The host must receive a trusted qualification resolver and verified model
+registration from deployment configuration. Client-supplied descriptors,
+qualification labels and observation bodies cannot authorize execution. Synthetic
+tests prove software behavior only; a production DG authority adapter and governed
+physiological/clinical qualification evidence are still required.
+
+Reconciled branches after fetching/pruning main: `feat/16-admitted-observations`
+was merged and its remote branch deleted. Older executable/reference-host work is
+already represented on main; longitudinal query, adaptive state and cognitive
+health demo work remain separate and are not silently merged into this boundary.
+
+Implementation checkpoint: the additive contract, bounded current-state executor,
+explicit reference HTTP host and client are implemented. Exact artifact identity,
+host tenant/subject, current qualification context/evidence/dependency lease,
+source admission/recency/uncertainty, output bounds and adaptation are enforced.
+Source and qualification are checked again after the actual model call and on
+retained-result reads. Unknown measurement uncertainty stays unknown. Out-of-
+envelope adaptation produces an inert DG-review candidate without activation.
+
+Local verification passes all 241 reference tests (69 new model-family cases),
+core protocol fixtures and clinical-reference conformance, plus diff checks.
+Tests execute a bounded synthetic arithmetic callable with a fixture authority;
+they do not establish physiological or clinical qualification. Production DG
+qualification, native model call-site wiring, forecast/counterfactual execution,
+multi-model composition and durable cross-repository revocation remain open.
+See `docs/MODEL_FAMILY_CONTRACTS.md` for exact trust and digest boundaries.
+
 ## Implemented — G2 admitted clinical observation bridge; joint release pending — 2026-09-14
 
 Issue: https://github.com/advatar/OpenBody/issues/16

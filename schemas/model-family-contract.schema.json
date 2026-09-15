@@ -1,0 +1,510 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/model-family-contract.v1.json",
+  "title": "OpenBody model-family execution contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile",
+    "schema_version",
+    "kind",
+    "id",
+    "model",
+    "context_of_use",
+    "required_observations",
+    "supported_population",
+    "supported_question",
+    "prediction_horizon_seconds",
+    "allowed_adaptation",
+    "behavioral_envelope",
+    "uncertainty_contract",
+    "abstention_rules",
+    "prohibited_uses",
+    "dependencies",
+    "qualification_evidence"
+  ],
+  "properties": {
+    "profile": {
+      "const": "openbody.model-family-contract.v1"
+    },
+    "schema_version": {
+      "const": "0.1"
+    },
+    "kind": {
+      "const": "ModelFamilyContract"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "family",
+        "artifact_digest",
+        "coordinate"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "family": {
+          "enum": [
+            "statistical",
+            "machine_learning",
+            "foundation",
+            "causal",
+            "mechanistic",
+            "pkpd",
+            "physiological",
+            "cellular",
+            "hybrid"
+          ]
+        },
+        "artifact_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "coordinate": {
+          "type": "string",
+          "pattern": "^ob://[a-z0-9._-]+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+(?:\\?[A-Za-z0-9._~!$&'()*+,;=:@%/?-]+)?$"
+        }
+      }
+    },
+    "context_of_use": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "software_test",
+          "research",
+          "clinical_decision_support"
+        ]
+      }
+    },
+    "required_observations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "code_system",
+          "code",
+          "unit",
+          "minimum_count",
+          "maximum_age_seconds",
+          "minimum_value",
+          "maximum_value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "code_system": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minimum_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "maximum_age_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 315576000
+          },
+          "minimum_value": {
+            "type": "number"
+          },
+          "maximum_value": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "supported_population": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+      }
+    },
+    "supported_question": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+      }
+    },
+    "prediction_horizon_seconds": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 31536000
+      }
+    },
+    "allowed_adaptation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parameters",
+        "outside_envelope"
+      ],
+      "properties": {
+        "parameters": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "minimum",
+              "maximum",
+              "default"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+              },
+              "minimum": {
+                "type": "number"
+              },
+              "maximum": {
+                "type": "number"
+              },
+              "default": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "outside_envelope": {
+          "const": "dg_review_required"
+        }
+      }
+    },
+    "behavioral_envelope": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "unit",
+          "minimum",
+          "maximum"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "minimum": {
+            "type": "number"
+          },
+          "maximum": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "uncertainty_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unknown_input",
+        "out_of_distribution"
+      ],
+      "properties": {
+        "unknown_input": {
+          "enum": [
+            "abstain",
+            "propagate_unknown"
+          ]
+        },
+        "out_of_distribution": {
+          "const": "abstain"
+        }
+      }
+    },
+    "abstention_rules": {
+      "const": [
+        "unqualified",
+        "unsupported_context",
+        "unsupported_population",
+        "unsupported_question",
+        "unsupported_horizon",
+        "missing_evidence",
+        "stale_evidence",
+        "out_of_distribution",
+        "dependency_unavailable",
+        "invalid_output"
+      ]
+    },
+    "prohibited_uses": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ref",
+          "digest"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "qualification_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ref",
+          "digest",
+          "kind"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "kind": {
+            "enum": [
+              "software",
+              "research",
+              "physiological",
+              "clinical"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ExecutionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "subject",
+        "purpose",
+        "population",
+        "question",
+        "horizon_seconds",
+        "observations",
+        "adaptation"
+      ],
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "population": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "question": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "horizon_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tenant_id",
+              "ehr_id",
+              "composition_uid",
+              "version_uid"
+            ],
+            "properties": {
+              "tenant_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "ehr_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "composition_uid": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "version_uid": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 800
+              }
+            }
+          }
+        },
+        "adaptation": {
+          "type": "object",
+          "maxProperties": 64,
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "AdaptationCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "schema_version",
+        "kind",
+        "id",
+        "subject",
+        "model_id",
+        "contract_digest",
+        "requested_parameters",
+        "status",
+        "activated"
+      ],
+      "properties": {
+        "profile": {
+          "const": "openbody.model-family-contract.v1"
+        },
+        "schema_version": {
+          "const": "0.1"
+        },
+        "kind": {
+          "const": "ModelAdaptationCandidate"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^candidate:[a-z0-9-]+$"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "model_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        },
+        "contract_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "requested_parameters": {
+          "type": "object",
+          "maxProperties": 64,
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "status": {
+          "const": "dg_review_required"
+        },
+        "activated": {
+          "const": false
+        }
+      }
+    }
+  }
+}
