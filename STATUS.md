@@ -17,7 +17,8 @@ Local verification passes 286 reference tests (45 new forecast cases), frozen
 core and clinical-reference fixtures. Forecast tests execute only deterministic
 synthetic arithmetic. This does not qualify the native post-meal model, establish
 CGM/walking source lineage, implement intervention counterfactuals or provide a
-production DG authority. Hosted CI for this addition remains pending.
+production DG authority. Hosted conformance `34916946185` passes at functional
+forecast head `5859a4672304df094160c8e2075615661444e10e`.
 
 Add a versioned model-family contract alongside the frozen core schema, then
 apply it to an actual model call in the reference host: current qualification
