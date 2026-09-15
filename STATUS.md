@@ -34,6 +34,11 @@ Source and qualification are checked again after the actual model call and on
 retained-result reads. Unknown measurement uncertainty stays unknown. Out-of-
 envelope adaptation produces an inert DG-review candidate without activation.
 
+Hosted conformance `34914384357` passes at functional source
+`6b0f7f496e9bfa3769b9fe83bd6b238f331e197b`, draft PR #19. The implementation
+remains on its feature branch while native model integration and trusted
+qualification resolution continue. It has not been merged or released.
+
 Local verification passes all 241 reference tests (69 new model-family cases),
 core protocol fixtures and clinical-reference conformance, plus diff checks.
 Tests execute a bounded synthetic arithmetic callable with a fixture authority;
