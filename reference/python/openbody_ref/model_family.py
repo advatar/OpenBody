@@ -326,6 +326,10 @@ class QualifiedModelRuntime:
             require(all(finite(value) for value in interval.values()) and interval["lower"] <= interval["point"] <= interval["upper"], "invalid_output", "Invalid model uncertainty interval")
 
     def read(self, execution_id: str) -> dict[str, Any]:
+        return self._validated_result(execution_id)[3]
+
+    def _validated_result(self, execution_id: str) -> tuple[Any, ...]:
+        """Internal publication boundary: detached result and its current authority."""
         with self._lock:
             retained = deepcopy(self._results.get(execution_id))
         require(retained is not None, "execution_unavailable", "Execution is not retained")
@@ -333,7 +337,7 @@ class QualifiedModelRuntime:
         model, _ = self._request(request)
         require(self._observations(model, request) == inputs, "source_changed", "Execution source evidence is no longer current")
         require(self._lease(model, request) == lease, "unqualified", "Execution qualification is no longer current")
-        return deepcopy(state)
+        return retained
 
     def adaptation_candidate(self, request: dict[str, Any]) -> dict[str, Any]:
         # An inert proposal, never an update of the registered contract or model.

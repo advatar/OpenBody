@@ -18,7 +18,7 @@ DEFAULT_FIXTURE = ROOT / "examples" / "post-meal-walk.scenario.json"
 ABSTENTION_FIXTURE = ROOT / "examples" / "insufficient-evidence.abstention.json"
 
 
-def create_model_execution_host(runtime) -> FastAPI:
+def create_model_execution_host(runtime, *, clinical_publisher=None) -> FastAPI:
     """Explicit qualified-execution host; no default models, grants or fixture replay.
 
     Authentication and the trusted source/qualification resolvers belong to the
@@ -27,13 +27,17 @@ def create_model_execution_host(runtime) -> FastAPI:
     from .model_family import ModelExecutionError, PROFILE, SCHEMA, QualifiedModelRuntime
     if not isinstance(runtime, QualifiedModelRuntime):
         raise ValueError("An explicitly configured qualified model runtime is required")
+    if clinical_publisher is not None:
+        from .model_clinical_reference import QualifiedClinicalReferencePublisher
+        if not isinstance(clinical_publisher, QualifiedClinicalReferencePublisher) or clinical_publisher.runtime is not runtime:
+            raise ValueError("Clinical publisher must bind this exact qualified runtime")
     app = FastAPI(title="OpenBody Qualified Model Reference Host", version="0.1.0")
 
     @app.get("/.well-known/openbody")
     @app.get("/v1/capabilities")
     def execution_capabilities():
         return {"protocol": "openbody", "versions": ["0.1"], "contract": contract_identity(),
-                "capabilities": ["model-families.discover", "model-executions.execute", "model-executions.read", "model-forecasts.execute", "model-counterfactuals.execute", "model-adaptations.propose"],
+                "capabilities": ["model-families.discover", "model-executions.execute", "model-executions.read", "model-forecasts.execute", "model-counterfactuals.execute", "model-adaptations.propose"] + (["model-clinical-references.read"] if clinical_publisher is not None else []),
                 "profiles": [{"id": PROFILE, "schema_digest": canonical_digest(SCHEMA), "schema_url": "/v1/model-families/profile"}]}
 
     @app.get("/v1/model-families/profile")
@@ -66,6 +70,15 @@ def create_model_execution_host(runtime) -> FastAPI:
     @app.get("/v1/model-executions/{execution_id}")
     def read_execution(execution_id: str):
         return checked(lambda: runtime.read(execution_id))
+
+    if clinical_publisher is not None:
+        @app.get("/v1/model-executions/{execution_id}/clinical-reference")
+        def read_clinical_reference(execution_id: str):
+            return checked(lambda: clinical_publisher.publish(execution_id))
+
+        @app.get("/v1/model-executions/{execution_id}/clinical-object")
+        def read_clinical_object(execution_id: str):
+            return checked(lambda: clinical_publisher.publish(execution_id)["resolved_object"])
 
     @app.post("/v1/model-adaptation-candidates")
     def propose_adaptation(request: dict[str, Any]):

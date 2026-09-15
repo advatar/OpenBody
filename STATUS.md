@@ -144,3 +144,34 @@ OpenBody CI run `34902726178` and all 172 local reference tests pass. PR #17 is
 ready for merge after the tracking update's checks. G2's joint release remains
 open until ProvidEHR PR #519's remaining release/policy gates are resolved.
 G3/G4 consumption and model qualification are tracked by Metabolog#1129.
+
+
+G3/G4 next execution step (2026-09-15, issue #18): connect retained qualified
+model executions to the existing clinical assertion reference profile. An
+explicit host-configured publisher will require clinical-purpose qualification,
+current independently verified tenant/EHR subject binding, exact source and
+qualification rechecks, and known supported uncertainty before returning an
+admission packet. State inference and counterfactual simulation stay distinct.
+Software/research outputs cannot be relabeled as clinical; forecasts without a
+compatible standalone clinical object profile must abstain. Verify actual model
+call -> retained result -> publisher HTTP -> clinical-reference validation, with
+revocation, expiry, binding, source changes and type negatives. This is not a
+production DG/identity adapter or a native app integration claim.
+
+Counterfactual revision `42b4b37` passed hosted CI `34919089702` (328 local
+reference tests plus core and clinical-reference conformance).
+
+Clinical publication implemented (2026-09-15): explicit
+`QualifiedClinicalReferencePublisher` and opt-in reference/object GET routes
+consume actual retained state/counterfactual executions. Publication requires the
+original clinical-purpose lease and current exact independent subject binding;
+software/research purposes and unknown uncertainty abstain. Source, dependency,
+qualification and binding changes prevent return; identical reads retain a
+stable immutable reference ID. Counterfactual receipts still reference the
+complete control/intervention execution. No clinical action is submitted.
+
+Validation: 383 reference tests pass locally, including 55 new actual-call/HTTP
+publication and negative tests. Core and clinical-reference conformance pass.
+Hosted checks are pending the commit. Production DG/identity adapters, native
+callers, admission of these new packets through ProvidEHR, and downstream
+transitive use-time revalidation remain open.

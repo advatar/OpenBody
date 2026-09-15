@@ -191,3 +191,57 @@ synthetic arithmetic and a fixture authority. They establish software enforcemen
 not physiological validity, causal identification, clinical efficacy or DG
 intervention approval. Production authority resolution and native model/source
 integration remain unfinished G3/G4 work.
+
+
+## Publication as a clinical assertion reference
+
+`QualifiedClinicalReferencePublisher` consumes a retained execution, never a
+caller-supplied result or a new purpose label. It first re-resolves the original
+source and exact qualification lease. Only an execution originally qualified for
+`clinical_decision_support` is eligible. Software and research executions remain
+ineligible even when the model also supports clinical use.
+
+An independently configured `SubjectBindingAuthority` must verify the exact
+OpenBody subject, tenant and EHR, proof issuer, expiry and current revocation
+state. No permissive identity implementation is shipped. A local own-record
+confirmation in InVivo is not independent identity proof. Unknown input/model
+uncertainty stays unknown and prevents clinical publication under the existing
+clinical-reference admission rules.
+
+Opt in with
+`create_model_execution_host(runtime, clinical_publisher=publisher)`. The publisher
+must bind that exact runtime. The ordinary execution host and public discovery
+host expose no clinical publication routes by default. The embedding host must
+authenticate and authorize every route for the hosted tenant and subject.
+
+- `GET /v1/model-executions/{id}/clinical-reference` returns the existing ProvidEHR
+  admission packet shape: `ehr_id`, `reference`, `resolved_object`. It submits no
+  admission or clinical action.
+- `GET /v1/model-executions/{id}/clinical-object` dereferences the canonical core
+  object after the same publication checks. Both routes return `no-store`.
+
+A current state remains `BodyState` with epistemic class `inference`. A
+counterfactual remains a core `CounterfactualScenario` with epistemic class
+`counterfactual`; its producer receipt references the complete retained execution,
+including the control forecast, through the execution URL. No treatment authority
+is added. Standalone `ModelForecast` publication abstains: the frozen nested
+`BodyTrajectory` lacks the standalone kind/schema fields required by the existing
+clinical-reference validator. The publisher does not invent those core fields.
+
+The reference binds exact content, producing receipt and admitted evidence
+lineage. Validity ends at the earlier qualification or binding expiry, never at
+the prediction horizon. A reference ID is stable for identical execution, content
+and binding so a repeated read can use ProvidEHR's existing immutable replay
+semantics. Binding changes produce a different reference ID. Source, qualification
+and identity are rechecked during every publication and canonical-object read;
+revocation or changes during construction prevent return. These sequential checks
+are not a distributed transaction across remote authorities.
+
+The 55 publication tests execute the synthetic model through HTTP before
+publishing and validating its actual retained output. Synthetic clinical policy
+and identity authorities exist only in tests; they prove software enforcement,
+not clinical qualification or identity attestation. Production DG/identity
+adapters, native callers and actual admission of these newly published packets
+through ProvidEHR remain integration work. Downstream consumers must revalidate
+current authority on future use; a previously admitted immutable packet alone
+cannot establish that a dependency remains active (G17).
