@@ -196,3 +196,16 @@ tests and conformance pass. A local actual Python publisher -> real Rust clinica
 admission crate + production HTTP resolver smoke passes, including revocation
 denial. Full worker/gateway integration is pending ProvidEHR's updated CI pin;
 this local smoke does not substitute for that gateway test or clinical evidence.
+
+Verified full live integration (2026-09-15): ProvidEHR `ed4df64` with OpenBody
+`38e8cb1` passed `34921269684`. The actual COSMIC worker -> admitted clinical
+source API -> qualified counterfactual runtime preserves unknown uncertainty and
+refuses clinical publication. A distinct synthetic known-input observation
+passes actual model/publisher -> enforced gateway admission/replay/read/A2UI;
+qualification, dependency, identity and source changes deny further use while
+historical records and original clinical compositions remain intact. This
+replaces the earlier fixture-only model-reference return with actual callable
+execution evidence. It still does not establish clinical efficacy, qualified
+COSMIC uncertainty, native callers, production DG/identity or full G17 graph
+propagation. The publisher/known-source authorities in this verifier are
+explicitly synthetic, test-only configuration.
