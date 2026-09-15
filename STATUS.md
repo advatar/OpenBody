@@ -175,3 +175,24 @@ publication and negative tests. Core and clinical-reference conformance pass.
 Hosted checks are pending the commit. Production DG/identity adapters, native
 callers, admission of these new packets through ProvidEHR, and downstream
 transitive use-time revalidation remain open.
+
+G3/G17 live integration follow-up (ProvidEHR#527, OpenBody#18): extend the
+actual worker/API verifier to execute the qualified counterfactual runtime and
+clinical publisher. Preserve the real worker observation's unknown uncertainty
+and prove it cannot become a clinically admitted result. A separate explicitly
+synthetic known-input observation will test positive runtime publication, actual
+ProvidEHR admission/replay/read and issuer revocation. That positive fixture is
+not evidence of qualified COSMIC measurement uncertainty. The gateway's fixed
+trusted issuer must re-resolve all current uses and leave historical records
+intact after denial.
+
+Live verifier update implemented: the actual qualified counterfactual runtime and
+authenticated publisher now serve the fixed issuer expected by ProvidEHR#527.
+The real worker observation retains unknown uncertainty and cannot be published
+clinically. A distinct synthetic known-input source exercises positive runtime
+publication, admission/replay/state/simulation/A2UI reads and current issuer
+qualification/dependency/identity/source revocation. All 384 local reference
+tests and conformance pass. A local actual Python publisher -> real Rust clinical
+admission crate + production HTTP resolver smoke passes, including revocation
+denial. Full worker/gateway integration is pending ProvidEHR's updated CI pin;
+this local smoke does not substitute for that gateway test or clinical evidence.

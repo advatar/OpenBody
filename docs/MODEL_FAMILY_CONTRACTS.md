@@ -245,3 +245,14 @@ adapters, native callers and actual admission of these newly published packets
 through ProvidEHR remain integration work. Downstream consumers must revalidate
 current authority on future use; a previously admitted immutable packet alone
 cannot establish that a dependency remains active (G17).
+
+
+The live `tools/verify_providehr_observation.py` verifier now uses the actual
+qualified counterfactual runtime and an authenticated publisher. It executes the
+real worker observation with its original unknown uncertainty and requires
+clinical publication to abstain. An independent synthetic known-input source
+exercises positive publication and the actual ProvidEHR admission/replay/read/UI
+paths, followed by issuer qualification, dependency, identity and source-change
+negatives. The positive fixture is explicitly not evidence that the original
+COSMIC observation has quantified uncertainty. Production has no test issuer or
+synthetic source enabled. See ProvidEHR#527 for the exact gateway CI evidence.
