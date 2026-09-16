@@ -4,3 +4,5 @@ fastapi>=0.116,<1
 httpx>=0.28,<1
 uvicorn>=0.35,<1
 pytest>=8.4,<9
+cryptography>=46,<51
+rfc8785==0.1.4

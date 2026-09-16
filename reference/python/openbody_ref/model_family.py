@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -104,6 +104,9 @@ class QualificationLease:
     valid_from: datetime
     valid_until: datetime
     status: str
+    # A fresh audit receipt may differ while the reviewed qualification stays the
+    # same. It is provenance, not a reusable authorization or a semantic revision.
+    resolution_reference: str | None = field(default=None, compare=False)
 
 
 class QualificationAuthority(Protocol):
@@ -371,6 +374,9 @@ class QualifiedModelRuntime:
                                            "normalization": deepcopy(row["normalization"]), "uncertainty": deepcopy(row["uncertainty"]),
                                            "contract_digest": canonical_digest(model.contract), "qualification_revision": lease.revision}}
                     for row in sorted(unique.values(), key=lambda row: row["id"])]
+        if lease.resolution_reference is not None:
+            for row in evidence:
+                row["source_provenance"]["qualification_resolution_ref"] = lease.resolution_reference
         state = {"schema_version": "0.1", "kind": "BodyState", "id": state_id, "subject": self.subject, "generated_at": now,
                  "state_time": state_time or now, "valid_until": lease.valid_until.isoformat().replace("+00:00", "Z"),
                  "subsystems": [{"coordinate": identity["coordinate"], "organizational_scale": REGISTRY[identity["coordinate"]],

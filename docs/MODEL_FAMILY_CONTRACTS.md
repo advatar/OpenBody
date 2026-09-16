@@ -10,8 +10,9 @@ A descriptor or a nonempty evidence reference does not establish qualification.
 
 The reference executor supports **current state estimation** (horizon zero) and
 explicitly registered **forecasts** and **intervention counterfactuals** (positive
-horizons). Multi-model composition, native model call sites and the
-production DG authority adapter remain unfinished G3/G4 work. Synthetic
+horizons). Multi-model composition and native physiological model call sites
+remain unfinished G3/G4 work. The reference host now installs the
+[current native DG adapter](DG_MODEL_QUALIFICATION.md). Synthetic
 arithmetic in the tests verifies software enforcement, not physiology or clinical
 utility. This profile neither qualifies existing Model Plane labels nor supplies
 a default model or permissive authority.
@@ -29,8 +30,11 @@ the host's trusted governance registry. Its lease binds the exact contract and
 artifact, tenant/subject, purpose, population, question, horizon, evidence and
 dependency digests, revision and validity window. The adapter must verify the
 underlying qualification evidence, subject/population attestations, approval
-authority and transitive dependency status. No such production DG adapter is
-shipped in this slice. The fixed authority in tests is only a synthetic fixture.
+authority and current dependency status. `DgQualificationAuthority` verifies
+native DG replies backed by current wallet inputs and exact reviewed evidence
+commitments; see [configuration and limits](DG_MODEL_QUALIFICATION.md).
+Production scientific evidence, issuer enrollment and independent subject linkage
+remain host responsibilities. Fixed authorities in isolated tests are synthetic fixtures.
 There is no HTTP field for supplying a qualification lease or executable model.
 
 Purpose is a machine code (`software_test`, `research`, or
@@ -189,8 +193,9 @@ runtime's total execution and retention bounds are applied.
 The 42 counterfactual tests exercise the actual callable and HTTP path with
 synthetic arithmetic and a fixture authority. They establish software enforcement,
 not physiological validity, causal identification, clinical efficacy or DG
-intervention approval. Production authority resolution and native model/source
-integration remain unfinished G3/G4 work.
+intervention approval. The native DG adapter is separately tested at the state
+execution boundary. Native physiological model/source integration and clinical
+qualification remain unfinished G3/G4 work.
 
 
 ## Publication as a clinical assertion reference

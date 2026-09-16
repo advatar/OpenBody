@@ -18,6 +18,20 @@ DEFAULT_FIXTURE = ROOT / "examples" / "post-meal-walk.scenario.json"
 ABSTENTION_FIXTURE = ROOT / "examples" / "insufficient-evidence.abstention.json"
 
 
+def create_dg_model_execution_host(subject, tenant_id, source, models, dg_config, dg_bindings, *, clock=None):
+    """Install native DG verification in the actual model execution/read routes.
+
+    Transport authentication, model loading, source trust and subject provisioning
+    remain host responsibilities. No HTTP field selects trust or qualification.
+    """
+    from .dg_qualification import DgQualificationAuthority
+    from .model_family import QualifiedModelRuntime
+    authority = DgQualificationAuthority(tenant_id, subject, dg_config,
+        [model.contract for model in models], dg_bindings, clock=clock)
+    runtime = QualifiedModelRuntime(subject, tenant_id, source, authority, models, clock=clock)
+    return create_model_execution_host(runtime)
+
+
 def create_model_execution_host(runtime, *, clinical_publisher=None) -> FastAPI:
     """Explicit qualified-execution host; no default models, grants or fixture replay.
 

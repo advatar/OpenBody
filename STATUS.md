@@ -1,3 +1,28 @@
+## Current native DG model qualification (2026-09-16)
+
+Branch `feat/18-model-family-contract`, issues #18/#20 and draft PR #19; paired
+native DG source `b68b410` on `feat/7-bounded-execution` / DG PR #8. The real
+`DgQualificationAuthority` now connects the actual execution/read HTTP host to
+fresh native DG qualification backed by current EUWallet inputs. Pinned command,
+key/policies, subject and exact model/evidence bindings are trusted host settings.
+Every declared dependency/evidence descriptor must appear in native frozen review;
+missing or changed review commitments refuse. Fresh audit references are retained
+without turning qualification into a provider-effect authorization.
+
+Local verification: **423 tests pass**, including 31 wire/host verifier tests and
+**eight actual DG/wallet/SurrealDB/HTTP composition cases**. Valid synthetic model
+execution preserves unknown uncertainty; revoked reviewer/operator/subject status,
+withdrawn consent, revoked evidence, missing wallet inputs and omitted review
+dependencies disable execution and retained reads. Consent withdrawal during the
+model call suppresses the result. Core and clinical-reference conformance pass.
+Hosted CI is skipped. See [configuration and reproduction](docs/DG_MODEL_QUALIFICATION.md).
+
+Synthetic arithmetic/public test keys establish software enforcement only.
+Production issuer enrollment, independent patient linkage, native physiological
+model/source integration, qualified model composition, clinical efficacy and full
+G3/G4/G7/G8/G17 remain open. Earlier checkpoints below retain their original scope;
+statements that no native DG qualification adapter exists are superseded here.
+
 Tracking current DG authority migration: https://github.com/advatar/OpenBody/issues/20
 
 Documentation cleanup is complete on this feature branch: current DG resolution,
