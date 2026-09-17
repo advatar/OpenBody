@@ -1,0 +1,25 @@
+{
+  "id": "executable-maturity-checking-pytest",
+  "title": "Capability maturity as a refutable claim, over pytest output",
+  "maturity": "IMPLEMENTED",
+  "gates": ["G18"],
+  "scope": "Machine-readable manifests and a checker that validates them and executes every declared gate, failing if the recorded test counts no longer hold. Reads pytest's summary line.",
+  "assumptions": [
+    "A checker that only ever passes is worth nothing, so its self-test asserts that specific false claims are refused.",
+    "Counts are read from the runner's own summary, so a changed output format is treated as unreadable rather than as passing."
+  ],
+  "verification": [
+    {
+      "command": "python3 tools/test_check_capabilities.py",
+      "expect_tests": 23,
+      "description": "Proves the checker refuses 17 distinct false claims, including a pytest count that differs from the claim."
+    }
+  ],
+  "known_failures": [
+    "Three of 27 repositories carry manifests; the rest have no machine-readable evidence.",
+    "Generating white-paper claims from manifests, G18's stated end state, is not built."
+  ],
+  "clinical_use": "none",
+  "dependencies": [],
+  "last_reviewed": "2026-09-17"
+}

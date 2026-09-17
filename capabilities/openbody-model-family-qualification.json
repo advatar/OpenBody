@@ -1,0 +1,26 @@
+{
+  "id": "openbody-model-family-qualification",
+  "title": "Model-family contracts with machine-enforced envelopes, uncertainty and abstention",
+  "maturity": "IMPLEMENTED",
+  "gates": ["G4"],
+  "scope": "The qualified model runtime: a model executes only under a contract declaring its context of use, required observations, supported population and question, prediction horizon, allowed adaptation, behavioural envelope, uncertainty contract, abstention rules, prohibited uses, dependencies and qualification evidence. Outputs outside the envelope, or with unquantified uncertainty where the contract demands it, abstain rather than return a value.",
+  "assumptions": [
+    "The synthetic offset model exercises the enforcement machinery. It is arithmetic, not physiology.",
+    "Qualification is a lease bound to the exact contract and artifact digests; execution re-checks sources and lease during the call."
+  ],
+  "verification": [
+    {
+      "command": "cd reference/python && ../../.venv/bin/python -m pytest tests -q",
+      "expect_tests": 415,
+      "description": "69 model-family, 45 forecast, 42 counterfactual and 31 DG-qualification cases, covering envelope breach, abstention, source change during execution and lease expiry."
+    }
+  ],
+  "known_failures": [
+    "Only synthetic models are qualified. No physiological or clinical model has been through this contract.",
+    "The Biological Twin as a qualified composition of such models is not built; that is tracked as qualified-twin-composition in InVivo and is TARGET.",
+    "Qualification evidence is declared and digest-bound, but the reference does not evaluate whether the evidence is scientifically adequate."
+  ],
+  "clinical_use": "research_only",
+  "dependencies": ["openbody-protocol-reference"],
+  "last_reviewed": "2026-09-17"
+}
