@@ -91,8 +91,10 @@ def validate(path, manifest, identities):
                 'clinical use requires an explicit qualification dependency')
 
     for dependency in manifest.get('dependencies', []):
-        # A bare kebab-case token names another capability; anything else is an
-        # external pin such as an upstream commit, which this checker cannot verify.
+        # A bare kebab-case token names another capability in this repository.
+        # `Repo/capability` names one in another repository, which only the
+        # workspace aggregator can resolve; anything else is an external pin such
+        # as an upstream commit. Both are skipped here.
         if re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', str(dependency)) and dependency not in identities:
             problems.append(f'{path.name}: dependency {dependency!r} does not resolve')
     return problems
