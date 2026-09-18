@@ -1,0 +1,26 @@
+{
+  "id": "openbody-protocol-reference",
+  "title": "Executable protocol reference: schemas, canonical digests and invariants",
+  "maturity": "IMPLEMENTED",
+  "gates": ["G2", "G3"],
+  "scope": "The Python reference implementation of the OpenBody protocol: pinned JSON schemas, the canonical digest form, admitted observation shape, and the protocol invariants that keep observation, inference, simulation and clinical assertion distinct kinds.",
+  "assumptions": [
+    "The canonical form is json.dumps(sort_keys=True, separators=(',',':'), ensure_ascii=False); every digest in the protocol is over that form.",
+    "This is the reference against which the native iOS and Android consumers are tested, so a change here changes their corpora too."
+  ],
+  "verification": [
+    {
+      "command": "cd reference/python && ../../.venv/bin/python -m pytest tests -q",
+      "expect_tests": 415,
+      "description": "The whole reference suite, including 49 protocol-invariant and 48 admitted-observation cases."
+    }
+  ],
+  "known_failures": [
+    "8 tests are skipped and the count above is passing tests only.",
+    "A reference implementation establishes that the protocol is executable and self-consistent. It establishes nothing about the clinical validity of anything expressed in it.",
+    "The reference is the oracle for the native consumers, so a defect here would be mirrored rather than caught by them."
+  ],
+  "clinical_use": "none",
+  "dependencies": [],
+  "last_reviewed": "2026-09-17"
+}

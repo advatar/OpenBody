@@ -8,6 +8,7 @@ or clinical payloads. This runner does not emulate the source API or admission.
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
 from datetime import datetime, timezone, timedelta
 import json
 from pathlib import Path
@@ -24,71 +25,107 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "reference" / "python"))
 
 from openbody_ref.client import OpenBodyClient
-from openbody_ref.host import create_app
+from openbody_ref.host import create_app, create_model_execution_host
+from providehr_model_publication import prepare_publication
 from openbody_ref.observation import ProvidEHRObservationSource, validate_locator
 from openbody_ref.store import InMemoryTwinStore
 from openbody_ref.clinical_reference import validate_clinical_reference
 from openbody_ref.validation import canonical_digest, semantic_validate, validate_definition
 
 
-def synthetic_model_reference(subject):
-    """Rebind a test-only scenario to the synthetic EHR and current test clock.
+def verify_model_return(configuration, observation, source):
+    from fastapi.responses import JSONResponse
+    runtime, publisher, request, fixture_request, authority, identity, sources = prepare_publication(configuration, observation, source)
+    app = create_model_execution_host(runtime, clinical_publisher=publisher)
 
-    This is transport/type evidence, not a model consuming the new observation.
-    G3/G4 must supply actual model execution and qualification separately.
-    """
-    bundle = json.loads((ROOT / "examples/clinical-assertion-references.v1.json").read_text())
-    scenario = json.loads((ROOT / "examples/post-meal-walk.scenario.json").read_text())
-    old_subject = bundle["base_reference"]["subject"]
-    now = datetime.now(timezone.utc)
-    shift = now - datetime.fromisoformat(bundle["evaluated_at"].replace("Z", "+00:00"))
+    @app.middleware("http")
+    async def authenticate(request, call_next):
+        if request.headers.get("authorization") != "Bearer " + configuration["publisher_token"]:
+            return JSONResponse({"error": "unauthorized"}, status_code=401, headers={"Cache-Control": "no-store"})
+        return await call_next(request)
 
-    def bind(value):
-        if isinstance(value, dict):
-            return {k: bind(v) for k, v in value.items()}
-        if isinstance(value, list):
-            return [bind(v) for v in value]
-        if value == old_subject:
-            return subject
-        if isinstance(value, str) and len(value) >= 20 and value[10:11] == "T" and value.endswith("Z"):
-            return (datetime.fromisoformat(value.replace("Z", "+00:00")) + shift).isoformat().replace("+00:00", "Z")
-        return value
-
-    reference, resolved = bind(bundle["base_reference"]), bind(scenario)
-    reference["content_digest"] = canonical_digest(resolved)
-    semantic_validate(resolved)
-    validate_clinical_reference(reference, resolved, evaluated_at=now)
-    return reference, resolved
-
-
-def verify_model_return(configuration, observation):
-    ehr = configuration["admitted"]["ehr_id"]
-    reference, resolved = synthetic_model_reference(observation["subject"])
-    payload = {"ehr_id": ehr, "reference": reference, "resolved_object": resolved}
-    prefix = f"/v1/ehr/{ehr}/openbody"
-    with httpx.Client(base_url=configuration["source_url"],
-                      headers={"Authorization": f"Bearer {configuration['source_token']}"}) as api:
-        response = api.post(f"{prefix}/admissions", json=payload)
-        assert response.status_code == 201, response.text
-        assert response.json()["admission"]["reference"]["object_kind"] == "CounterfactualScenario"
-        assert response.json()["admission"]["resolved_object"] == resolved
-        assert api.post(f"{prefix}/admissions", json=payload).json()["replayed"] is True
-        assert api.post(f"{prefix}/simulations", json=payload).status_code == 201
-        state = api.get(f"{prefix}/state")
-        assert state.status_code == 200
-        assert len(state.json()["projections"]) == 1
-        assert state.json()["projections"][0]["reference"]["epistemic_class"] == "statistical_association"
-        forged = deepcopy(payload)
-        forged["reference"]["subject"] = "subject:providehr:ehr:another"
-        assert api.post(f"{prefix}/admissions", json=forged).status_code == 422
-        assert api.post(f"{prefix}/admissions", json=payload | {"reference": observation, "resolved_object": observation}).status_code == 422
-        expired = deepcopy(payload)
-        expired["reference"]["validity"]["valid_until"] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
-        assert api.post(f"{prefix}/admissions", json=expired).status_code == 422
-        wrong_kind = deepcopy(payload)
-        wrong_kind["reference"]["object_kind"] = "BodyState"
-        assert api.post(f"{prefix}/simulations", json=wrong_kind).status_code == 422
-    print("PASS separately typed synthetic model-reference return, replay, EHR binding, expiry and Observation rejection")
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", configuration["publisher_port"]))
+    sock.listen(128)
+    server = uvicorn.Server(uvicorn.Config(app, log_level="error", access_log=False))
+    thread = Thread(target=server.run, kwargs={"sockets": [sock]}, daemon=True)
+    thread.start()
+    try:
+        deadline = monotonic() + 10
+        while not server.started:
+            if not thread.is_alive() or monotonic() > deadline:
+                raise RuntimeError("Qualified model publisher failed to start")
+            Event().wait(0.01)
+        ehr = configuration["admitted"]["ehr_id"]
+        prefix = f"/v1/ehr/{ehr}/openbody"
+        with httpx.Client(base_url=configuration["publisher_url"], headers={"Authorization": "Bearer " + configuration["publisher_token"]}) as model_api, httpx.Client(
+                base_url=configuration["source_url"], headers={"Authorization": "Bearer " + configuration["source_token"]}) as api:
+            # Execute the real worker observation without strengthening it.
+            unknown = model_api.post("/v1/model-executions", json=request).json()
+            assert unknown["kind"] == "ModelCounterfactual"
+            assert unknown["scenario"]["uncertainty"]["coverage"] is None
+            assert unknown["scenario"]["evidence"][0]["source_provenance"]["uncertainty"] == observation["uncertainty"]
+            refused = model_api.get(f"/v1/model-executions/{unknown['id']}/clinical-reference")
+            assert refused.json()["kind"] == "Abstention"
+            assert refused.headers["OpenBody-Execution-Reason"] == "uncertainty_unknown"
+            assert api.post(f"{prefix}/admissions", json={"ehr_id": ehr, "reference": refused.json(), "resolved_object": unknown}).status_code == 422
+            assert api.get(f"{prefix}/state").json()["projections"] == []
+            # An independent known-input software fixture exercises positive
+            # runtime publication. It is not the worker's admitted observation.
+            result = model_api.post("/v1/model-executions", json=fixture_request).json()
+            payload = model_api.get(f"/v1/model-executions/{result['id']}/clinical-reference").json()
+            reference, resolved = payload["reference"], payload["resolved_object"]
+            assert resolved == result["scenario"]
+            assert resolved["evidence"][0]["source_provenance"]["source"]["system"] == "synthetic-test-only"
+            assert resolved["evidence"][0]["id"] != observation["id"]
+            response = api.post(f"{prefix}/admissions", json=payload)
+            assert response.status_code == 201, response.text
+            assert response.json()["admission"]["resolved_object"] == resolved
+            assert api.post(f"{prefix}/admissions", json=payload).json()["replayed"] is True
+            assert api.post(f"{prefix}/simulations", json=payload).status_code == 201
+            state = api.get(f"{prefix}/state")
+            assert state.status_code == 200, state.text
+            assert len(state.json()["projections"]) == 1
+            assert state.json()["projections"][0]["reference"]["epistemic_class"] == "counterfactual"
+            original = deepcopy(state.json()["projections"][0])
+            ui = api.post("/v1/a2ui/intent", json={"intent": "openbody_clinical_state", "ehr_id": ehr})
+            assert ui.status_code == 200, ui.text
+            forged = deepcopy(payload)
+            forged["reference"]["subject"] = "subject:providehr:ehr:another"
+            assert api.post(f"{prefix}/admissions", json=forged).status_code == 422
+            assert api.post(f"{prefix}/admissions", json=payload | {"reference": observation, "resolved_object": observation}).status_code == 422
+            expired = deepcopy(payload)
+            expired["reference"]["validity"]["valid_until"] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            assert api.post(f"{prefix}/admissions", json=expired).status_code == 422
+            wrong_kind = deepcopy(payload)
+            wrong_kind["reference"]["object_kind"] = "BodyState"
+            assert api.post(f"{prefix}/simulations", json=wrong_kind).status_code == 422
+            for change in ("qualification", "dependency", "identity", "source"):
+                lease, binding, fixture = authority.current, identity.current, deepcopy(sources.fixture)
+                if change == "qualification": authority.current = replace(lease, status="revoked")
+                elif change == "dependency": authority.current = replace(lease, dependency_digests=())
+                elif change == "identity": identity.current = replace(binding, status="revoked")
+                else: sources.fixture["uncertainty"]["coverage"] = 0.7
+                for route in ("state", "simulations"):
+                    denied = api.get(f"{prefix}/{route}")
+                    assert denied.status_code == 422, denied.text
+                    assert denied.json()["code"] == "openbody_not_current"
+                for route in ("admissions", "simulations"):
+                    assert api.post(f"{prefix}/{route}", json=payload).status_code == 422
+                ui = api.post("/v1/a2ui/intent", json={"intent": "openbody_clinical_state", "ehr_id": ehr})
+                assert ui.status_code == 422, ui.text
+                assert ui.json()["code"] == "openbody_not_current"
+                authority.current, identity.current, sources.fixture = lease, binding, fixture
+                restored = api.get(f"{prefix}/state")
+                assert restored.status_code == 200, restored.text
+                assert restored.json()["projections"][0] == original
+            assert source.resolve(configuration["admitted"]) == observation
+        print("PASS actual worker observation -> qualified model preserves unknown uncertainty and refuses clinical publication")
+        print("PASS separate synthetic known-input model -> publisher -> real ProvidEHR admission/read/replay; issuer qualification/dependency/identity/source revocation denies reuse and preserves history")
+    finally:
+        server.should_exit = True
+        thread.join(timeout=10)
+        sock.close()
 
 
 def verify(configuration):
@@ -142,7 +179,7 @@ def verify(configuration):
             raise AssertionError("Observation became BodyState without a model")
         assert len(store.observations) == 1
         if configuration.get("verify_model_return"):
-            verify_model_return(configuration, value)
+            verify_model_return(configuration, value, source)
         print("PASS live ProvidEHR worker -> authorized version API -> OpenBody HTTP ingestion/read/replay; partial/review/type/scope rejection")
     finally:
         server.should_exit = True
