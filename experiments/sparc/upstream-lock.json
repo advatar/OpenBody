@@ -1,0 +1,25 @@
+{
+  "sckan": {
+    "repository": "SciCrunch/NIF-Ontology",
+    "tag": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "published_at": "2026-06-23T14:59:10Z",
+    "release_commit": "5656b05",
+    "artifact": "release-2026-06-23T135208Z-sckan.zip",
+    "size_bytes": 159258100,
+    "sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "graph_artifact": "sparc-sckan-graph-20260623T070119.zip",
+    "graph_size_bytes": 496886143,
+    "graph_sha256": "d6cf12f5a1daada792c6329771d9cd1160e15df5072b6d3657b791cb438b64f7",
+    "provenance": "GitHub release API digest metadata",
+    "note": "Latest upstream release found on 2026-09-20; it is explicitly marked prerelease."
+  },
+  "ascent_guided_mode_demo": {
+    "doi": "10.26275/0JZ3-ZRLO",
+    "version": 1,
+    "year": 2023,
+    "osparc_study": "1f1f0efc-f94b-11ed-a0b9-02420a0b0ee6",
+    "published_runtime_note": "Portal simulations used an older ASCENT; current tutorial warns versions may produce small differences.",
+    "reference_output_gate": "Do not set a numeric tolerance until the exact published output artifact and runtime version are independently retrieved."
+  }
+}
