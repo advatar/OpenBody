@@ -99,3 +99,22 @@ SCKAN functionality is frozen. Main remains `8c2dff59c6c5e431b99db38e197a659f029
 - [x] Preserve BLOCKED: no defensible contract, no candidate execution, no guessed tolerance.
 - [x] Classify all PR files and replace bulky generated evidence with reproducible receipts.
 - [x] Perform adversarial review and local tests; publish for hosted CI on the draft PR without merging.
+
+## 2026-09-20 — Closed-loop experimental physiology: observation to hypothesis to intervention to evidence
+
+- [ ] Track in GitHub issue #24.
+- [ ] Execute the bounded plan in the issue without weakening existing authority, privacy, provenance, or release gates.
+- [ ] Add adversarial/negative-control coverage appropriate to this track and record qualification evidence before promotion.
+
+
+## External scientific resource admission — 2026-09-20
+
+Start `15ff70ee41c59c6d11f6132507a8f66205fde948`; reconcile main
+`0f1ac79d716506816aee66c827a44b8ec6da748b` without changing its planning track.
+- [ ] Document research evidence handoff to existing PR #19 qualification architecture.
+- [ ] Add compact admission examples and test a committed pre-execution contract gate.
+- [ ] Move ASCENT external bundle dependency into its own follow-up issue.
+- [ ] Complete adversarial review, full local checks and final-head CI; assess review readiness.
+
+SCKAN bounded reproduction is complete and frozen. ASCENT remains BLOCKED;
+no candidate will execute during this milestone. Do not merge PR #23.
