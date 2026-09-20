@@ -29,7 +29,12 @@ This directory is a research candidate, isolated from the frozen OpenBody protoc
 - Actual ASCENT execution: **NOT TESTED / BLOCKED**; no output/tolerance is invented.
 
 Local Python is 3.14.7. Hosted research CI uses Python 3.13; conformance uses 3.12.
-Initial CI repair is green; final revision checks are linked in the delivery.
+Implementation commit `4795cc0a46253ea9195b899165d2604fee4d7009` passed hosted
+SPARC runs [35511918368](https://github.com/advatar/OpenBody/actions/runs/35511918368)
+and [35511919989](https://github.com/advatar/OpenBody/actions/runs/35511919989),
+and conformance [35511920007](https://github.com/advatar/OpenBody/actions/runs/35511920007).
+Machine-readable results are in `evidence/receipts/hosted-ci.json`. Subsequent
+report-only commit checks are linked in the final delivery.
 
 ## Remaining gates
 

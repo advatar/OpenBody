@@ -102,9 +102,28 @@ From the repository root (Python standard library plus Docker):
 python3 -m experiments.sparc.authenticate --cache /tmp/openbody-sparc-cache
 ```
 
-Call `safe_extract` on the verified release archive into a fresh `release`
-directory under that cache. Copy its `data/blazegraph.jnl` and `prefixes.conf`
-into `blazegraph-run` under the cache. Start the official service with the exact
+Extract only after authentication succeeds (the target must not exist):
+
+```sh
+python3 - <<'PYTHON'
+from pathlib import Path
+from experiments.sparc.authenticate import safe_extract, verify
+import json, shutil
+cache = Path('/tmp/openbody-sparc-cache')
+lock = json.loads(Path('experiments/sparc/upstream-lock.json').read_text())['sckan']
+archive = cache / lock['artifact']
+verify(archive, lock['sha256'], lock['size_bytes'])
+print(safe_extract(archive, cache / 'release'))
+data = cache / 'release' / lock['artifact'][:-4] / 'data'
+run = cache / 'blazegraph-run'
+run.mkdir(exist_ok=False)
+for name in ('blazegraph.jnl', 'prefixes.conf'):
+    shutil.copyfile(data / name, run / name)
+PYTHON
+```
+
+For another invocation, reuse the already verified cache/journal rather than
+extracting over an existing directory. Start the official service with the exact
 image above (only a disposable journal copy is writable):
 
 ```sh
