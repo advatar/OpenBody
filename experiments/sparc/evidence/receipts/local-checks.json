@@ -1,9 +1,9 @@
 {
-  "recorded_at": "2026-09-20T12:53:29.327115+00:00",
+  "recorded_at": "2026-09-20T15:27:44.906853+00:00",
   "python": "3.14.7",
   "research": {
     "command": "python3 -m unittest discover -s experiments/sparc -p 'test_*.py' -v",
-    "passed": 54
+    "passed": 76
   },
   "reference": {
     "command": "PYTHONPATH=reference/python python -m pytest -q reference/python/tests",
@@ -21,5 +21,12 @@
     "status": "PASS"
   },
   "docker_client_version": "29.7.2",
-  "research_only": true
+  "research_only": true,
+  "external_full_sckan_receipts": {
+    "command": "python3 -m experiments.sparc.evidence_tools --results <external-output>/sckan-queries.json",
+    "runs_checked": 2,
+    "queries_per_run": 5,
+    "status": "PASS",
+    "queries_executed_this_milestone": 0
+  }
 }

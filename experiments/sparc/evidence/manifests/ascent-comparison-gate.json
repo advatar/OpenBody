@@ -6,7 +6,7 @@
   "reference_template_sha256": "0263efbabffc1027f49349082ab63137a7e4ae4f1b8b42e1b28b5505104beb0f",
   "locked_study": "1f1f0efc-f94b-11ed-a0b9-02420a0b0ee6",
   "deposited_study": "7bb84d3a-24b2-11ee-a4be-02420a0bc195",
-  "study_identity_status": "INCOMPARABLE",
+  "study_identity_status": "INCOMPARABLE (previous lock identifies a different study)",
   "ascent_version": "1.2.1 (dataset revised README)",
   "neuron_version": null,
   "comsol_version": null,
@@ -31,11 +31,15 @@
     "COMSOL version"
   ],
   "blockers": [
-    "Deposited study UUID differs from lock; relation between studies not authenticated.",
-    "Deposit contains configuration and metadata only, not reference output.",
-    "Root manifest size mismatch: metadata 4110 bytes versus downloaded 5318; SHA-256 matches.",
-    "COMSOL and nrniv not found on PATH or named /Applications installations.",
-    "No connected browser for existing authorized o2S2PARC session."
+    "No published Guided Mode numerical output or complete input/potential bundle in authenticated deposit.",
+    "Exact study service, NEURON and FEM-generating solver versions are not authenticated.",
+    "No defensible comparison criterion; generic search termination is not a reproduction tolerance.",
+    "Unauthenticated official project metadata API returns HTTP 401; authorized study export is required."
   ],
-  "interpretation": "No numerical, biological or clinical validation; no transfer to auricular VNS."
+  "interpretation": "No numerical, biological or clinical validation; no transfer to auricular VNS.",
+  "identity_resolution": "DISTINCT_STUDIES",
+  "study_uuid": "7bb84d3a-24b2-11ee-a4be-02420a0bc195",
+  "reference_search": "receipts/ascent-reference-search.json",
+  "manifest_discrepancy_classification": "UPSTREAM_METADATA_DEFECT",
+  "execution_environment_note": "Guided Mode uses pre-solved FEM potentials; local COMSOL is not assumed necessary for this path. Exact runtime unavailable/unbound."
 }

@@ -22,19 +22,23 @@ class EvidenceTests(unittest.TestCase):
     def test_query_receipts_are_consistent(self):
         for r in read(E/'receipts/sckan-queries.json'):
             text=(ROOT/'queries'/(r['query_id']+'.rq')).read_bytes()
-            self.assertEqual(text.decode(),r['query_text'])
             self.assertEqual(hashlib.sha256(text).hexdigest(),r['query_sha256'])
-            result=sparql_envelope(r['canonical_result'])
-            self.assertEqual(result['result_sha256'],r['result_sha256'])
-            self.assertEqual(result['raw_row_count'],r['raw_row_count'])
-            self.assertEqual(result['status'],r['status'])
+            self.assertEqual(r['query_file'],'queries/'+r['query_id']+'.rq')
+            self.assertLessEqual(len(r['selected_bindings']),2)
+            self.assertLessEqual(len(r['selected_bindings']),r['raw_row_count'])
+            # Full digest verification moved to evidence_tools against external output;
+            # summaries must never masquerade as independently recomputed full results.
+            self.assertNotIn('canonical_result',r)
     def test_repeat_digests_identical(self):
-        def digests(name):return {r['query_id']:r['result_sha256'] for r in read(E/'receipts'/name)}
-        self.assertEqual(digests('sckan-queries.json'),digests('sckan-queries-first-run.json'))
+        for r in read(E/'receipts/sckan-queries.json'):
+            self.assertEqual(r['result_sha256'],r['prior_execution']['result_sha256'])
+            self.assertEqual(r['raw_row_count'],r['prior_execution']['raw_row_count'])
     def test_species_and_unknown(self):
         queries={r['query_id']:r for r in read(E/'receipts/sckan-queries.json')}
         self.assertEqual(queries['missing-population']['status'],'unknown')
-        for row in queries['keast-5-rat']['canonical_result']['results']['bindings']:
+        self.assertEqual(queries['missing-population']['raw_row_count'],0)
+        self.assertEqual(queries['keast-5-rat']['observed_species'],['http://purl.obolibrary.org/obo/NCBITaxon_10116'])
+        for row in queries['keast-5-rat']['selected_bindings']:
             self.assertEqual(row['species']['value'],'http://purl.obolibrary.org/obo/NCBITaxon_10116')
     def test_ascent_does_not_claim_execution(self):
         gate=read(E/'manifests/ascent-comparison-gate.json')

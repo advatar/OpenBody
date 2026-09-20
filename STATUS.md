@@ -83,9 +83,19 @@ Starting main SHA: `8c2dff59c6c5e431b99db38e197a659f029e7244` (already an ancest
 
 - [x] Authenticate pinned SCKAN prerelease metadata and local artifact bytes.
 - [x] Execute the native upstream query and bounded variants with typed semantics; broader Simple SCKAN coverage remains open.
-- [ ] ASCENT numerical reference gate BLOCKED: configuration authenticated, study identity differs and reference output is absent.
+- [ ] ASCENT numerical reference gate BLOCKED: distinct Tutorial/Guided Mode identities resolved; published reference output and complete runtime/input binding remain absent.
 - [x] Run SCKAN in the available environment; record exact ASCENT reference/license/access blockers.
 - [x] Repair SPARC CI, run research and existing conformance suites.
 - [x] Commit receipts and reports; push to existing draft PR without merging.
 
 No stable protocol/runtime or Cymba changes are authorized by this milestone.
+
+## ASCENT provenance and PR reduction — 2026-09-20
+
+Continue issue #22 / draft PR #23 from `90d3d3c3412ecebc87ecef5f858fee4b407e1957`.
+SCKAN functionality is frozen. Main remains `8c2dff59c6c5e431b99db38e197a659f029e7244`.
+- [x] Trace distinct Guided Mode/Tutorial identities and diagnose upstream manifest size metadata defect.
+- [x] Inspect complete public deposit, workbooks and pinned source; reference output/runtime binding remains absent.
+- [x] Preserve BLOCKED: no defensible contract, no candidate execution, no guessed tolerance.
+- [x] Classify all PR files and replace bulky generated evidence with reproducible receipts.
+- [x] Perform adversarial review and local tests; publish for hosted CI on the draft PR without merging.

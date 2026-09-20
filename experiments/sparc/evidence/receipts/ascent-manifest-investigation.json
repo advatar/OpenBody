@@ -1,0 +1,126 @@
+{
+  "classification": "UPSTREAM_METADATA_DEFECT",
+  "file_verification_status": "FAILED",
+  "declared_entry": {
+    "name": "manifest.json",
+    "path": "manifest.json",
+    "size": 4110,
+    "fileType": "Json",
+    "uri": "s3://sparc-prod-aod-discover-publish50-use1/364/manifest.json",
+    "packageType": "Unsupported",
+    "icon": "JSON",
+    "sourcePackageId": null,
+    "createdAt": "2023-12-28T22:27:03.809725Z",
+    "s3Version": "k2bHkhvv_na3EZpeGWrWuN4UhimBiQVI",
+    "sha256": "hwM7xl34X+XK94aImTp39KCELT0sMg+oQSapkBZjlss=",
+    "type": "File"
+  },
+  "observations": [
+    {
+      "url": "https://sparc-prod-aod-discover-publish50-use1.s3.amazonaws.com/364/manifest.json?versionId=k2bHkhvv_na3EZpeGWrWuN4UhimBiQVI",
+      "retrieved_at": "2026-09-20T15:19:12.608337+00:00",
+      "byte_count": 5318,
+      "sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+      "headers": {
+        "last-modified": "Wed, 07 Jan 2026 15:04:48 GMT",
+        "etag": "\"e14abfddf78406f9f1c1f1000bf6c108\"",
+        "x-amz-version-id": "k2bHkhvv_na3EZpeGWrWuN4UhimBiQVI",
+        "content-type": "application/octet-stream",
+        "content-length": "5318"
+      },
+      "measurements": {
+        "byte_count": 5318,
+        "sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+        "utf8_bom": false,
+        "unicode_characters": 5314,
+        "crlf_count": 0,
+        "lf_count": 159,
+        "lf_normalized_bytes": 5318,
+        "crlf_normalized_bytes": 5477,
+        "compact_json_bytes": 3511,
+        "gzip_bytes": 1760,
+        "self_declared_sizes": [
+          5318
+        ]
+      }
+    },
+    {
+      "url": "https://sparc-prod-aod-discover-publish50-use1.s3.amazonaws.com/364/manifest.json?versionId=k2bHkhvv_na3EZpeGWrWuN4UhimBiQVI",
+      "retrieved_at": "2026-09-20T15:19:12.988405+00:00",
+      "byte_count": 5318,
+      "sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+      "headers": {
+        "last-modified": "Wed, 07 Jan 2026 15:04:48 GMT",
+        "etag": "\"e14abfddf78406f9f1c1f1000bf6c108\"",
+        "x-amz-version-id": "k2bHkhvv_na3EZpeGWrWuN4UhimBiQVI",
+        "content-type": "application/octet-stream",
+        "content-length": "5318"
+      },
+      "measurements": {
+        "byte_count": 5318,
+        "sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+        "utf8_bom": false,
+        "unicode_characters": 5314,
+        "crlf_count": 0,
+        "lf_count": 159,
+        "lf_normalized_bytes": 5318,
+        "crlf_normalized_bytes": 5477,
+        "compact_json_bytes": 3511,
+        "gzip_bytes": 1760,
+        "self_declared_sizes": [
+          5318
+        ]
+      }
+    },
+    {
+      "url": "https://sparc-prod-aod-discover-publish50-use1.s3.amazonaws.com/364/manifest.json",
+      "retrieved_at": "2026-09-20T15:19:13.369576+00:00",
+      "byte_count": 5318,
+      "sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+      "headers": {
+        "last-modified": "Wed, 07 Jan 2026 15:04:48 GMT",
+        "etag": "\"e14abfddf78406f9f1c1f1000bf6c108\"",
+        "x-amz-version-id": "k2bHkhvv_na3EZpeGWrWuN4UhimBiQVI",
+        "content-type": "application/octet-stream",
+        "content-length": "5318"
+      },
+      "measurements": {
+        "byte_count": 5318,
+        "sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+        "utf8_bom": false,
+        "unicode_characters": 5314,
+        "crlf_count": 0,
+        "lf_count": 159,
+        "lf_normalized_bytes": 5318,
+        "crlf_normalized_bytes": 5477,
+        "compact_json_bytes": 3511,
+        "gzip_bytes": 1760,
+        "self_declared_sizes": [
+          5318
+        ]
+      }
+    }
+  ],
+  "explanation": "Same object version/digest: file-list size conflicts with raw bytes, HTTP Content-Length and manifest self-entry. Internal publisher cause is not established.",
+  "declared_metadata_source": {
+    "url": "https://api.pennsieve.io/discover/datasets/364/versions/1/files/browse?limit=100&path=",
+    "retrieved_at": "2026-09-20T15:18:53.649754+00:00",
+    "byte_count": 1720,
+    "sha256": "ac5fd392cfabc0fd550bada5db11679112da1caacedefbc876401a1100cf726c",
+    "headers": {
+      "content-type": "application/json",
+      "content-length": "1720"
+    }
+  },
+  "classification_basis": "Observed API/object inconsistency, not publisher confirmation of an internal software defect; exact regeneration/staleness cause remains unknown.",
+  "hypotheses": {
+    "incorrect_local_measurement": "Rejected: independent repeated raw reads and Content-Length are 5318.",
+    "compression": "No Content-Encoding; requested identity; gzip diagnostic is 1760, not 4110.",
+    "newline_normalization": "No CRLF; LF=5318 bytes, CRLF-normalized=5477.",
+    "encoding_bom": "UTF-8 without BOM; 5314 Unicode characters, 5318 bytes.",
+    "json_representation": "Compact JSON diagnostic=3511 bytes; no evidence API size denotes another serialization.",
+    "version_mismatch": "Same S3 version ID and digest in file listing and all three responses.",
+    "generated_manifest": "Object Last-Modified is 2026-01-07, later than dataset publication; changed/generated metadata plausible, exact cause not established.",
+    "stale_size_metadata": "Supported diagnosis of inconsistent API size; no invented historical 4110-byte artifact."
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "dataset": 364,
+  "version": 1,
+  "files": [
+    {
+      "path": "files/dataset_description.xlsx",
+      "size": 15492,
+      "sha256": "5d671da4b89464009af898cce4b0efb9a2fcfc378f654fa8fd999da499172d36",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "files/manifest.xlsx",
+      "size": 5767,
+      "sha256": "b4a5d7abc77932127514680113fa77442cbc94b7bc2bb363b4ff53f40fdc940b",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "files/submission.xlsx",
+      "size": 5559,
+      "sha256": "456fc8871255ce53714d21e60817364cba1d4a1828946a61c23e4c76e62cde08",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "files/template.json",
+      "size": 251,
+      "sha256": "0263efbabffc1027f49349082ab63137a7e4ae4f1b8b42e1b28b5505104beb0f",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "metadata/records/file.csv",
+      "size": 458,
+      "sha256": "a87dc9c8741d4d1030d46fd1750dfc9f32878246a18b7dd20eef6189d658e128",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "metadata/schema.json",
+      "size": 567,
+      "sha256": "ef695a79a6b0cb8876184e1d98653f7e798373b67b6cadb581f4450bdbd1e315",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "revisions/1/banner.jpg",
+      "size": 33185,
+      "sha256": "6a5db29fcb312130b0373f0d2d6da704d9d174329859e3cec6a0e688e0e3ca04",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "revisions/1/manifest.json",
+      "size": 1873,
+      "sha256": "52761066ea4f14f747516dd971a1414f8ac7f3574ea3bac12e2d79a85b0c87cb",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "revisions/1/readme.md",
+      "size": 1511,
+      "sha256": "5e6e511ecd280f102258d0109419938f08f32ac7d0477288b1a60810b7d711fb",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "banner.jpg",
+      "size": 33185,
+      "sha256": "6a5db29fcb312130b0373f0d2d6da704d9d174329859e3cec6a0e688e0e3ca04",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "changelog.md",
+      "size": 24,
+      "sha256": "35105c3e9eae1a3495aafdf4005a34ed6ff19d408dd48df57ccd7fb8f50fe0a0",
+      "status": "VERIFIED"
+    },
+    {
+      "path": "manifest.json",
+      "size": 5318,
+      "sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+      "status": "FAILED"
+    },
+    {
+      "path": "readme.md",
+      "size": 1475,
+      "sha256": "e31934ec3d01b6dcc81d54ca55ab508cce85d0b85f5c35b11903110bed1a6d82",
+      "status": "VERIFIED"
+    }
+  ],
+  "workbook_inspection": {
+    "dataset_description.xlsx": {
+      "nonempty_cells": 159,
+      "selected_cells": {
+        "xl/worksheets/sheet1.xml#D12": "The simulations were performed with ASCENT v.1.2.1",
+        "xl/worksheets/sheet1.xml#H26": "https://osparc.io/study/7bb84d3a-24b2-11ee-a4be-02420a0bc195"
+      }
+    },
+    "manifest.xlsx": {
+      "nonempty_cells": 8,
+      "selected_cells": {
+        "xl/worksheets/sheet1.xml#A2": "template.json"
+      }
+    },
+    "submission.xlsx": {
+      "nonempty_cells": 18,
+      "selected_cells": {}
+    }
+  },
+  "source_receipts": {
+    "ascent_documentation": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/20faf73c7e3e743909ad98db4438a01dd5743389/docs/source/Running_ASCENT/osparc.md",
+      "retrieved_at": "2026-09-20T15:19:14.322604+00:00",
+      "byte_count": 3054,
+      "sha256": "74ecdc6b0e7827ba21e0bccf6910cf2e8096b8a427f5d47b93797478e0128e71",
+      "headers": {
+        "content-length": "3054",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"360913fc028520ed4f9aef0b9b70ba974667853f8a5d3bdac4a51bed2e26f3ba\""
+      }
+    },
+    "portal_tutorial": {
+      "url": "https://docs.sparc.science/v1.0/docs/tutorial-running-ascent-on-o2s2parc-from-the-sparc-portal",
+      "retrieval_status": "BLOCKED",
+      "http_status": 403
+    },
+    "config/templates/osparc/osparc_sim.json": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/1360b77920c5759a66815b6b3db29efa7f78f950/config/templates/osparc/osparc_sim.json",
+      "retrieved_at": "2026-09-20T15:19:14.587001+00:00",
+      "byte_count": 1973,
+      "sha256": "37303f3a48ff12a140d71cec1aa0c4bbd471a6c2854f2b22d77bc8a371a2f000",
+      "headers": {
+        "content-length": "1973",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"4021b0c0cb82d2eb62d0f071e722a0161320b7a2d2f5ff1826e0833561558c58\""
+      }
+    },
+    "config/templates/osparc/osparc_centroid_sim.json": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/1360b77920c5759a66815b6b3db29efa7f78f950/config/templates/osparc/osparc_centroid_sim.json",
+      "retrieved_at": "2026-09-20T15:19:14.621578+00:00",
+      "byte_count": 1822,
+      "sha256": "282d6819d78f886c309b9e81abc086099acbc2fecadd72398bfe390586d0839d",
+      "headers": {
+        "content-length": "1822",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"b74129e94b671e4b2987c3cfe3bd95da33e1a1ca82989b3ff4ab9f4c6eb75c68\""
+      }
+    },
+    "config/templates/osparc/osparc_run.json": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/1360b77920c5759a66815b6b3db29efa7f78f950/config/templates/osparc/osparc_run.json",
+      "retrieved_at": "2026-09-20T15:19:14.654455+00:00",
+      "byte_count": 308,
+      "sha256": "2adadf1d353b0180b6c21897958f3779916690929cf25b534d95685aa735b74e",
+      "headers": {
+        "content-length": "308",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"88dae3dd582e8868baf48cc35e1b25f56e019073cc2c8f795fe68af75568a83d\""
+      }
+    },
+    "src/neuron/HOC_Files/FindThresh.hoc": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/1360b77920c5759a66815b6b3db29efa7f78f950/src/neuron/HOC_Files/FindThresh.hoc",
+      "retrieved_at": "2026-09-20T15:19:14.704385+00:00",
+      "byte_count": 4841,
+      "sha256": "3b8ca4764d1f7ad8601cf5779f027bcce5a6b0b36d71b72327096cbd02e73ac7",
+      "headers": {
+        "content-length": "4841",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"0e95b1c0e7beb76b3a7935c69a4a6f8292c97bf3157fca207ed4cbd0742e8972\""
+      }
+    },
+    "src/neuron/HOC_Files/Saving_Thresh.hoc": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/1360b77920c5759a66815b6b3db29efa7f78f950/src/neuron/HOC_Files/Saving_Thresh.hoc",
+      "retrieved_at": "2026-09-20T15:19:14.738607+00:00",
+      "byte_count": 836,
+      "sha256": "a579563ea9a454441b745c539cff247c410fd7c52f5c50a0b8dfaf3bb484b239",
+      "headers": {
+        "content-length": "836",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"7e6e03e24f3294e2c93d53316679d2a86ff03bcd98130e423c159b2ffaf99939\""
+      }
+    },
+    "requirements.txt": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/1360b77920c5759a66815b6b3db29efa7f78f950/requirements.txt",
+      "retrieved_at": "2026-09-20T15:19:14.956106+00:00",
+      "byte_count": 176,
+      "sha256": "aea870d8fc86e242959b94f74c897a5963b9f3a350e9b446d558bbcfcec6d707",
+      "headers": {
+        "content-length": "176",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"dee79cdefa69abb2ada9fcb0014aba96a83c689c6ba01ee31c19b5d7fc81cf49\""
+      }
+    },
+    "docs/source/Getting_Started.md": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/1360b77920c5759a66815b6b3db29efa7f78f950/docs/source/Getting_Started.md",
+      "retrieved_at": "2026-09-20T15:19:15.190660+00:00",
+      "byte_count": 18881,
+      "sha256": "60baafd2caebaff7b02f4433218db5a76e92f913822ebc02b4290200f9ef5867",
+      "headers": {
+        "content-length": "18881",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"6e30583aa53ae7e369ecf8cf72a64ead11ea1edf89fa3e0c7fb5c74f3e6df893\""
+      }
+    }
+  },
+  "conclusions": {
+    "complete_public_inventory": true,
+    "reference_numerical_output_found": false,
+    "model_input_bundle_found": false,
+    "published_ascent_version": "1.2.1",
+    "source_tag_commit": "1360b77920c5759a66815b6b3db29efa7f78f950",
+    "solver_path": "NEURON HOC/MOD in ASCENT 1.2.1; no PyFibers path in that pinned source",
+    "guided_mode": "Uses pre-solved FEM potentials, per versioned ASCENT documentation; no potentials in deposit.",
+    "generic_source_output": "Saving_Thresh.hoc writes extracellular threshold amplitude in mA using %f; not an authenticated output for this study.",
+    "template_search_termination": "PERCENT_DIFFERENCE=1; threshold search stopping rule only, not a cross-run tolerance or an authenticated published setting.",
+    "unknown": [
+      "exact NEURON version",
+      "pre-solved FEM/COMSOL generating version",
+      "study service image digest",
+      "selected settings",
+      "nerve morphology bytes",
+      "electrode geometry bytes",
+      "FEM potential artifact",
+      "reference output bytes/digest"
+    ],
+    "banner_inspection": "Authenticated banner.jpg visually inspected: schematic promotional illustration, no numerical reference table or machine-readable plot values. Revision banner has the same digest."
+  }
+}

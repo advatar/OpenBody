@@ -6,7 +6,18 @@ The current SCKAN documentation directs programmatic users to the latest GitHub/
 
 This improves artifact identity but does not establish a final/stable SCKAN release. We therefore keep M0 research-only and refuse silent upgrades.
 
-The SPARC documentation identifies ASCENT Guided Mode Demo Version 1 (DOI 10.26275/0JZ3-ZRLO) and the corresponding o2S2PARC study. The tutorial also warns that runtime/version differences can cause small numerical differences. Consequently no tolerance is guessed: reference output bytes, model/runtime version, parameters and metric must be captured first.
+The Guided Mode target is dataset 364/version 1, DOI `10.26275/0JZ3-ZRLO`,
+with template `7bb84d3a-24b2-11ee-a4be-02420a0bc195`. The previous UUID belongs
+to ASCENT Tutorial (dataset 365), as independently shown by its authenticated
+file and versioned ASCENT documentation. The lock retains the rejected UUID and
+links the [identity chain](evidence/receipts/ascent-identity.json).
+These studies are INCOMPARABLE, not interchangeable revisions.
+
+The deposited README and workbook identify ASCENT 1.2.1. Guided Mode uses
+pre-solved FEM potentials; exact potential/input/output bytes and solver versions
+are not deposited. The generic source template's threshold-search stopping rule
+is not a reproduction tolerance. Warnings about older simulations in the Portal
+tutorial refer to a separate dataset (311), not an authenticated Guided Mode run.
 
 ## Query-reproduction gate
 

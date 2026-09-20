@@ -9,6 +9,7 @@ import urllib.request
 import zipfile
 from pathlib import Path, PurePosixPath
 from .adapter import IntegrityError, sha256
+from .evidence_tools import external_directory
 
 
 def metadata_check(lock, release):
@@ -80,8 +81,12 @@ def safe_extract(path, target, *, max_bytes=8 * 1024**3, max_files=100000):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--cache', type=Path, required=True)
-    p.add_argument('--evidence', type=Path, default=Path('experiments/sparc/evidence'))
+    p.add_argument('--evidence', type=Path, required=True)
     args = p.parse_args()
+    args.cache = external_directory(args.cache)
+    args.evidence = external_directory(args.evidence)
+    (args.evidence/'manifests').mkdir(exist_ok=True)
+    (args.evidence/'receipts').mkdir(exist_ok=True)
     lock = json.loads(Path(__file__).with_name('upstream-lock.json').read_text())['sckan']
     url = f"https://api.github.com/repos/{lock['repository']}/releases/tags/{lock['tag']}"
     raw = urllib.request.urlopen(url, timeout=60).read()

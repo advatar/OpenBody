@@ -19,10 +19,11 @@ No changes to OpenBody protocol/runtime, no patient data, no Twin writes, no cli
 - **VERIFIED:** pinned SCKAN prerelease metadata and both large artifact digests.
 - **REPRODUCED:** native upstream ApiNATOMY query and three bounded native query
   variants, with repeat-stable typed results; deliberately missing coverage is UNKNOWN.
-- **BLOCKED:** ASCENT numerical reproduction. Dataset metadata/configuration were
-  retrieved; the deposit's study UUID differs from the lock, one metadata size
-  check fails, reference outputs/solver identities are absent, and no licensed
-  local or authorized browser execution environment is available.
+- **BLOCKED:** ASCENT numerical reproduction. The UUID discrepancy is traced to
+  a different Tutorial dataset; the size discrepancy is an upstream metadata
+  defect. Neither supplies the missing published inputs/potentials, exact solver
+  versions or numerical reference output. No defensible contract was frozen and
+  no candidate was executed.
 - **NOT TESTED:** biological/clinical validity, broader Simple SCKAN competency
   reproduction, consumer integration and modality transfer.
 
@@ -32,3 +33,8 @@ See [SCKAN evidence](evidence/SCKAN_REPRODUCTION.md),
 The original literal-edge adapter remains; typed SPARQL results are preserved
 separately rather than flattened into asserted anatomical edges. This is not a
 complete ontology transformation or model qualification.
+
+Full query results and downloaded metadata now go to explicit external output
+directories. Git retains exact queries, compact receipts, selected regression
+facts and two-run hashes. See [PR audit](evidence/PR_AUDIT.md) for the complete
+file classification, size reduction and adversarial review.

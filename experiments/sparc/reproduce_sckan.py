@@ -12,12 +12,14 @@ import urllib.request
 from pathlib import Path
 from .adapter import sparql_envelope, sha256
 from .authenticate import verify
+from .evidence_tools import verify_results, external_directory
 
 IMAGE = 'tgbugs/musl@sha256:0eca49ed3b0e0cb93145710ad7d587dc49868df16f63747559abaac5bda20897'
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--cache', type=Path, required=True)
+    p.add_argument('--output', type=Path, required=True)
     p.add_argument('--endpoint', default='http://127.0.0.1:19999/blazegraph/sparql')
     args = p.parse_args()
     if urllib.parse.urlparse(args.endpoint).hostname not in ('127.0.0.1', 'localhost'):
@@ -25,6 +27,7 @@ def main():
     if args.endpoint != 'http://127.0.0.1:19999/blazegraph/sparql':
         raise ValueError('endpoint must match the inspected container port')
     root = Path(__file__).parent
+    output = external_directory(args.output)
     lock = json.loads((root/'upstream-lock.json').read_text())['sckan']
     verify(args.cache/lock['artifact'], lock['sha256'], lock['size_bytes'])
     journal = args.cache/'release'/lock['artifact'][:-4]/'data/blazegraph.jnl'
@@ -67,10 +70,19 @@ def main():
             receipt.update(execution_status='FAILED', error_type=type(exc).__name__)
         receipt['duration_seconds'] = round(time.monotonic()-start, 6)
         receipts.append(receipt)
-        (root/'evidence/receipts/sckan-queries.json').write_text(json.dumps(receipts,ensure_ascii=False,indent=2)+'\n')
-        print(path.stem,receipt['execution_status'],receipt.get('raw_row_count'),receipt.get('result_sha256'),flush=True)
-    verify(mounted, journal_digest, journal.stat().st_size)
+        print(path.stem,'QUERY_EXECUTED_PENDING_FINAL_CHECKS',receipt.get('raw_row_count'),receipt.get('result_sha256'),flush=True)
+    try:
+        verify(mounted, journal_digest, journal.stat().st_size)
+        verify_results(receipts, json.loads((root/'evidence/receipts/sckan-queries.json').read_text()), root/'queries')
+    except Exception:
+        for receipt in receipts:
+            receipt['execution_status'] = 'FAILED'
+            receipt['run_integrity_status'] = 'FAILED'
+        raise
+    finally:
+        (output/'sckan-queries.json').write_text(json.dumps(receipts,ensure_ascii=False,indent=2)+'\n')
     if any(r['execution_status']=='FAILED' for r in receipts):
         raise SystemExit(1)
+    print('PASS: journal unchanged and every result matches the frozen receipts', flush=True)
 
 if __name__ == '__main__': main()

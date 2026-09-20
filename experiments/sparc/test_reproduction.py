@@ -93,3 +93,8 @@ class ComparatorFailures(unittest.TestCase):
         self.assertEqual(reproduction_outcome(self.bound(),self.bound(),atol=0)['outcome'],'PASS')
         self.assertEqual(reproduction_outcome(self.bound(),self.bound(value=2),atol=0)['outcome'],'FAIL')
         self.assertEqual(reproduction_outcome(self.bound(),self.bound(species='human'),atol=0)['outcome'],'INCOMPARABLE')
+
+    def test_failed_incomparable_stays_incomparable(self):
+        self.assertEqual(reproduction_outcome(self.bound(),self.bound(status='failed',species='human'),atol=0)['outcome'],'INCOMPARABLE')
+    def test_missing_reference_stays_blocked(self):
+        self.assertEqual(reproduction_outcome(self.bound(status='missing'),self.bound(status='failed'),atol=0)['outcome'],'BLOCKED')

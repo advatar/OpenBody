@@ -18,8 +18,11 @@
     "doi": "10.26275/0JZ3-ZRLO",
     "version": 1,
     "year": 2023,
-    "osparc_study": "1f1f0efc-f94b-11ed-a0b9-02420a0b0ee6",
-    "published_runtime_note": "Portal simulations used an older ASCENT; current tutorial warns versions may produce small differences.",
-    "reference_output_gate": "Do not set a numeric tolerance until the exact published output artifact and runtime version are independently retrieved."
+    "osparc_study": "7bb84d3a-24b2-11ee-a4be-02420a0bc195",
+    "published_runtime_note": "Dataset 364 identifies ASCENT 1.2.1. Generic tutorial warnings about rerunning dataset 311 do not define a Guided Mode reproduction tolerance.",
+    "reference_output_gate": "Do not set a numeric tolerance until the exact published output artifact and runtime version are independently retrieved.",
+    "previous_osparc_study": "1f1f0efc-f94b-11ed-a0b9-02420a0b0ee6",
+    "identity_resolution_receipt": "evidence/receipts/ascent-identity.json",
+    "previous_study_disposition": "ASCENT Tutorial, dataset 365/version 1; not equivalent to Guided Mode."
   }
 }

@@ -1,0 +1,165 @@
+{
+  "resolution": "DISTINCT_STUDIES",
+  "equivalence": "INCOMPARABLE",
+  "explanation": "The previous lock followed a mislabeled SPARC citation example. Authenticated deposits and versioned ASCENT documentation independently identify different Guided Mode and Tutorial templates, not a demonstrated migration or alias.",
+  "sources": {
+    "doi": {
+      "url": "https://api.datacite.org/dois/10.26275/0JZ3-ZRLO",
+      "retrieved_at": "2026-09-20T15:19:13.735781+00:00",
+      "byte_count": 9380,
+      "sha256": "29d235f51ef2c4cc3192998cef464da873282f6c49e577c23184643d0fa2571b",
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "etag": "W/\"29d235f51ef2c4cc3192998cef464da8\""
+      }
+    },
+    "versions": {
+      "url": "https://api.pennsieve.io/discover/datasets/364/versions",
+      "retrieved_at": "2026-09-20T15:19:14.291515+00:00",
+      "byte_count": 2299,
+      "sha256": "47897a24d8d88e5aa4fd31ac55544da24aad63a6702489da28ac17b1eb01f3f6",
+      "headers": {
+        "content-type": "application/json",
+        "content-length": "2299"
+      }
+    },
+    "ascent_documentation": {
+      "url": "https://raw.githubusercontent.com/wmglab-duke/ascent/20faf73c7e3e743909ad98db4438a01dd5743389/docs/source/Running_ASCENT/osparc.md",
+      "retrieved_at": "2026-09-20T15:19:14.322604+00:00",
+      "byte_count": 3054,
+      "sha256": "74ecdc6b0e7827ba21e0bccf6910cf2e8096b8a427f5d47b93797478e0128e71",
+      "headers": {
+        "content-length": "3054",
+        "content-type": "text/plain; charset=utf-8",
+        "etag": "\"360913fc028520ed4f9aef0b9b70ba974667853f8a5d3bdac4a51bed2e26f3ba\""
+      }
+    },
+    "citation_guide": {
+      "url": "https://docs.sparc.science/docs/instructions-for-sparc-investigators-to-cite-their-datasets-in-manuscripts-1",
+      "retrieval_status": "BLOCKED",
+      "http_status": 403
+    }
+  },
+  "studies": {
+    "guided": {
+      "dataset": 364,
+      "version": 1,
+      "doi": "10.26275/0jz3-zrlo",
+      "title": "ASCENT Guided Mode Demo",
+      "uuid": "7bb84d3a-24b2-11ee-a4be-02420a0bc195",
+      "template_name": "ASCENT Guided Mode Demo",
+      "template_receipt": {
+        "path": "files/template.json",
+        "expected_size": 251,
+        "size": 251,
+        "expected_sha256": "0263efbabffc1027f49349082ab63137a7e4ae4f1b8b42e1b28b5505104beb0f",
+        "observed_sha256": "0263efbabffc1027f49349082ab63137a7e4ae4f1b8b42e1b28b5505104beb0f",
+        "object_version": "c8LpOhyAqDsXvz.LBczw39jrCH1gXRe8",
+        "status": "VERIFIED",
+        "retrieval": {
+          "url": "https://sparc-prod-aod-discover-publish50-use1.s3.amazonaws.com/364/files/template.json?versionId=c8LpOhyAqDsXvz.LBczw39jrCH1gXRe8",
+          "retrieved_at": "2026-09-20T15:18:58.414083+00:00",
+          "byte_count": 251,
+          "sha256": "0263efbabffc1027f49349082ab63137a7e4ae4f1b8b42e1b28b5505104beb0f",
+          "headers": {
+            "content-length": "251",
+            "last-modified": "Thu, 23 Oct 2025 16:09:27 GMT",
+            "etag": "\"bcfe4190d5f354e9c3f1c6dd8ebf4907\"",
+            "x-amz-version-id": "c8LpOhyAqDsXvz.LBczw39jrCH1gXRe8",
+            "content-type": "application/octet-stream"
+          }
+        }
+      },
+      "metadata_source": {
+        "url": "https://api.pennsieve.io/discover/datasets/364/versions/1",
+        "retrieved_at": "2026-09-20T15:18:53.069256+00:00",
+        "byte_count": 2297,
+        "sha256": "42283e61a4c73219caec1733a3c797e46cf75820da78ab505e04c9ed072d0475",
+        "headers": {
+          "content-type": "application/json",
+          "content-length": "2297"
+        }
+      }
+    },
+    "tutorial": {
+      "dataset": 365,
+      "version": 1,
+      "doi": "10.26275/3d2g-d3xd",
+      "title": "ASCENT Tutorial",
+      "uuid": "1f1f0efc-f94b-11ed-a0b9-02420a0b0ee6",
+      "template_name": "ASCENT Tutorial",
+      "template_receipt": {
+        "path": "files/template.json",
+        "expected_size": 271,
+        "size": 271,
+        "expected_sha256": "5916725bcc86462c6db39cf96616eb2a7bd548cebdcde41fa173079f9188172b",
+        "observed_sha256": "5916725bcc86462c6db39cf96616eb2a7bd548cebdcde41fa173079f9188172b",
+        "object_version": "IPTjiyXbhPaBGsECvkfw4fsXQ5otXB5R",
+        "status": "VERIFIED",
+        "retrieval": {
+          "url": "https://sparc-prod-aod-discover-publish50-use1.s3.amazonaws.com/365/files/template.json?versionId=IPTjiyXbhPaBGsECvkfw4fsXQ5otXB5R",
+          "retrieved_at": "2026-09-20T15:19:08.292256+00:00",
+          "byte_count": 271,
+          "sha256": "5916725bcc86462c6db39cf96616eb2a7bd548cebdcde41fa173079f9188172b",
+          "headers": {
+            "last-modified": "Thu, 23 Oct 2025 16:09:41 GMT",
+            "etag": "\"02f241435c60bc83c7aa9416cabb517f\"",
+            "x-amz-version-id": "IPTjiyXbhPaBGsECvkfw4fsXQ5otXB5R",
+            "content-type": "application/octet-stream",
+            "content-length": "271"
+          }
+        }
+      },
+      "metadata_source": {
+        "url": "https://api.pennsieve.io/discover/datasets/365/versions/1",
+        "retrieved_at": "2026-09-20T15:19:02.776448+00:00",
+        "byte_count": 2235,
+        "sha256": "5e5ae7dd5e6e1a3715cd2d48be65b0746ffd019c831f173b86361cbbf07f78f8",
+        "headers": {
+          "content-type": "application/json",
+          "content-length": "2235"
+        }
+      }
+    }
+  },
+  "links": [
+    {
+      "from": "10.26275/0jz3-zrlo",
+      "relation": "resolves_to_dataset_version",
+      "to": "364/1"
+    },
+    {
+      "from": "364/1/files/template.json",
+      "relation": "declares_template_uuid",
+      "to": "7bb84d3a-24b2-11ee-a4be-02420a0bc195"
+    },
+    {
+      "from": "10.26275/3d2g-d3xd",
+      "relation": "resolves_to_dataset_version",
+      "to": "365/1"
+    },
+    {
+      "from": "365/1/files/template.json",
+      "relation": "declares_template_uuid",
+      "to": "1f1f0efc-f94b-11ed-a0b9-02420a0b0ee6"
+    }
+  ],
+  "citation_guide_observation": {
+    "method": "web search/open primary documentation",
+    "observed_date": "2026-09-20",
+    "finding": "Citation example labels Tutorial UUID as Guided Mode; raw scripted retrieval returned 403. This is supporting context, not the identity anchor."
+  },
+  "documentation_history": {
+    "added_links_commit": "2d708dc53d696c8a979de2704615dcc517720904",
+    "added_links_date": "2023-07-26",
+    "syntax_correction_commit": "20faf73c7e3e743909ad98db4438a01dd5743389",
+    "interpretation": "Both study links already distinguished before the December 2023 dataset publications."
+  },
+  "workbook_corroboration": {
+    "nonempty_cells": 159,
+    "selected_cells": {
+      "xl/worksheets/sheet1.xml#D12": "The simulations were performed with ASCENT v.1.2.1",
+      "xl/worksheets/sheet1.xml#H26": "https://osparc.io/study/7bb84d3a-24b2-11ee-a4be-02420a0bc195"
+    }
+  }
+}

@@ -34,8 +34,8 @@ journal bytes again after execution.
 
 ## Query scope and semantics
 
-[Exact queries](../queries/) and [typed results/receipts](receipts/sckan-queries.json)
-record language, engine, release, times, duration, row counts and result hashes.
+[Exact queries](../queries/) and [compact receipts and selected typed facts](receipts/sckan-queries.json)
+record language, engine, release, times, duration, row counts and result hashes. Full typed result dumps are external, not vendored.
 `upstream-apinatomy.rq` is the native OWL example from
 [SciCrunch/sparc-curation](https://github.com/SciCrunch/sparc-curation/blob/54a4c7ed112bc60387e46bb61287d2092239b5c5/docs/simple-sckan/readme.md),
 with only surrounding code-fence whitespace removed. The upstream MIT notice is
@@ -99,7 +99,7 @@ upgrade the scientific evidence class. Imported ontology terms retain native IRI
 From the repository root (Python standard library plus Docker):
 
 ```sh
-python3 -m experiments.sparc.authenticate --cache /tmp/openbody-sparc-cache
+python3 -m experiments.sparc.authenticate --cache /tmp/openbody-sparc-cache --evidence /tmp/openbody-sckan-authentication
 ```
 
 Extract only after authentication succeeds (the target must not exist):
@@ -131,7 +131,7 @@ docker run --detach --name openbody-sparc-reproduction --platform linux/amd64 \
   --memory 4g --cpus 2 -p 127.0.0.1:19999:9999 \
   -v /tmp/openbody-sparc-cache/blazegraph-run:/var/lib/blazegraph \
   tgbugs/musl@sha256:0eca49ed3b0e0cb93145710ad7d587dc49868df16f63747559abaac5bda20897
-python3 -m experiments.sparc.reproduce_sckan --cache /tmp/openbody-sparc-cache
+python3 -m experiments.sparc.reproduce_sckan --cache /tmp/openbody-sparc-cache --output /tmp/openbody-sckan-results
 docker stop openbody-sparc-reproduction
 ```
 
@@ -148,3 +148,25 @@ manual; synthetic CI never downloads these artifacts or starts a database.
 | `keast-5` | 72 | `97e6ebc4dda328816b395e2c52b7672cd1c5a6aa52a5bd7dff4bcf9e807e5b1c` |
 | `missing-population` | 0 | `17f1e24a64a61eaeb837f3c2549a4451ba81f91858d875fb1a9c1a47554fbb10` |
 | `upstream-apinatomy` | 516 | `278bf46e3ba3afc4ab54c8bb6131e984e38e9cf2a18bc216cf714da0bd8d2ad9` |
+
+## Compact evidence policy
+
+The frozen queries, source/engine identities, row counts and result digests are
+unchanged. Each receipt retains at most two typed regression rows plus both
+execution timestamps/durations/digests. These samples cannot establish the full
+result hash on their own. Reconstruction and verification are explicit:
+
+```sh
+python3 -m experiments.sparc.evidence_tools --results /tmp/openbody-sckan-results/sckan-queries.json
+```
+
+That verifier checks every full canonical result, including unselected rows,
+query bytes, count, species summary, metadata predicates and source/engine
+bindings against the frozen compact receipts. Both original full runs passed it
+before removal from the branch tip. No SCKAN query was added or rerun for cleanup.
+The original generated receipts remain recoverable from Git commit
+`90d3d3c3412ecebc87ecef5f858fee4b407e1957`; they are not required for a fresh rerun.
+The native runner now writes only to external output, verifies the mounted
+journal at completion, and fails if output differs from the frozen result.
+Offline CI tests exercise this verifier with tampered unselected rows; they do
+not pretend a summary alone independently verifies upstream execution.

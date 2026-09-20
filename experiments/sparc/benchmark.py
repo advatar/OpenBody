@@ -29,6 +29,6 @@ def reproduction_outcome(reference, candidate, *, atol, rtol=0.0):
     status = result['status']
     result['outcome'] = {'pass': 'PASS', 'fail': 'FAIL', 'incomparable': 'INCOMPARABLE',
                          'invalid_numeric_output': 'FAIL', 'invalid_tolerance': 'INCOMPARABLE'}.get(status, 'BLOCKED')
-    if candidate.get('status') == 'failed':
+    if status == 'not_compared' and reference.get('status') == 'ok' and candidate.get('status') == 'failed':
         result['outcome'] = 'FAIL'
     return result
