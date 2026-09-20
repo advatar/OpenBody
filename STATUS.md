@@ -111,10 +111,11 @@ SCKAN functionality is frozen. Main remains `8c2dff59c6c5e431b99db38e197a659f029
 
 Start `15ff70ee41c59c6d11f6132507a8f66205fde948`; reconcile main
 `0f1ac79d716506816aee66c827a44b8ec6da748b` without changing its planning track.
-- [ ] Document research evidence handoff to existing PR #19 qualification architecture.
-- [ ] Add compact admission examples and test a committed pre-execution contract gate.
-- [ ] Move ASCENT external bundle dependency into its own follow-up issue.
-- [ ] Complete adversarial review, full local checks and final-head CI; assess review readiness.
+- [x] Document research evidence handoff to existing PR #19 qualification architecture.
+- [x] Add compact admission examples and test a committed pre-execution contract gate.
+- [x] Move ASCENT external bundle dependency to issue #25.
+- [x] Complete fresh local adversarial review and full local checks (99 research, 172 reference, 2 examples, 11 clinical fixtures, 5 JSON checks).
+- [x] Prepare for final-head hosted CI and external review; readiness is conditional on those checks and is recorded on PR #23.
 
 SCKAN bounded reproduction is complete and frozen. ASCENT remains BLOCKED;
 no candidate will execute during this milestone. Do not merge PR #23.

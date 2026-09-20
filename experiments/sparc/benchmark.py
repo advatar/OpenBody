@@ -24,7 +24,11 @@ def compare(reference:dict,candidate:dict,*,atol:float,rtol:float=0.0)->dict:
 
 
 def reproduction_outcome(reference, candidate, *, atol, rtol=0.0):
-    """Operational outcome distinct from the existing detailed comparison status."""
+    """Diagnostic comparison only; not an execution gate or predeclaration evidence.
+
+    New candidate invocations must use contract.execute. These results cannot
+    establish model qualification or override a missing reproduction contract.
+    """
     result = compare(reference, candidate, atol=atol, rtol=rtol)
     status = result['status']
     result['outcome'] = {'pass': 'PASS', 'fail': 'FAIL', 'incomparable': 'INCOMPARABLE',

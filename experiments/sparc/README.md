@@ -4,7 +4,7 @@ Research-only integration candidate for OpenBody. It follows the 2026 SPARC revi
 
 The SCKAN reader is deliberately literal and fail-closed: it verifies a pinned local export when a digest is supplied, preserves native triples and evidence, performs exact filtering, and treats missing coverage as unknown. It does not invent inverse/transitive connectivity or convert anatomical relations into signal flow.
 
-The numerical comparator is the first gate for an ASCENT reproduction. It refuses comparisons unless model, artifact, inputs, dataset version, species, stimulation modality, metric and unit agree. A pass means only that a candidate number is within a predeclared tolerance of a reference number.
+The numerical comparator is a diagnostic helper: it refuses comparisons unless model, artifact, inputs, dataset version, species, stimulation modality, metric and unit agree. It does not establish predeclaration. New executable candidates require the committed pre-execution gate described in the admission policy; no ASCENT contract exists.
 
 ## Boundaries
 
@@ -38,3 +38,8 @@ Full query results and downloaded metadata now go to explicit external output
 directories. Git retains exact queries, compact receipts, selected regression
 facts and two-run hashes. See [PR audit](evidence/PR_AUDIT.md) for the complete
 file classification, size reduction and adversarial review.
+
+See [external model admission policy](../../docs/EXTERNAL_MODEL_ADMISSION.md) for
+qualification boundaries, compact examples and the committed pre-execution gate.
+ASCENT external evidence is tracked separately in [issue #25](https://github.com/advatar/OpenBody/issues/25);
+it does not block review of this research infrastructure. No candidate was executed.

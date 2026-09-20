@@ -59,3 +59,14 @@ correction for a fully passing deposit receipt; it is diagnosed, not waived.
 Broader SCKAN and biological/clinical qualification are later milestones. PR #23
 remains draft for reviewer acceptance of the explicit BLOCKED scope, without
 any implication of completed ASCENT reproduction or consumer readiness.
+
+See [external model admission policy](../../docs/EXTERNAL_MODEL_ADMISSION.md) for
+qualification boundaries, compact examples and the committed pre-execution gate.
+ASCENT external evidence is tracked separately in [issue #25](https://github.com/advatar/OpenBody/issues/25);
+it does not block review of this research infrastructure. No candidate was executed.
+
+Admission milestone verification: **99 research tests**, **172 reference tests**
+(two dependency deprecation warnings), **2 protocol examples**, **11 clinical-reference
+fixtures**, **5 JSON parsing checks** passed. New tests use synthetic temporary Git
+repositories and prove contract-before-callback ordering. No ASCENT execution or
+SCKAN query rerun occurred. Final-head hosted CI is linked from PR #23.

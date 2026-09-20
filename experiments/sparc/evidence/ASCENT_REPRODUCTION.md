@@ -131,3 +131,10 @@ compared to them; changed upstream bytes must not be silently accepted as the
 same artifact. Authentication alone never binds species, stimulation modality,
 physiological engagement or clinical benefit. No transfer to auricular VNS,
 Cymba qualification, patient data, Twin writes, control or dosing is introduced.
+
+## Follow-up boundary
+
+The public-deposit investigation is complete for PR #23. [Issue #25](https://github.com/advatar/OpenBody/issues/25)
+owns the external reproduction bundle. Obtain it, commit a defensible contract,
+then execute and compare; model/context qualification remains a separate gate.
+No ASCENT execution or tolerance selection is authorized by this report.

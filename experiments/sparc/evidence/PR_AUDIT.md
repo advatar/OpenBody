@@ -132,7 +132,7 @@ sign-off. Tests are software evidence only. Findings and fixes:
     deterministic offline suite has no dependency downloads or live services.
     Local path examples are generic temp directories, not private user paths.
 
-## Review gate
+## Previous review gate (superseded by the admission milestone below)
 
 The investigation and cleanup can be reviewed on their evidence, but this is
 not ASCENT reproduction completion. PR stays draft. A reviewer must explicitly
@@ -140,3 +140,44 @@ accept the bounded SCKAN success plus documented ASCENT BLOCKED scope, or requir
 the authorized Guided Mode study export, complete runtime/input/potential lineage
 and published numerical output before progressing the milestone. That output is
 needed to commit a defensible contract before any candidate execution.
+
+## External admission milestone review — 2026-09-20
+
+Starting head `15ff70ee41c59c6d11f6132507a8f66205fde948`; main's only intervening
+change is issue #24 planning in STATUS, preserved by merge. PR #19 was inspected
+at `bb3c689802e9284a29c200e42b8a01b96fa0680f`: model-family docs/schema/runtime
+already supply qualification and context admission. They remain unmerged;
+PR #23 documents that boundary rather than installing a competing authority.
+
+Additional files are narrowly classified:
+- A source: `experiments/sparc/contract.py`, committed pre-invocation exact-byte gate.
+- B tests: `experiments/sparc/test_contract.py`, synthetic Git ordering/failure tests and receipt-linked examples.
+- C metadata: `experiments/sparc/examples/admission.json`, compact non-authoritative claim examples.
+- C policy: `docs/EXTERNAL_MODEL_ADMISSION.md`, evidence/qualification mapping and trust boundary.
+Existing A–D classifications above remain; no generated dumps or runtime caches added.
+
+Fresh adversarial review findings and fixes:
+- The numerical helper's old README wording implied tolerance predeclaration
+  that it does not enforce. Corrected it and documented diagnostics versus the
+  sole new candidate invocation gate. A comparison helper never grants admission.
+- A new fixture initially treated the missing-population receipt as REPRODUCED;
+  its actual label is VERIFIED with UNKNOWN coverage. Tests now retain that exact
+  distinction and verify the repeated digest, without changing historical evidence.
+- Merely accepting an environment claim did not bind actual input/model bytes.
+  The gate now checks both artifact and input digests before invocation; the
+  trusted adapter still must attest that it executes those bytes in that runtime.
+- Tests reject changed/staged/symlink/duplicate-key contracts, nonancestor commits,
+  unknown/missing context, arbitrary/NaN tolerance, mismatched artifacts/inputs/runtime,
+  missing/wrong reference and the actual incomplete ASCENT gate. Failure states
+  remain distinct. Synthetic PASS is not scientific evidence.
+- Historical SCKAN reproduction is not relabeled as a newly precontracted run.
+  No upstream authentication was re-inferred from the lock, no queries expanded,
+  no ASCENT candidate invoked, and no size failure or UUID difference waived.
+- PR #19 is explicitly identified as pending. No model-family/runtime/protocol code
+  was copied or changed. No patient/context authority is synthesized by examples.
+
+This is a fresh local adversarial review, not independent scientific approval.
+External human review is still required before merge. ASCENT's external resource
+gate is now issue #25 and is not itself a blocker to reviewing this bounded PR.
+Readiness requires green final-head CI; neither marking ready nor passing tests
+constitutes approval, biological validation or a merge authorization.

@@ -28,5 +28,18 @@
     "queries_per_run": 5,
     "status": "PASS",
     "queries_executed_this_milestone": 0
+  },
+  "external_admission_checkpoint": {
+    "recorded_at": "2026-09-20T17:17:00.976804+00:00",
+    "starting_head": "15ff70ee41c59c6d11f6132507a8f66205fde948",
+    "research_passed": 99,
+    "reference_passed": 172,
+    "reference_warnings": 2,
+    "protocol_examples_passed": 2,
+    "clinical_reference_fixtures_passed": 11,
+    "json_checks_passed": 5,
+    "ascent_executed": false,
+    "sckan_rerun": false,
+    "note": "Commands above repeated for admission changes; earlier full SCKAN receipt check was not rerun."
   }
 }
