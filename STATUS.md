@@ -74,3 +74,10 @@ OpenBody CI run `34902726178` and all 172 local reference tests pass. PR #17 is
 ready for merge after the tracking update's checks. G2's joint release remains
 open until ProvidEHR PR #519's remaining release/policy gates are resolved.
 G3/G4 consumption and model qualification are tracked by Metabolog#1129.
+
+## 2026-09-20 — Closed-loop experimental physiology: observation to hypothesis to intervention to evidence
+
+- [ ] Track in GitHub issue #24.
+- [ ] Execute the bounded plan in the issue without weakening existing authority, privacy, provenance, or release gates.
+- [ ] Add adversarial/negative-control coverage appropriate to this track and record qualification evidence before promotion.
+
