@@ -185,66 +185,9 @@ open until ProvidEHR PR #519's remaining release/policy gates are resolved.
 G3/G4 consumption and model qualification are tracked by Metabolog#1129.
 
 
-G3/G4 next execution step (2026-09-15, issue #18): connect retained qualified
-model executions to the existing clinical assertion reference profile. An
-explicit host-configured publisher will require clinical-purpose qualification,
-current independently verified tenant/EHR subject binding, exact source and
-qualification rechecks, and known supported uncertainty before returning an
-admission packet. State inference and counterfactual simulation stay distinct.
-Software/research outputs cannot be relabeled as clinical; forecasts without a
-compatible standalone clinical object profile must abstain. Verify actual model
-call -> retained result -> publisher HTTP -> clinical-reference validation, with
-revocation, expiry, binding, source changes and type negatives. This is not a
-production DG/identity adapter or a native app integration claim.
+## 2026-09-20 — Closed-loop experimental physiology: observation to hypothesis to intervention to evidence
 
-Counterfactual revision `42b4b37` passed hosted CI `34919089702` (328 local
-reference tests plus core and clinical-reference conformance).
+- [ ] Track in GitHub issue #24.
+- [ ] Execute the bounded plan in the issue without weakening existing authority, privacy, provenance, or release gates.
+- [ ] Add adversarial/negative-control coverage appropriate to this track and record qualification evidence before promotion.
 
-Clinical publication implemented (2026-09-15): explicit
-`QualifiedClinicalReferencePublisher` and opt-in reference/object GET routes
-consume actual retained state/counterfactual executions. Publication requires the
-original clinical-purpose lease and current exact independent subject binding;
-software/research purposes and unknown uncertainty abstain. Source, dependency,
-qualification and binding changes prevent return; identical reads retain a
-stable immutable reference ID. Counterfactual receipts still reference the
-complete control/intervention execution. No clinical action is submitted.
-
-Validation: 383 reference tests pass locally, including 55 new actual-call/HTTP
-publication and negative tests. Core and clinical-reference conformance pass.
-Hosted checks are pending the commit. Production DG/identity adapters, native
-callers, admission of these new packets through ProvidEHR, and downstream
-transitive use-time revalidation remain open.
-
-G3/G17 live integration follow-up (ProvidEHR#527, OpenBody#18): extend the
-actual worker/API verifier to execute the qualified counterfactual runtime and
-clinical publisher. Preserve the real worker observation's unknown uncertainty
-and prove it cannot become a clinically admitted result. A separate explicitly
-synthetic known-input observation will test positive runtime publication, actual
-ProvidEHR admission/replay/read and issuer revocation. That positive fixture is
-not evidence of qualified COSMIC measurement uncertainty. The gateway's fixed
-trusted issuer must re-resolve all current uses and leave historical records
-intact after denial.
-
-Live verifier update implemented: the actual qualified counterfactual runtime and
-authenticated publisher now serve the fixed issuer expected by ProvidEHR#527.
-The real worker observation retains unknown uncertainty and cannot be published
-clinically. A distinct synthetic known-input source exercises positive runtime
-publication, admission/replay/state/simulation/A2UI reads and current issuer
-qualification/dependency/identity/source revocation. All 384 local reference
-tests and conformance pass. A local actual Python publisher -> real Rust clinical
-admission crate + production HTTP resolver smoke passes, including revocation
-denial. Full worker/gateway integration is pending ProvidEHR's updated CI pin;
-this local smoke does not substitute for that gateway test or clinical evidence.
-
-Verified full live integration (2026-09-15): ProvidEHR `ed4df64` with OpenBody
-`38e8cb1` passed `34921269684`. The actual COSMIC worker -> admitted clinical
-source API -> qualified counterfactual runtime preserves unknown uncertainty and
-refuses clinical publication. A distinct synthetic known-input observation
-passes actual model/publisher -> enforced gateway admission/replay/read/A2UI;
-qualification, dependency, identity and source changes deny further use while
-historical records and original clinical compositions remain intact. This
-replaces the earlier fixture-only model-reference return with actual callable
-execution evidence. It still does not establish clinical efficacy, qualified
-COSMIC uncertainty, native callers, production DG/identity or full G17 graph
-propagation. The publisher/known-source authorities in this verifier are
-explicitly synthetic, test-only configuration.
