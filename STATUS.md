@@ -75,9 +75,47 @@ ready for merge after the tracking update's checks. G2's joint release remains
 open until ProvidEHR PR #519's remaining release/policy gates are resolved.
 G3/G4 consumption and model qualification are tracked by Metabolog#1129.
 
+## SPARC research reproduction gates — 2026-09-20
+
+Continue issue #22 and draft PR #23 on `research/sparc-m0`; do not merge.
+Starting PR SHA: `49d8d9526cd1aeed377530dfd8e4c9bbd39e40b7`.
+Starting main SHA: `8c2dff59c6c5e431b99db38e197a659f029e7244` (already an ancestor).
+
+- [x] Authenticate pinned SCKAN prerelease metadata and local artifact bytes.
+- [x] Execute the native upstream query and bounded variants with typed semantics; broader Simple SCKAN coverage remains open.
+- [ ] ASCENT numerical reference gate BLOCKED: distinct Tutorial/Guided Mode identities resolved; published reference output and complete runtime/input binding remain absent.
+- [x] Run SCKAN in the available environment; record exact ASCENT reference/license/access blockers.
+- [x] Repair SPARC CI, run research and existing conformance suites.
+- [x] Commit receipts and reports; push to existing draft PR without merging.
+
+No stable protocol/runtime or Cymba changes are authorized by this milestone.
+
+## ASCENT provenance and PR reduction — 2026-09-20
+
+Continue issue #22 / draft PR #23 from `90d3d3c3412ecebc87ecef5f858fee4b407e1957`.
+SCKAN functionality is frozen. Main remains `8c2dff59c6c5e431b99db38e197a659f029e7244`.
+- [x] Trace distinct Guided Mode/Tutorial identities and diagnose upstream manifest size metadata defect.
+- [x] Inspect complete public deposit, workbooks and pinned source; reference output/runtime binding remains absent.
+- [x] Preserve BLOCKED: no defensible contract, no candidate execution, no guessed tolerance.
+- [x] Classify all PR files and replace bulky generated evidence with reproducible receipts.
+- [x] Perform adversarial review and local tests; publish for hosted CI on the draft PR without merging.
+
 ## 2026-09-20 — Closed-loop experimental physiology: observation to hypothesis to intervention to evidence
 
 - [ ] Track in GitHub issue #24.
 - [ ] Execute the bounded plan in the issue without weakening existing authority, privacy, provenance, or release gates.
 - [ ] Add adversarial/negative-control coverage appropriate to this track and record qualification evidence before promotion.
 
+
+## External scientific resource admission — 2026-09-20
+
+Start `15ff70ee41c59c6d11f6132507a8f66205fde948`; reconcile main
+`0f1ac79d716506816aee66c827a44b8ec6da748b` without changing its planning track.
+- [x] Document research evidence handoff to existing PR #19 qualification architecture.
+- [x] Add compact admission examples and test a committed pre-execution contract gate.
+- [x] Move ASCENT external bundle dependency to issue #25.
+- [x] Complete fresh local adversarial review and full local checks (99 research, 172 reference, 2 examples, 11 clinical fixtures, 5 JSON checks).
+- [x] Prepare for final-head hosted CI and external review; readiness is conditional on those checks and is recorded on PR #23.
+
+SCKAN bounded reproduction is complete and frozen. ASCENT remains BLOCKED;
+no candidate will execute during this milestone. Do not merge PR #23.

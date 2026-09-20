@@ -1,0 +1,11 @@
+# Research-only SCKAN export query.
+# Preserve native terms and evidence; do not infer inverse or transitive connectivity.
+SELECT ?subject ?predicate ?object ?species ?citation
+WHERE {
+  ?subject ?predicate ?object .
+  OPTIONAL { ?subject <http://uri.interlex.org/tgbugs/uris/readable/hasSpecies> ?species . }
+  OPTIONAL { ?subject <http://purl.org/dc/terms/references> ?citation . }
+  FILTER(isIRI(?subject))
+  FILTER(isIRI(?predicate))
+}
+ORDER BY ?subject ?predicate ?object

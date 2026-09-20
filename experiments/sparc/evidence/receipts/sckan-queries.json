@@ -1,0 +1,467 @@
+[
+  {
+    "query_id": "bladder-target",
+    "query_language": "SPARQL 1.1",
+    "query_sha256": "7367a5903c85a180a0ceece04a985659d6048e3fbaf5862dcb6c46e342951ffe",
+    "release": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "source_artifact_sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "journal_sha256": "841289a3eff9d1339a094aa93741cbd73e42c4d830817e466183bc0eb0e46096",
+    "engine": "Blazegraph 2.1.6-SNAPSHOT",
+    "engine_commit": "6b0c935523f5064b80279b30a5175a858cddd2a1",
+    "engine_image": "tgbugs/musl@sha256:0eca49ed3b0e0cb93145710ad7d587dc49868df16f63747559abaac5bda20897",
+    "host_architecture": "arm64",
+    "execution_architecture": "linux/amd64 (emulated)",
+    "executed_at": "2026-09-20T12:49:02.130191+00:00",
+    "status": "ok",
+    "research_only": true,
+    "raw_row_count": 10,
+    "result_sha256": "0854a10d2e74156f8ed50c305433a1f10732837105ff72e77e739359533edac4",
+    "limitations": [
+      "Bindings are query results, not asserted direct connectivity edges.",
+      "OWL filler restrictions retain their native predicates; unsupported nested expressions require source inspection.",
+      "No inverse, transitive connectivity, signal direction, or clinical effect is inferred."
+    ],
+    "execution_status": "REPRODUCED",
+    "interpretation": "Executed pinned-release query; not agreement with a historical release result or biological validation.",
+    "duration_seconds": 0.092053,
+    "query_file": "queries/bladder-target.rq",
+    "variables": [
+      "anatomy",
+      "population",
+      "relation",
+      "species"
+    ],
+    "selected_bindings": [
+      {
+        "population": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/apinat-simple/neuron-type-keast-1"
+        },
+        "relation": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/hasOrganTarget"
+        },
+        "anatomy": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/UBERON_0001556"
+        },
+        "species": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+        }
+      },
+      {
+        "population": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/apinat-simple/neuron-type-keast-12"
+        },
+        "relation": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/hasOrganTarget"
+        },
+        "anatomy": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/UBERON_0001556"
+        },
+        "species": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+        }
+      }
+    ],
+    "observed_species": [
+      "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+    ],
+    "metadata_predicates": [],
+    "selection_note": "First two canonical rows only; digest/count cover the complete external result, not these selected facts.",
+    "prior_execution": {
+      "executed_at": "2026-09-20T12:44:50.294423+00:00",
+      "duration_seconds": 0.55482,
+      "result_sha256": "0854a10d2e74156f8ed50c305433a1f10732837105ff72e77e739359533edac4",
+      "raw_row_count": 10,
+      "execution_status": "REPRODUCED"
+    }
+  },
+  {
+    "query_id": "keast-5-rat",
+    "query_language": "SPARQL 1.1",
+    "query_sha256": "a5999a4e06dc471bb7b86dd49cf1ab664bcb51d03bb5da9598bac2dc41172839",
+    "release": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "source_artifact_sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "journal_sha256": "841289a3eff9d1339a094aa93741cbd73e42c4d830817e466183bc0eb0e46096",
+    "engine": "Blazegraph 2.1.6-SNAPSHOT",
+    "engine_commit": "6b0c935523f5064b80279b30a5175a858cddd2a1",
+    "engine_image": "tgbugs/musl@sha256:0eca49ed3b0e0cb93145710ad7d587dc49868df16f63747559abaac5bda20897",
+    "host_architecture": "arm64",
+    "execution_architecture": "linux/amd64 (emulated)",
+    "executed_at": "2026-09-20T12:49:02.222948+00:00",
+    "status": "ok",
+    "research_only": true,
+    "raw_row_count": 72,
+    "result_sha256": "97e6ebc4dda328816b395e2c52b7672cd1c5a6aa52a5bd7dff4bcf9e807e5b1c",
+    "limitations": [
+      "Bindings are query results, not asserted direct connectivity edges.",
+      "OWL filler restrictions retain their native predicates; unsupported nested expressions require source inspection.",
+      "No inverse, transitive connectivity, signal direction, or clinical effect is inferred."
+    ],
+    "execution_status": "REPRODUCED",
+    "interpretation": "Executed pinned-release query; not agreement with a historical release result or biological validation.",
+    "duration_seconds": 20.206676,
+    "query_file": "queries/keast-5-rat.rq",
+    "variables": [
+      "anatomy",
+      "filler_relation",
+      "metadata_predicate",
+      "metadata_value",
+      "population",
+      "relation",
+      "species"
+    ],
+    "selected_bindings": [
+      {
+        "population": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/neuron-type-keast-5"
+        },
+        "relation": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/hasAxonPresynapticElementIn"
+        },
+        "filler_relation": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/BFO_0000050"
+        },
+        "anatomy": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/UBERON_0016508"
+        },
+        "species": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+        },
+        "metadata_predicate": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/composer/uris/readable/hasComposerURI"
+        },
+        "metadata_value": {
+          "type": "uri",
+          "value": "https://composer.scicrunch.io/statement/101"
+        }
+      },
+      {
+        "population": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/neuron-type-keast-5"
+        },
+        "relation": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/hasAxonPresynapticElementIn"
+        },
+        "filler_relation": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/BFO_0000050"
+        },
+        "anatomy": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/UBERON_0016508"
+        },
+        "species": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+        },
+        "metadata_predicate": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/expertConsultant"
+        },
+        "metadata_value": {
+          "type": "uri",
+          "value": "https://orcid.org/0000-0002-4341-3265"
+        }
+      }
+    ],
+    "observed_species": [
+      "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+    ],
+    "metadata_predicates": [
+      "http://uri.interlex.org/composer/uris/readable/hasComposerURI",
+      "http://uri.interlex.org/tgbugs/uris/readable/expertConsultant",
+      "http://uri.interlex.org/tgbugs/uris/readable/genLabel",
+      "http://uri.interlex.org/tgbugs/uris/readable/literatureCitation",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "http://www.w3.org/2000/01/rdf-schema#label",
+      "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "http://www.w3.org/2004/02/skos/core#prefLabel",
+      "https://apinatomy.org/uris/readable/annotates"
+    ],
+    "selection_note": "First two canonical rows only; digest/count cover the complete external result, not these selected facts.",
+    "prior_execution": {
+      "executed_at": "2026-09-20T12:44:50.859253+00:00",
+      "duration_seconds": 38.926666,
+      "result_sha256": "97e6ebc4dda328816b395e2c52b7672cd1c5a6aa52a5bd7dff4bcf9e807e5b1c",
+      "raw_row_count": 72,
+      "execution_status": "REPRODUCED"
+    }
+  },
+  {
+    "query_id": "keast-5",
+    "query_language": "SPARQL 1.1",
+    "query_sha256": "7025696ef95564b26bab5ae4a9c3214a6f2b9e4b3c4efea3501de78d809054a4",
+    "release": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "source_artifact_sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "journal_sha256": "841289a3eff9d1339a094aa93741cbd73e42c4d830817e466183bc0eb0e46096",
+    "engine": "Blazegraph 2.1.6-SNAPSHOT",
+    "engine_commit": "6b0c935523f5064b80279b30a5175a858cddd2a1",
+    "engine_image": "tgbugs/musl@sha256:0eca49ed3b0e0cb93145710ad7d587dc49868df16f63747559abaac5bda20897",
+    "host_architecture": "arm64",
+    "execution_architecture": "linux/amd64 (emulated)",
+    "executed_at": "2026-09-20T12:49:22.430980+00:00",
+    "status": "ok",
+    "research_only": true,
+    "raw_row_count": 72,
+    "result_sha256": "97e6ebc4dda328816b395e2c52b7672cd1c5a6aa52a5bd7dff4bcf9e807e5b1c",
+    "limitations": [
+      "Bindings are query results, not asserted direct connectivity edges.",
+      "OWL filler restrictions retain their native predicates; unsupported nested expressions require source inspection.",
+      "No inverse, transitive connectivity, signal direction, or clinical effect is inferred."
+    ],
+    "execution_status": "REPRODUCED",
+    "interpretation": "Executed pinned-release query; not agreement with a historical release result or biological validation.",
+    "duration_seconds": 34.311781,
+    "query_file": "queries/keast-5.rq",
+    "variables": [
+      "anatomy",
+      "filler_relation",
+      "metadata_predicate",
+      "metadata_value",
+      "population",
+      "relation",
+      "species"
+    ],
+    "selected_bindings": [
+      {
+        "population": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/neuron-type-keast-5"
+        },
+        "relation": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/hasAxonPresynapticElementIn"
+        },
+        "filler_relation": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/BFO_0000050"
+        },
+        "anatomy": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/UBERON_0016508"
+        },
+        "species": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+        },
+        "metadata_predicate": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/composer/uris/readable/hasComposerURI"
+        },
+        "metadata_value": {
+          "type": "uri",
+          "value": "https://composer.scicrunch.io/statement/101"
+        }
+      },
+      {
+        "population": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/neuron-type-keast-5"
+        },
+        "relation": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/hasAxonPresynapticElementIn"
+        },
+        "filler_relation": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/BFO_0000050"
+        },
+        "anatomy": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/UBERON_0016508"
+        },
+        "species": {
+          "type": "uri",
+          "value": "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+        },
+        "metadata_predicate": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/tgbugs/uris/readable/expertConsultant"
+        },
+        "metadata_value": {
+          "type": "uri",
+          "value": "https://orcid.org/0000-0002-4341-3265"
+        }
+      }
+    ],
+    "observed_species": [
+      "http://purl.obolibrary.org/obo/NCBITaxon_10116"
+    ],
+    "metadata_predicates": [
+      "http://uri.interlex.org/composer/uris/readable/hasComposerURI",
+      "http://uri.interlex.org/tgbugs/uris/readable/expertConsultant",
+      "http://uri.interlex.org/tgbugs/uris/readable/genLabel",
+      "http://uri.interlex.org/tgbugs/uris/readable/literatureCitation",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "http://www.w3.org/2000/01/rdf-schema#label",
+      "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "http://www.w3.org/2004/02/skos/core#prefLabel",
+      "https://apinatomy.org/uris/readable/annotates"
+    ],
+    "selection_note": "First two canonical rows only; digest/count cover the complete external result, not these selected facts.",
+    "prior_execution": {
+      "executed_at": "2026-09-20T12:45:30.634761+00:00",
+      "duration_seconds": 92.709476,
+      "result_sha256": "97e6ebc4dda328816b395e2c52b7672cd1c5a6aa52a5bd7dff4bcf9e807e5b1c",
+      "raw_row_count": 72,
+      "execution_status": "REPRODUCED"
+    }
+  },
+  {
+    "query_id": "missing-population",
+    "query_language": "SPARQL 1.1",
+    "query_sha256": "31e0d87ea60beb0168d4d3b7c678fa17756e3ef40ab3de09fbc850006fbe7719",
+    "release": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "source_artifact_sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "journal_sha256": "841289a3eff9d1339a094aa93741cbd73e42c4d830817e466183bc0eb0e46096",
+    "engine": "Blazegraph 2.1.6-SNAPSHOT",
+    "engine_commit": "6b0c935523f5064b80279b30a5175a858cddd2a1",
+    "engine_image": "tgbugs/musl@sha256:0eca49ed3b0e0cb93145710ad7d587dc49868df16f63747559abaac5bda20897",
+    "host_architecture": "arm64",
+    "execution_architecture": "linux/amd64 (emulated)",
+    "executed_at": "2026-09-20T12:49:56.744607+00:00",
+    "status": "unknown",
+    "research_only": true,
+    "raw_row_count": 0,
+    "result_sha256": "17f1e24a64a61eaeb837f3c2549a4451ba81f91858d875fb1a9c1a47554fbb10",
+    "limitations": [
+      "Bindings are query results, not asserted direct connectivity edges.",
+      "OWL filler restrictions retain their native predicates; unsupported nested expressions require source inspection.",
+      "No inverse, transitive connectivity, signal direction, or clinical effect is inferred."
+    ],
+    "execution_status": "VERIFIED",
+    "interpretation": "Executed pinned-release query; not agreement with a historical release result or biological validation.",
+    "duration_seconds": 0.859786,
+    "query_file": "queries/missing-population.rq",
+    "variables": [
+      "anatomy",
+      "filler_relation",
+      "metadata_predicate",
+      "metadata_value",
+      "population",
+      "relation",
+      "species"
+    ],
+    "selected_bindings": [],
+    "observed_species": [],
+    "metadata_predicates": [],
+    "selection_note": "First two canonical rows only; digest/count cover the complete external result, not these selected facts.",
+    "prior_execution": {
+      "executed_at": "2026-09-20T12:47:02.690975+00:00",
+      "duration_seconds": 2.171893,
+      "result_sha256": "17f1e24a64a61eaeb837f3c2549a4451ba81f91858d875fb1a9c1a47554fbb10",
+      "raw_row_count": 0,
+      "execution_status": "VERIFIED"
+    }
+  },
+  {
+    "query_id": "upstream-apinatomy",
+    "query_language": "SPARQL 1.1",
+    "query_sha256": "aabf40b952a9ddf67ea25db5d57bd6513da4a73deb3afce7381dde85afc2de04",
+    "release": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "source_artifact_sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "journal_sha256": "841289a3eff9d1339a094aa93741cbd73e42c4d830817e466183bc0eb0e46096",
+    "engine": "Blazegraph 2.1.6-SNAPSHOT",
+    "engine_commit": "6b0c935523f5064b80279b30a5175a858cddd2a1",
+    "engine_image": "tgbugs/musl@sha256:0eca49ed3b0e0cb93145710ad7d587dc49868df16f63747559abaac5bda20897",
+    "host_architecture": "arm64",
+    "execution_architecture": "linux/amd64 (emulated)",
+    "executed_at": "2026-09-20T12:49:57.605597+00:00",
+    "status": "ok",
+    "research_only": true,
+    "raw_row_count": 516,
+    "result_sha256": "278bf46e3ba3afc4ab54c8bb6131e984e38e9cf2a18bc216cf714da0bd8d2ad9",
+    "limitations": [
+      "Bindings are query results, not asserted direct connectivity edges.",
+      "OWL filler restrictions retain their native predicates; unsupported nested expressions require source inspection.",
+      "No inverse, transitive connectivity, signal direction, or clinical effect is inferred."
+    ],
+    "execution_status": "REPRODUCED",
+    "interpretation": "Executed pinned-release query; not agreement with a historical release result or biological validation.",
+    "duration_seconds": 1.945627,
+    "query_file": "queries/upstream-apinatomy.rq",
+    "variables": [
+      "Neuron_Label",
+      "Soma_Location",
+      "Soma_Location_ID",
+      "Terminal_Location",
+      "Terminal_Location_ID"
+    ],
+    "selected_bindings": [
+      {
+        "Neuron_Label": {
+          "type": "literal",
+          "value": "simple neuron type aacar 10a"
+        },
+        "Soma_Location_ID": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/base/ilx_0793555"
+        },
+        "Soma_Location": {
+          "type": "literal",
+          "value": "Atrial intrinsic cardiac ganglion"
+        },
+        "Terminal_Location_ID": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/base/ilx_0793555"
+        },
+        "Terminal_Location": {
+          "type": "literal",
+          "value": "Atrial intrinsic cardiac ganglion"
+        }
+      },
+      {
+        "Neuron_Label": {
+          "type": "literal",
+          "value": "simple neuron type aacar 10a"
+        },
+        "Soma_Location_ID": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/base/ilx_0793555"
+        },
+        "Soma_Location": {
+          "type": "literal",
+          "value": "Atrial intrinsic cardiac ganglion"
+        },
+        "Terminal_Location_ID": {
+          "type": "uri",
+          "value": "http://uri.interlex.org/base/ilx_0793556"
+        },
+        "Terminal_Location": {
+          "type": "literal",
+          "value": "ventricular intrinsic cardiac ganglion"
+        }
+      }
+    ],
+    "observed_species": [],
+    "metadata_predicates": [],
+    "selection_note": "First two canonical rows only; digest/count cover the complete external result, not these selected facts.",
+    "prior_execution": {
+      "executed_at": "2026-09-20T12:47:04.805701+00:00",
+      "duration_seconds": 7.052087,
+      "result_sha256": "278bf46e3ba3afc4ab54c8bb6131e984e38e9cf2a18bc216cf714da0bd8d2ad9",
+      "raw_row_count": 516,
+      "execution_status": "REPRODUCED"
+    }
+  }
+]

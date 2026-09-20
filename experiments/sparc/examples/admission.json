@@ -1,0 +1,67 @@
+{
+  "sckan": {
+    "biological_validation": "NOT ESTABLISHED",
+    "clinical_validation": "NOT ESTABLISHED",
+    "model_qualification": "NOT ESTABLISHED",
+    "context_qualification": "NOT ESTABLISHED",
+    "cymba_auricular_vns_qualification": "NOT ESTABLISHED",
+    "qualification_authority": null,
+    "uncertainty": "UNKNOWN",
+    "population_sample": "UNKNOWN",
+    "sex": "UNKNOWN",
+    "current_authority": "NOT ESTABLISHED",
+    "identity": "sckan-2026-06-23",
+    "upstream_status": "prerelease",
+    "artifact_authentication": "PASS",
+    "bounded_execution": "PASS",
+    "bounded_reproduction": "PASS",
+    "reproduction_scope": "Historical repeated execution of five frozen queries; not a predeclared numerical contract",
+    "scientific_evidence_class": "ANATOMICAL/CONNECTIVITY KNOWLEDGE",
+    "species": "Preserved per upstream row; rat constraint only where explicit",
+    "modality": "not applicable: knowledge query, no stimulation",
+    "evidence": [
+      "evidence/receipts/sckan-artifacts.json",
+      "evidence/receipts/sckan-queries.json"
+    ],
+    "limitations": [
+      "No inferred inverse/transitive connectivity or signal direction",
+      "Missing coverage is UNKNOWN"
+    ]
+  },
+  "ascent": {
+    "biological_validation": "NOT ESTABLISHED",
+    "clinical_validation": "NOT ESTABLISHED",
+    "model_qualification": "NOT ESTABLISHED",
+    "context_qualification": "NOT ESTABLISHED",
+    "cymba_auricular_vns_qualification": "NOT ESTABLISHED",
+    "qualification_authority": null,
+    "uncertainty": "UNKNOWN",
+    "population_sample": "UNKNOWN",
+    "sex": "UNKNOWN",
+    "current_authority": "NOT ESTABLISHED",
+    "identity": "10.26275/0JZ3-ZRLO dataset 364 version 1",
+    "study_uuid": "7bb84d3a-24b2-11ee-a4be-02420a0bc195",
+    "model_version": "ASCENT 1.2.1",
+    "artifact_authentication": "BOUNDED",
+    "manifest_size_verification": "FAILED",
+    "execution_identity": "UNKNOWN",
+    "bounded_execution": "NOT TESTED",
+    "reproduction_contract": "ABSENT",
+    "bounded_reproduction": "BLOCKED",
+    "candidate_executed": false,
+    "scientific_evidence_class": "MECHANISTIC MODEL CANDIDATE",
+    "species": "UNKNOWN",
+    "modality": "UNKNOWN",
+    "evidence": [
+      "evidence/receipts/ascent-identity.json",
+      "evidence/receipts/ascent-manifest-investigation.json",
+      "evidence/manifests/ascent-comparison-gate.json"
+    ],
+    "limitations": [
+      "No authenticated study-specific reference output",
+      "Incomplete published runtime/input identity",
+      "Tutorial dataset 365 is INCOMPARABLE"
+    ],
+    "follow_up": "https://github.com/advatar/OpenBody/issues/25"
+  }
+}

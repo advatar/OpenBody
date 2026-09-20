@@ -1,0 +1,31 @@
+{
+  "tag_name": "sckan-2026-06-23",
+  "prerelease": true,
+  "published_at": "2026-06-23T14:59:10Z",
+  "html_url": "https://github.com/SciCrunch/NIF-Ontology/releases/tag/sckan-2026-06-23",
+  "assets": [
+    {
+      "name": "docker-sckan-data-2026-06-23T141321Z.tar.gz",
+      "size": 634820289,
+      "digest": "sha256:40409061330a8ec9bce35520528ad7fb79d30a9e58b871eafd2b77f544125182",
+      "browser_download_url": "https://github.com/SciCrunch/NIF-Ontology/releases/download/sckan-2026-06-23/docker-sckan-data-2026-06-23T141321Z.tar.gz"
+    },
+    {
+      "name": "release-2026-06-23T135208Z-sckan.zip",
+      "size": 159258100,
+      "digest": "sha256:3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+      "browser_download_url": "https://github.com/SciCrunch/NIF-Ontology/releases/download/sckan-2026-06-23/release-2026-06-23T135208Z-sckan.zip"
+    },
+    {
+      "name": "sparc-sckan-graph-20260623T070119.zip",
+      "size": 496886143,
+      "digest": "sha256:d6cf12f5a1daada792c6329771d9cd1160e15df5072b6d3657b791cb438b64f7",
+      "browser_download_url": "https://github.com/SciCrunch/NIF-Ontology/releases/download/sckan-2026-06-23/sparc-sckan-graph-20260623T070119.zip"
+    }
+  ],
+  "snapshot": {
+    "raw_sha256": "35cfa8b23130612e440b2a00bca45cef45cbe8d375e9b8a18dab3ce4112fb040",
+    "raw_bytes": 6282,
+    "selection": "Selected fields of independent GitHub API response; not a new upstream response."
+  }
+}

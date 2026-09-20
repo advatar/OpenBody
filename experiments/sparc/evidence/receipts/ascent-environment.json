@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-09-20T15:21:29.620103+00:00",
+  "host_architecture": "arm64",
+  "os": "Darwin",
+  "python": "3.14.7",
+  "comsol_on_path": false,
+  "nrniv_on_path": false,
+  "python_neuron_available": false,
+  "docker_engine_architecture": "aarch64",
+  "browser_access": "No connected browser automation surface. Native Safari exists, but concurrent user activity interrupted navigation; authenticated oSPARC session not established.",
+  "candidate_executed": false,
+  "outcome": "BLOCKED",
+  "warnings": [
+    "Exact published execution environment remains unknown; no code or model was executed.",
+    "COMSOL absence does not alone block pre-solved-potential Guided Mode.",
+    "No credentials inspected, copied or requested; public metadata GETs only."
+  ],
+  "nrnivmodl_on_path": false,
+  "public_project_metadata": {
+    "guided": 401,
+    "tutorial": 401
+  }
+}

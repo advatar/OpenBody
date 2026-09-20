@@ -1,0 +1,38 @@
+[
+  {
+    "repository": "SciCrunch/NIF-Ontology",
+    "release_url": "https://github.com/SciCrunch/NIF-Ontology/releases/tag/sckan-2026-06-23",
+    "tag": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "published_at": "2026-06-23T14:59:10Z",
+    "asset": "release-2026-06-23T135208Z-sckan.zip",
+    "expected_sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "observed_sha256": "3473cc9cf4eaf1fb4b22dc72569cc7431eacf0da70d0460938414b133da37945",
+    "byte_count": 159258100,
+    "verified_at": "2026-09-20T12:40:31.489828+00:00",
+    "runtime": "3.14.7",
+    "tool": "experiments.sparc.authenticate",
+    "host_architecture": "arm64",
+    "verification_result": "VERIFIED",
+    "retrieval_recorded_at": "2026-09-20T12:40:31.489828+00:00",
+    "retrieval_note": "Fresh download this invocation; timestamp recorded after retrieval and digest check."
+  },
+  {
+    "repository": "SciCrunch/NIF-Ontology",
+    "release_url": "https://github.com/SciCrunch/NIF-Ontology/releases/tag/sckan-2026-06-23",
+    "tag": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "published_at": "2026-06-23T14:59:10Z",
+    "asset": "sparc-sckan-graph-20260623T070119.zip",
+    "expected_sha256": "d6cf12f5a1daada792c6329771d9cd1160e15df5072b6d3657b791cb438b64f7",
+    "observed_sha256": "d6cf12f5a1daada792c6329771d9cd1160e15df5072b6d3657b791cb438b64f7",
+    "byte_count": 496886143,
+    "verified_at": "2026-09-20T12:40:55.970096+00:00",
+    "runtime": "3.14.7",
+    "tool": "experiments.sparc.authenticate",
+    "host_architecture": "arm64",
+    "verification_result": "VERIFIED",
+    "retrieval_recorded_at": "2026-09-20T12:40:55.970096+00:00",
+    "retrieval_note": "Fresh download this invocation; timestamp recorded after retrieval and digest check."
+  }
+]

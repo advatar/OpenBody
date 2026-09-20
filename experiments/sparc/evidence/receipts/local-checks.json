@@ -1,0 +1,45 @@
+{
+  "recorded_at": "2026-09-20T15:27:44.906853+00:00",
+  "python": "3.14.7",
+  "research": {
+    "command": "python3 -m unittest discover -s experiments/sparc -p 'test_*.py' -v",
+    "passed": 76
+  },
+  "reference": {
+    "command": "PYTHONPATH=reference/python python -m pytest -q reference/python/tests",
+    "passed": 172,
+    "warnings": 2
+  },
+  "conformance": {
+    "command": "python tools/validate_openbody.py",
+    "protocol_examples": 2,
+    "clinical_reference_fixtures": 11,
+    "status": "PASS"
+  },
+  "json_parse": {
+    "count": 5,
+    "status": "PASS"
+  },
+  "docker_client_version": "29.7.2",
+  "research_only": true,
+  "external_full_sckan_receipts": {
+    "command": "python3 -m experiments.sparc.evidence_tools --results <external-output>/sckan-queries.json",
+    "runs_checked": 2,
+    "queries_per_run": 5,
+    "status": "PASS",
+    "queries_executed_this_milestone": 0
+  },
+  "external_admission_checkpoint": {
+    "recorded_at": "2026-09-20T17:17:00.976804+00:00",
+    "starting_head": "15ff70ee41c59c6d11f6132507a8f66205fde948",
+    "research_passed": 99,
+    "reference_passed": 172,
+    "reference_warnings": 2,
+    "protocol_examples_passed": 2,
+    "clinical_reference_fixtures_passed": 11,
+    "json_checks_passed": 5,
+    "ascent_executed": false,
+    "sckan_rerun": false,
+    "note": "Commands above repeated for admission changes; earlier full SCKAN receipt check was not rerun."
+  }
+}
