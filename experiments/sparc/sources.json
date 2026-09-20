@@ -1,0 +1,23 @@
+{
+  "program": "NIH SPARC",
+  "review_doi": "10.1186/s42234-026-00213-z",
+  "research_only": true,
+  "sources": [
+    {
+      "name": "SCKAN",
+      "role": "versioned autonomic connectivity evidence",
+      "required_gate": "pin an upstream release/export and independently verify provenance and reuse terms"
+    },
+    {
+      "name": "ASCENT Guided Mode Demo",
+      "doi": "10.26275/0JZ3-ZRLO",
+      "role": "first numerical reproduction candidate",
+      "required_gate": "obtain independently sourced reference outputs and freeze tolerances before execution"
+    }
+  ],
+  "boundaries": [
+    "Do not infer consumer auricular VNS effects from implanted cervical VNS.",
+    "Do not convert a successful simulation into a clinical claim.",
+    "No patient data, Twin mutation, stimulation control, or dosing."
+  ]
+}
