@@ -58,3 +58,32 @@ def main(argv=None):
     print(json.dumps(envelope(a.export,expected_sha256=a.sha256,subject=a.subject,
       predicate=a.predicate,object_=a.object_,species=a.species),sort_keys=True,indent=2))
 if __name__=="__main__": main()
+
+
+def sparql_envelope(data: dict) -> dict:
+    """Keep typed native SPARQL bindings; never flatten OWL restrictions into edges.
+
+    Blank-node labels are execution-local, so this bounded canonicalizer refuses
+    them rather than pretending that arbitrary labels identify stable anatomy.
+    """
+    if not isinstance(data, dict) or not isinstance(data.get('head'), dict):
+        raise ValueError('invalid SPARQL result head')
+    variables = data['head'].get('vars')
+    rows = data.get('results', {}).get('bindings')
+    if not isinstance(variables, list) or not all(isinstance(v, str) for v in variables) or len(set(variables)) != len(variables) or not isinstance(rows, list):
+        raise ValueError('invalid SPARQL SELECT result')
+    for row in rows:
+        if not isinstance(row, dict) or set(row) - set(variables):
+            raise ValueError('invalid binding variables')
+        for term in row.values():
+            if not isinstance(term, dict) or term.get('type') not in ('uri', 'literal', 'typed-literal') or not isinstance(term.get('value'), str):
+                raise ValueError('unsupported or malformed RDF term (including blank node)')
+    encode = lambda x: json.dumps(x, sort_keys=True, ensure_ascii=False, separators=(',', ':'), allow_nan=False)
+    canonical = {'head': {'vars': sorted(variables)}, 'results': {'bindings': sorted(rows, key=encode)}}
+    raw = encode(canonical).encode('utf-8')
+    return {'status': 'ok' if rows else 'unknown', 'research_only': True,
+            'raw_row_count': len(rows), 'canonical_result': canonical,
+            'result_sha256': hashlib.sha256(raw).hexdigest(),
+            'limitations': ['Bindings are query results, not asserted direct connectivity edges.',
+                           'OWL filler restrictions retain their native predicates; unsupported nested expressions require source inspection.',
+                           'No inverse, transitive connectivity, signal direction, or clinical effect is inferred.']}

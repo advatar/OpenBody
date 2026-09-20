@@ -1,0 +1,25 @@
+{
+  "recorded_at": "2026-09-20T12:53:29.327115+00:00",
+  "python": "3.14.7",
+  "research": {
+    "command": "python3 -m unittest discover -s experiments/sparc -p 'test_*.py' -v",
+    "passed": 54
+  },
+  "reference": {
+    "command": "PYTHONPATH=reference/python python -m pytest -q reference/python/tests",
+    "passed": 172,
+    "warnings": 2
+  },
+  "conformance": {
+    "command": "python tools/validate_openbody.py",
+    "protocol_examples": 2,
+    "clinical_reference_fixtures": 11,
+    "status": "PASS"
+  },
+  "json_parse": {
+    "count": 5,
+    "status": "PASS"
+  },
+  "docker_client_version": "29.7.2",
+  "research_only": true
+}

@@ -1,0 +1,37 @@
+{
+  "query_source": "https://raw.githubusercontent.com/SciCrunch/sckan-query-examples/966442d59135ed8cd258d5932d46e26bd8e8fa34/competency-queries/CQ2-Query.rq",
+  "query_sha256": "ca15d96847c2b36798906253b10781640b4fc3b7e14de8b57c3bc31845d29c38",
+  "query_language": "SPARQL 1.1",
+  "release": "sckan-2026-06-23",
+  "engine": "Blazegraph 2.1.6-SNAPSHOT",
+  "execution_status": "NOT REPRODUCED",
+  "duration_seconds": 0.059079,
+  "code_redistribution": "No repository license found; retrieve exact query at immutable URL.",
+  "status": "unknown",
+  "research_only": true,
+  "raw_row_count": 0,
+  "canonical_result": {
+    "head": {
+      "vars": [
+        "A",
+        "B",
+        "C",
+        "Neuron_ID",
+        "Neuron_Label",
+        "Region_A",
+        "Region_B",
+        "Region_C"
+      ]
+    },
+    "results": {
+      "bindings": []
+    }
+  },
+  "result_sha256": "3229e2cdd864f7411ee0d5280a9629166b1b5fd36ef79f10d468ed499d97cbca",
+  "limitations": [
+    "Bindings are query results, not asserted direct connectivity edges.",
+    "OWL filler restrictions retain their native predicates; unsupported nested expressions require source inspection.",
+    "No inverse, transitive connectivity, signal direction, or clinical effect is inferred."
+  ],
+  "executed_at": "2026-09-20T12:51:12.884321+00:00"
+}

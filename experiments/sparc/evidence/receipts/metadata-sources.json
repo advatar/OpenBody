@@ -1,0 +1,38 @@
+[
+  {
+    "path": "manifests/sckan-release.json",
+    "source_url": "https://api.github.com/repos/SciCrunch/NIF-Ontology/releases/tags/sckan-2026-06-23",
+    "observed_sha256": "35cfa8b23130612e440b2a00bca45cef45cbe8d375e9b8a18dab3ce4112fb040",
+    "source_hash_available": false,
+    "note": "Retrieved from public HTTPS upstream; local snapshot digest, not an upstream-supplied digest.",
+    "recorded_at": "2026-09-20T12:52:57.635216+00:00",
+    "runtime": "3.14.7"
+  },
+  {
+    "path": "manifests/ascent-datacite.json",
+    "source_url": "https://api.datacite.org/dois/10.26275/0JZ3-ZRLO",
+    "observed_sha256": "29d235f51ef2c4cc3192998cef464da873282f6c49e577c23184643d0fa2571b",
+    "source_hash_available": false,
+    "note": "Retrieved from public HTTPS upstream; local snapshot digest, not an upstream-supplied digest.",
+    "recorded_at": "2026-09-20T12:52:57.635775+00:00",
+    "runtime": "3.14.7"
+  },
+  {
+    "path": "manifests/ascent-dataset.json",
+    "source_url": "https://api.pennsieve.io/discover/datasets/364/versions/1",
+    "observed_sha256": "42283e61a4c73219caec1733a3c797e46cf75820da78ab505e04c9ed072d0475",
+    "source_hash_available": false,
+    "note": "Retrieved from public HTTPS upstream; local snapshot digest, not an upstream-supplied digest.",
+    "recorded_at": "2026-09-20T12:52:57.635911+00:00",
+    "runtime": "3.14.7"
+  },
+  {
+    "path": "manifests/ascent-files.json",
+    "source_url": "https://api.pennsieve.io/discover/datasets/364/versions/1/files/browse (recursive, path parameter)",
+    "observed_sha256": "58733aade7e9f9a4549c70c41b51fc5870a60df9fbd0fe63bb7555280a42e55e",
+    "source_hash_available": false,
+    "note": "Retrieved from public HTTPS upstream; local snapshot digest, not an upstream-supplied digest.",
+    "recorded_at": "2026-09-20T12:52:57.635990+00:00",
+    "runtime": "3.14.7"
+  }
+]

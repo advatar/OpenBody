@@ -81,11 +81,11 @@ Continue issue #22 and draft PR #23 on `research/sparc-m0`; do not merge.
 Starting PR SHA: `49d8d9526cd1aeed377530dfd8e4c9bbd39e40b7`.
 Starting main SHA: `8c2dff59c6c5e431b99db38e197a659f029e7244` (already an ancestor).
 
-- [ ] Authenticate pinned SCKAN prerelease metadata and local artifact bytes.
-- [ ] Reproduce documented upstream queries and preserve literal semantics.
-- [ ] Authenticate ASCENT reference artifacts and predeclare a comparison gate.
-- [ ] Attempt exact execution where environment/access permits; record blockers.
-- [ ] Repair SPARC CI, run research and existing conformance suites.
+- [x] Authenticate pinned SCKAN prerelease metadata and local artifact bytes.
+- [x] Execute the native upstream query and bounded variants with typed semantics; broader Simple SCKAN coverage remains open.
+- [ ] ASCENT numerical reference gate BLOCKED: configuration authenticated, study identity differs and reference output is absent.
+- [x] Run SCKAN in the available environment; record exact ASCENT reference/license/access blockers.
+- [x] Repair SPARC CI, run research and existing conformance suites.
 - [ ] Commit receipts and reports; push to existing draft PR without merging.
 
 No stable protocol/runtime or Cymba changes are authorized by this milestone.

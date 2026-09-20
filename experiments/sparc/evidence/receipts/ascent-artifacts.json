@@ -1,0 +1,132 @@
+[
+  {
+    "path": "files/dataset_description.xlsx",
+    "size": 15492,
+    "expected_sha256": "5d671da4b89464009af898cce4b0efb9a2fcfc378f654fa8fd999da499172d36",
+    "observed_sha256": "5d671da4b89464009af898cce4b0efb9a2fcfc378f654fa8fd999da499172d36",
+    "object_version": "NGAprxcZthQDE3ngvtNEgsLzqqZYuJRL",
+    "retrieved_at": "2026-09-20T12:42:09.429969+00:00",
+    "status": "VERIFIED",
+    "expected_size": 15492
+  },
+  {
+    "path": "files/manifest.xlsx",
+    "size": 5767,
+    "expected_sha256": "b4a5d7abc77932127514680113fa77442cbc94b7bc2bb363b4ff53f40fdc940b",
+    "observed_sha256": "b4a5d7abc77932127514680113fa77442cbc94b7bc2bb363b4ff53f40fdc940b",
+    "object_version": "DiU_jzPRaRHr3gReVjYIyzaq13sZ_F8G",
+    "retrieved_at": "2026-09-20T12:42:09.803624+00:00",
+    "status": "VERIFIED",
+    "expected_size": 5767
+  },
+  {
+    "path": "files/submission.xlsx",
+    "size": 5559,
+    "expected_sha256": "456fc8871255ce53714d21e60817364cba1d4a1828946a61c23e4c76e62cde08",
+    "observed_sha256": "456fc8871255ce53714d21e60817364cba1d4a1828946a61c23e4c76e62cde08",
+    "object_version": "WjN1Nh6lJNlFU41warH_vxV9IXeTBiTv",
+    "retrieved_at": "2026-09-20T12:42:10.190388+00:00",
+    "status": "VERIFIED",
+    "expected_size": 5559
+  },
+  {
+    "path": "files/template.json",
+    "size": 251,
+    "expected_sha256": "0263efbabffc1027f49349082ab63137a7e4ae4f1b8b42e1b28b5505104beb0f",
+    "observed_sha256": "0263efbabffc1027f49349082ab63137a7e4ae4f1b8b42e1b28b5505104beb0f",
+    "object_version": "c8LpOhyAqDsXvz.LBczw39jrCH1gXRe8",
+    "retrieved_at": "2026-09-20T12:42:10.559753+00:00",
+    "status": "VERIFIED",
+    "expected_size": 251
+  },
+  {
+    "path": "metadata/records/file.csv",
+    "size": 458,
+    "expected_sha256": "a87dc9c8741d4d1030d46fd1750dfc9f32878246a18b7dd20eef6189d658e128",
+    "observed_sha256": "a87dc9c8741d4d1030d46fd1750dfc9f32878246a18b7dd20eef6189d658e128",
+    "object_version": "Lj1195VZahwlBMS7YAuDWl7Ru01LlN.l",
+    "retrieved_at": "2026-09-20T12:42:10.935503+00:00",
+    "status": "VERIFIED",
+    "expected_size": 458
+  },
+  {
+    "path": "metadata/schema.json",
+    "size": 567,
+    "expected_sha256": "ef695a79a6b0cb8876184e1d98653f7e798373b67b6cadb581f4450bdbd1e315",
+    "observed_sha256": "ef695a79a6b0cb8876184e1d98653f7e798373b67b6cadb581f4450bdbd1e315",
+    "object_version": "DlIr07DH4icwseafXySOeDPFiRAiL98o",
+    "retrieved_at": "2026-09-20T12:42:11.324273+00:00",
+    "status": "VERIFIED",
+    "expected_size": 567
+  },
+  {
+    "path": "revisions/1/banner.jpg",
+    "size": 33185,
+    "expected_sha256": "6a5db29fcb312130b0373f0d2d6da704d9d174329859e3cec6a0e688e0e3ca04",
+    "observed_sha256": "6a5db29fcb312130b0373f0d2d6da704d9d174329859e3cec6a0e688e0e3ca04",
+    "object_version": "MRlLDbyHeLLLQORNXph6PTE34M2RLZg9",
+    "retrieved_at": "2026-09-20T12:42:11.817813+00:00",
+    "status": "VERIFIED",
+    "expected_size": 33185
+  },
+  {
+    "path": "revisions/1/manifest.json",
+    "size": 1873,
+    "expected_sha256": "52761066ea4f14f747516dd971a1414f8ac7f3574ea3bac12e2d79a85b0c87cb",
+    "observed_sha256": "52761066ea4f14f747516dd971a1414f8ac7f3574ea3bac12e2d79a85b0c87cb",
+    "object_version": "7qViwGx_mUslcTyw5QSgga3HzkWQxoXH",
+    "retrieved_at": "2026-09-20T12:42:12.182873+00:00",
+    "status": "VERIFIED",
+    "expected_size": 1873
+  },
+  {
+    "path": "revisions/1/readme.md",
+    "size": 1511,
+    "expected_sha256": "5e6e511ecd280f102258d0109419938f08f32ac7d0477288b1a60810b7d711fb",
+    "observed_sha256": "5e6e511ecd280f102258d0109419938f08f32ac7d0477288b1a60810b7d711fb",
+    "object_version": "XxLqY21Y6T9z54W4sDHVDNpqSQN9r5CJ",
+    "retrieved_at": "2026-09-20T12:42:12.559323+00:00",
+    "status": "VERIFIED",
+    "expected_size": 1511
+  },
+  {
+    "path": "banner.jpg",
+    "size": 33185,
+    "expected_sha256": "6a5db29fcb312130b0373f0d2d6da704d9d174329859e3cec6a0e688e0e3ca04",
+    "observed_sha256": "6a5db29fcb312130b0373f0d2d6da704d9d174329859e3cec6a0e688e0e3ca04",
+    "object_version": "5cH8aykWHBDrcpV0EzjuLCFmhs979HCV",
+    "retrieved_at": "2026-09-20T12:42:13.049369+00:00",
+    "status": "VERIFIED",
+    "expected_size": 33185
+  },
+  {
+    "path": "changelog.md",
+    "size": 24,
+    "expected_sha256": "35105c3e9eae1a3495aafdf4005a34ed6ff19d408dd48df57ccd7fb8f50fe0a0",
+    "observed_sha256": "35105c3e9eae1a3495aafdf4005a34ed6ff19d408dd48df57ccd7fb8f50fe0a0",
+    "object_version": "iH812ZWMZuJdwvNDVoKpyDd.63Yj3TyE",
+    "retrieved_at": "2026-09-20T12:42:13.424063+00:00",
+    "status": "VERIFIED",
+    "expected_size": 24
+  },
+  {
+    "path": "manifest.json",
+    "size": 5318,
+    "expected_sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+    "observed_sha256": "87033bc65df85fe5caf78688993a77f4a0842d3d2c320fa84126a990166396cb",
+    "object_version": "k2bHkhvv_na3EZpeGWrWuN4UhimBiQVI",
+    "retrieved_at": "2026-09-20T12:42:13.802946+00:00",
+    "status": "FAILED",
+    "expected_size": 4110
+  },
+  {
+    "path": "readme.md",
+    "size": 1475,
+    "expected_sha256": "e31934ec3d01b6dcc81d54ca55ab508cce85d0b85f5c35b11903110bed1a6d82",
+    "observed_sha256": "e31934ec3d01b6dcc81d54ca55ab508cce85d0b85f5c35b11903110bed1a6d82",
+    "object_version": "BL5sv9NEQMZ2n1kR8yBnDjQActmp5TSX",
+    "retrieved_at": "2026-09-20T12:42:14.228804+00:00",
+    "status": "VERIFIED",
+    "expected_size": 1475
+  }
+]

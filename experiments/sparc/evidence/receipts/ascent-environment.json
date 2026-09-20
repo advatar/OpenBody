@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-09-20T12:47:19.045097+00:00",
+  "host_architecture": "arm64",
+  "os": "Darwin",
+  "python": "3.14.7",
+  "comsol_on_path": false,
+  "nrniv_on_path": false,
+  "python_neuron_available": false,
+  "docker_engine_architecture": "aarch64",
+  "browser_access": "unavailable",
+  "candidate_executed": false,
+  "outcome": "BLOCKED",
+  "warnings": [
+    "ARM64 compatibility of exact published pipeline NOT TESTED.",
+    "An HTTP 404 from an exploratory public-study API path does not establish authorization status."
+  ]
+}

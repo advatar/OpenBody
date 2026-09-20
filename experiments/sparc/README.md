@@ -14,6 +14,21 @@ No changes to OpenBody protocol/runtime, no patient data, no Twin writes, no cli
 
     python3 -m unittest discover -s experiments/sparc -p 'test_*.py' -v
 
-## Next gate
+## Actual checkpoint — 2026-09-20
 
-Pin and authenticate an actual SCKAN release/export, reproduce selected upstream connectivity queries, then freeze independently sourced ASCENT reference outputs and tolerances before running the first real numerical reproduction.
+- **VERIFIED:** pinned SCKAN prerelease metadata and both large artifact digests.
+- **REPRODUCED:** native upstream ApiNATOMY query and three bounded native query
+  variants, with repeat-stable typed results; deliberately missing coverage is UNKNOWN.
+- **BLOCKED:** ASCENT numerical reproduction. Dataset metadata/configuration were
+  retrieved; the deposit's study UUID differs from the lock, one metadata size
+  check fails, reference outputs/solver identities are absent, and no licensed
+  local or authorized browser execution environment is available.
+- **NOT TESTED:** biological/clinical validity, broader Simple SCKAN competency
+  reproduction, consumer integration and modality transfer.
+
+See [SCKAN evidence](evidence/SCKAN_REPRODUCTION.md),
+[ASCENT evidence](evidence/ASCENT_REPRODUCTION.md),
+[audit](evidence/AUDIT.md) and [validation record](VALIDATION.md).
+The original literal-edge adapter remains; typed SPARQL results are preserved
+separately rather than flattened into asserted anatomical edges. This is not a
+complete ontology transformation or model qualification.

@@ -1,0 +1,49 @@
+# This is the SCKAN Query Example in SPARQL.
+
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX partOf: <http://purl.obolibrary.org/obo/BFO_0000050>
+PREFIX ilxtr: <http://uri.interlex.org/tgbugs/uris/readable/>
+
+SELECT 
+DISTINCT ?Neuron_Label ?Soma_Location_ID ?Soma_Location 
+  				  ?Terminal_Location_ID ?Terminal_Location
+WHERE
+{
+    VALUES (?npo_soma) {(ilxtr:hasSomaLocatedIn)}
+    VALUES (?npo_terminal) 
+      { 
+        (ilxtr:hasAxonPresynapticElementIn)
+        (ilxtr:hasAxonSensorySubcellularElementIn)
+      }
+    ?Neuron_ID owl:equivalentClass [
+                                    rdf:type owl:Class ;
+                                    owl:intersectionOf ?bn0
+                                   ] .
+    ?bn0 rdf:rest*/rdf:first ilxtr:NeuronApinatSimple .
+  
+    ?bn0 rdf:rest*/rdf:first [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty ?npo_soma ;
+                               owl:someValuesFrom [
+                                                    a owl:Restriction ;
+                                                    owl:onProperty partOf: ;
+                                                    owl:someValuesFrom ?Soma_Location_ID
+                                                  ] 
+                              ] .
+    ?bn0 rdf:rest*/rdf:first [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty ?npo_terminal ;
+                               owl:someValuesFrom [
+                                                    a owl:Restriction ;
+                                                    owl:onProperty partOf: ;
+                                                    owl:someValuesFrom ?Terminal_Location_ID
+                                                  ] 
+                              ] .
+    ?Neuron_ID rdfs:label ?Neuron_Label .
+    ?Soma_Location_ID rdfs:label ?Soma_Location .
+    ?Terminal_Location_ID rdfs:label ?Terminal_Location
+  }
+ORDER BY ?Neuron_ID ?Soma_Location ?Terminal_Location
+LIMIT 999

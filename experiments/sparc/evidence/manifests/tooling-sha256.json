@@ -1,0 +1,17 @@
+{
+  "__init__.py": "b9c58070a0733868df525be84dbfcab07e4d431aeca34a4b73d76b2b884bcbbf",
+  "adapter.py": "d4bf18b4b2fbe319728d9aad9bb116adf2b3262ed2058f9c559b546bf91b45cc",
+  "authenticate.py": "8756f7627532be211ad4eeb1c96847f3cc95ebfec4541954fec6cb5cfbc77ed3",
+  "authenticate_ascent.py": "55712b4dc265b22d44f8c2851d927e42babe6bcf3a05e2494fe296d323ff96c8",
+  "benchmark.py": "981f2dff51a3a41d3222e5f4bee8efa24f2959d2e331f0fbf80a70310acb8b18",
+  "reproduce_sckan.py": "031d3b47a1b7a937d1242586c61eec9f0ac1fa89e5cfc4fe46a38b2304420692",
+  "test_evidence.py": "12b86f5497a64282d08931a0dd9aa25bf2bdf897bbf3983e669d9d66267a603a",
+  "test_reproduction.py": "94de6edfca6e36e9e1b3db35dcfb5757ff9bf60ded98cd2a426a667de3b6d217",
+  "test_sparc.py": "44060a003fcf8e2c58a5b5aaf7ac8791d2cf8f91c563000fa401918666e9b256",
+  "test_upstream_lock.py": "0316113de778b389ad898eeaf1e9b7b98449613de36501635ba8475653b402e4",
+  "queries/bladder-target.rq": "7367a5903c85a180a0ceece04a985659d6048e3fbaf5862dcb6c46e342951ffe",
+  "queries/keast-5-rat.rq": "a5999a4e06dc471bb7b86dd49cf1ab664bcb51d03bb5da9598bac2dc41172839",
+  "queries/keast-5.rq": "7025696ef95564b26bab5ae4a9c3214a6f2b9e4b3c4efea3501de78d809054a4",
+  "queries/missing-population.rq": "31e0d87ea60beb0168d4d3b7c678fa17756e3ef40ab3de09fbc850006fbe7719",
+  "queries/upstream-apinatomy.rq": "aabf40b952a9ddf67ea25db5d57bd6513da4a73deb3afce7381dde85afc2de04"
+}
