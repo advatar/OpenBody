@@ -192,7 +192,8 @@ every pull request and push to `main`.
 The marketing site is a separate private submodule,
 `git@github.com:advatar/openbody-display.git`, checked out at `LandingPage/`. It
 needs its own GitHub access and a Bun/Node toolchain (`bun install`,
-`bun run build`), and is served on `:8796` behind its own proxy site block. It is
+`bun run build`), and is served on `:8796` behind the site block in
+[`deploy/openbody/CADDY-BLOCK.md`](deploy/openbody/CADDY-BLOCK.md). It is
 authored through Lovable, which commits to that repository directly, so local
 hand edits can be overwritten. It shares nothing with the protocol host; a clone
 without submodule access still deploys everything above.

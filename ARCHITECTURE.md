@@ -14,7 +14,7 @@ and provenance, which is how the conflict arose.
 | Layer | Owns | Does not own |
 | --- | --- | --- |
 | InVivo | The canonical biological Twin, raw observation custody, consent, disclosure decisions | The wire contract; governed memory |
-| OpenBody | Physiological computation: state, models, simulation, outcome, calibration, abstention | Medical records; authority; memory |
+| OpenBody | Physiological computation plus neutral, reference-oriented source-observation profiles: state, models, simulation, outcome, calibration, abstention | Raw observation custody; medical records; authority; memory |
 | OpenMind | Governed memory, projection policy, redaction, retrieval, continuity | Physiological representation; a second `BodyState` |
 | BrIAn | The reasoning and conversational interface | Policy enforcement; physiological inference |
 | ProvidEHR | Clinical evidence, attestation, orders, workflow, authoritative write-back | Twin state; counterfactual computation |
@@ -34,7 +34,9 @@ BrIAn may combine both. Neither replaces the other, and BrIAn does not become a 
 For `health.*` domains the envelope payload carries exactly one of:
 
 - `projectionClass: "source_observation"` — a user-approved summary with no corresponding OpenBody
-  assertion yet. Carries `sourceReference` and `contentDigest`.
+  assertion yet. Carries `sourceReference` and `contentDigest`. Domain profiles such as
+  [`openbody.intervention-observation/1.0`](schemas/intervention-observation.schema.json) may constrain
+  its contents without converting it into a core OpenBody-derived object.
 - `projectionClass: "openbody_reference"` — a governed reference to an OpenBody object. Carries
   `objectKind`, `canonicalRef`, `contentDigest`, `epistemicClass`, and the contract identity below.
 

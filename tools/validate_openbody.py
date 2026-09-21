@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "reference" / "python"))
 
 from openbody_ref.clinical_reference import FIXTURE_BUNDLE_PATH, validate_fixture_bundle
+from openbody_ref.intervention_observation import validate_intervention_observation
 
 SCHEMA = ROOT / "schemas" / "openbody.schema.json"
 REGISTRY = ROOT / "registry" / "coordinates.json"
@@ -308,6 +309,16 @@ def main(paths):
         if path.resolve() == FIXTURE_BUNDLE_PATH.resolve():
             continue
         doc = load(path)
+        if doc.get("schema_version") == "openbody.intervention-observation/1.0":
+            try:
+                validate_intervention_observation(doc)
+            except ValueError as error:
+                failed = True
+                print(f"FAIL {path}")
+                print(f"  intervention observation: {error}")
+            else:
+                print(f"PASS {path}")
+            continue
         schema_errors = sorted(validator.iter_errors(doc), key=lambda e: list(e.absolute_path))
         custom_errors = invariant_errors(doc)
         unknown = sorted({c for c in collect_coordinates(doc) if c not in known_coordinates})
