@@ -1,0 +1,11 @@
+.git
+.github
+tmp
+output
+LandingPage
+**/__pycache__
+**/.pytest_cache
+**/*.py[cod]
+.venv
+**/node_modules
+**/.DS_Store

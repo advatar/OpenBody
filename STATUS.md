@@ -1,5 +1,44 @@
 # Status
 
+## Implemented — independent deployment handover — 2026-09-21
+
+Issue: https://github.com/advatar/OpenBody/issues/26
+Implementation branch: `feat/deployment-handover`.
+
+The repository had no deployment artifacts, and the only observation host factory
+required a reachable ProvidEHR deployment with an authorized tenant/EHR. An
+external developer could therefore run the bundled demo twin or a catalogue and
+nothing else.
+
+- [x] `DEPLOYMENT.md`: modes, prerequisites, proxy boundary, verification, and the
+  constraints an operator must design around (no authorization, in-memory state,
+  single-tenant by construction, checkout-relative artifact resolution).
+- [x] `deploy/openbody/`: Dockerfile, compose file with one service per mode,
+  `env.example`, systemd unit, Caddy example, and an `OPENBODY_MODE` entrypoint —
+  catalogue hosting previously had no factory of its own.
+- [x] `LocalObservationSource`: the admitted-observation path resolving a directory
+  of clinical version documents instead of the clinical API. The post-fetch
+  verification is extracted and shared, so both resolvers admit exactly the same
+  documents; the local one verifies every document at startup rather than on first
+  read. It substitutes the transport, not the admission policy.
+- [x] `examples/local-observations/`: one runnable synthetic admitted document.
+- [x] Fail-closed configuration and an honest operational signal: unknown mode,
+  demo twin and non-authoritative source each require an explicit opt-in, and
+  `/healthz` names the resolver the process is bound to.
+- [x] 33 new unit tests; 212 reference tests and fixture conformance pass on 3.12.
+- [x] Verified in a container end to end: build, `observations-local` startup with
+  no clinical API, ingest and read of the shipped document, absent subject routes,
+  and in-image conformance.
+
+The local source is not a clinical authority and does not make one. Its trust
+boundary is the file system, so any deployment handling real clinical data still
+resolves through the authorized clinical API. The 0.1 wire contract is unchanged:
+the source kind is reported on `/healthz`, outside the protocol surface.
+
+Not done: no persistence layer, so a restart still drops protocol state, and the
+reference host still implements no authorization. Both are stated in
+`DEPLOYMENT.md` as operator responsibilities rather than silently deferred.
+
 ## Implemented — G2 admitted clinical observation bridge; joint release pending — 2026-09-14
 
 Issue: https://github.com/advatar/OpenBody/issues/16
