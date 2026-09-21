@@ -323,6 +323,10 @@ def create_app(
             "status": "ok",
             "contract": contract_identity(),
             "models": len(store.models),
+            # Operational, not protocol: which resolver this process is bound to.
+            # A non-authoritative source must be visible to whoever runs the host,
+            # because the served objects look identical either way.
+            "observation_source": getattr(observation_source, "kind", None),
         }
 
     @app.get("/.well-known/openbody")
@@ -515,6 +519,28 @@ def create_observation_host_from_env() -> FastAPI:
             source.close()
 
     return create_app(store=store, observation_source=source, observations_only=True, lifespan=source_lifespan)
+
+
+def create_local_observation_host_from_env() -> FastAPI:
+    """Uvicorn factory for observation hosting with no clinical API to reach.
+
+    Start with `uvicorn openbody_ref.host:create_local_observation_host_from_env --factory`.
+    The same profile, store and read paths as the authorized factory; only the
+    resolver differs. The source directory is the trust boundary, so the operator
+    opts in explicitly rather than acquiring a non-authoritative source by leaving
+    a variable unset.
+    """
+    from .observation import LocalObservationSource
+    names = ("OPENBODY_SOURCE_DIRECTORY", "OPENBODY_SOURCE_TENANT", "OPENBODY_SOURCE_EHR")
+    configuration = {name: os.environ.get(name, "") for name in names}
+    if not all(configuration.values()):
+        raise ValueError("source directory, tenant and EHR are required for local observation hosting")
+    if os.environ.get("OPENBODY_ACCEPT_LOCAL_SOURCE", "").strip().lower() != "yes":
+        raise ValueError("a local source is not an authorized clinical source and requires OPENBODY_ACCEPT_LOCAL_SOURCE=yes")
+    source = LocalObservationSource(Path(configuration["OPENBODY_SOURCE_DIRECTORY"]),
+                                    configuration["OPENBODY_SOURCE_TENANT"], configuration["OPENBODY_SOURCE_EHR"])
+    store = InMemoryTwinStore(state={"subject": f"subject:providehr:ehr:{configuration['OPENBODY_SOURCE_EHR']}"})
+    return create_app(store=store, observation_source=source, observations_only=True)
 
 
 app = create_app()

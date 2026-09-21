@@ -1,8 +1,13 @@
-"""Admitted observation profile and an authoritative ProvidEHR source resolver.
+"""Admitted observation profile and its source resolvers.
 
 The host accepts a clinical-version locator, never a caller's clinical values or
-admission status. The resolver's configured origin and credentials define the
-trust boundary. This profile adds no authority to the originating admission.
+admission status. A resolver's configured origin and credentials define the trust
+boundary. This profile adds no authority to the originating admission.
+
+Two resolvers exist. `ProvidEHRObservationSource` reads the authorized clinical
+API and is the production path. `LocalObservationSource` reads the same admitted
+version documents from a directory, for deployments with no clinical API to reach;
+it moves the trust boundary to the file system without relaxing any check.
 """
 from __future__ import annotations
 
@@ -72,6 +77,58 @@ def validate_observation(value: Any, *, subject: str | None = None) -> None:
         raise ObservationError("subject_mismatch", "Contained observation and parent subjects disagree")
 
 
+def verify_admitted_version(version: Any, locator: dict[str, str], tenant_id: str, ehr_id: str) -> dict[str, Any]:
+    """Check a resolved clinical version against its locator and its own admission.
+
+    Every source runs this, because these checks are what make a document an
+    admitted fact — the transport that fetched it is not. A source that verified
+    less would admit something that merely resembles an admitted observation.
+    """
+    if not isinstance(version, dict) or any(version.get(field) != locator[field] for field in ("ehr_id", "composition_uid", "version_uid")):
+        raise ObservationError("version_mismatch", "The source returned another clinical version")
+    composition = version.get("composition", {})
+    if not isinstance(composition, dict) or composition.get("template_id") != "providehr.cosmic_observation.v1":
+        raise ObservationError("source_not_admitted", "Only an admitted canonical clinical observation is a source")
+    context = composition.get("context", {})
+    if not isinstance(context, dict) or context.get("tenant_id") != tenant_id:
+        raise ObservationError("source_scope_mismatch", "The source version has another tenant")
+    value = context.get("openbody_observation")
+    validate_observation(value, subject=f"subject:providehr:ehr:{ehr_id}")
+    if value["source"]["clinical_version"] != locator:
+        raise ObservationError("version_mismatch", "The stored projection identifies another clinical version")
+    if (context.get("external_source_system") != value["source"]["system"]
+            or context.get("external_resource_type") != "Observation"
+            or context.get("upstream_version") != value["source"]["resource_version"]):
+        raise ObservationError("admission_mismatch", "The projection has different source provenance")
+    admission = context.get("semantic_admission", {})
+    evidence = context.get("source_evidence", {})
+    if (not isinstance(admission, dict) or admission.get("kind") != "observation"
+            or admission.get("result") != value["normalization"]
+            or not isinstance(evidence, dict) or f"sha256:{evidence.get('payload_hash')}" != value["source"]["resource_digest"]
+            or evidence.get("parent") != value["source"]["parent"]):
+        raise ObservationError("admission_mismatch", "The projection is not backed by this clinical version's admission")
+    content = composition.get("content", {})
+    canonical = content.get("observation") if isinstance(content, dict) else None
+    if not isinstance(canonical, dict) or any(canonical.get(field) != expected for field, expected in {
+        "code": value["code"], "value": value["quantity"]["value"], "unit": value["quantity"]["code"],
+        "effective_time": value["effective_time"], "patient_external_id": value["source"]["patient_external_id"],
+    }.items()):
+        raise ObservationError("admission_mismatch", "The source's canonical clinical values differ from the projection")
+    return deepcopy(value)
+
+
+def _document_locator(version: Any, tenant_id: str) -> dict[str, str]:
+    """Read a document's own locator, so a file name cannot claim an identity."""
+    if not isinstance(version, dict):
+        raise ValueError("a clinical version document must be a JSON object")
+    locator = {"tenant_id": tenant_id} | {key: version.get(key) for key in ("ehr_id", "composition_uid", "version_uid")}
+    try:
+        validate_locator(locator)
+    except ObservationError as error:
+        raise ValueError(f"document does not identify a clinical version: {error}") from error
+    return locator
+
+
 class ObservationSource(Protocol):
     def resolve(self, locator: dict[str, str]) -> dict[str, Any]: ...
 
@@ -83,6 +140,8 @@ class ProvidEHRObservationSource:
     credentials, redirects, patient or arbitrary API operation. Responses must
     identify the exact immutable version and agree with its admission evidence.
     """
+    kind = "providehr-api"
+
     def __init__(self, base_url: str, access_token: str, tenant_id: str, ehr_id: str,
                  *, transport: httpx.BaseTransport | None = None) -> None:
         url = urlsplit(base_url)
@@ -113,34 +172,57 @@ class ProvidEHRObservationSource:
             version = response.json()
         except (httpx.HTTPError, ValueError) as error:
             raise ObservationError("source_unavailable", "The authorized clinical source could not be resolved") from error
-        if not isinstance(version, dict) or any(version.get(field) != locator[field] for field in ("ehr_id", "composition_uid", "version_uid")):
-            raise ObservationError("version_mismatch", "The source returned another clinical version")
-        composition = version.get("composition", {})
-        if not isinstance(composition, dict) or composition.get("template_id") != "providehr.cosmic_observation.v1":
-            raise ObservationError("source_not_admitted", "Only an admitted canonical clinical observation is a source")
-        context = composition.get("context", {})
-        if not isinstance(context, dict) or context.get("tenant_id") != self.tenant_id:
-            raise ObservationError("source_scope_mismatch", "The source version has another tenant")
-        value = context.get("openbody_observation")
-        validate_observation(value, subject=f"subject:providehr:ehr:{self.ehr_id}")
-        if value["source"]["clinical_version"] != locator:
-            raise ObservationError("version_mismatch", "The stored projection identifies another clinical version")
-        if (context.get("external_source_system") != value["source"]["system"]
-                or context.get("external_resource_type") != "Observation"
-                or context.get("upstream_version") != value["source"]["resource_version"]):
-            raise ObservationError("admission_mismatch", "The projection has different source provenance")
-        admission = context.get("semantic_admission", {})
-        evidence = context.get("source_evidence", {})
-        if (not isinstance(admission, dict) or admission.get("kind") != "observation"
-                or admission.get("result") != value["normalization"]
-                or not isinstance(evidence, dict) or f"sha256:{evidence.get('payload_hash')}" != value["source"]["resource_digest"]
-                or evidence.get("parent") != value["source"]["parent"]):
-            raise ObservationError("admission_mismatch", "The projection is not backed by this clinical version's admission")
-        content = composition.get("content", {})
-        canonical = content.get("observation") if isinstance(content, dict) else None
-        if not isinstance(canonical, dict) or any(canonical.get(field) != expected for field, expected in {
-            "code": value["code"], "value": value["quantity"]["value"], "unit": value["quantity"]["code"],
-            "effective_time": value["effective_time"], "patient_external_id": value["source"]["patient_external_id"],
-        }.items()):
-            raise ObservationError("admission_mismatch", "The source's canonical clinical values differ from the projection")
-        return deepcopy(value)
+        return verify_admitted_version(version, locator, self.tenant_id, self.ehr_id)
+
+
+class LocalObservationSource:
+    """Resolve admitted clinical versions from a directory instead of a clinical API.
+
+    This exists so an operator with no ProvidEHR deployment can run and conform the
+    whole observation path. It is deliberately not an authority: the trust boundary
+    becomes the file system, and whoever can write the directory can write a
+    document claiming to be admitted. What it does not do is verify less. Each
+    document passes exactly the checks an API response passes — locator identity,
+    template, tenant, projection/admission agreement, payload digest and canonical
+    clinical values — so this source cannot admit anything the production path
+    would reject. It substitutes the transport, never the admission policy.
+
+    The directory is indexed and verified at startup, so an unservable document is
+    a startup failure rather than a surprise on first read.
+    """
+
+    kind = "local-directory"
+
+    def __init__(self, directory: Path, tenant_id: str, ehr_id: str) -> None:
+        if not tenant_id or not ehr_id:
+            raise ValueError("source tenant/EHR binding is required")
+        if not directory.is_dir():
+            raise ValueError(f"local observation source directory {str(directory)!r} is not a directory")
+        self.tenant_id = tenant_id
+        self.ehr_id = ehr_id
+        self._versions: dict[str, dict[str, Any]] = {}
+        for path in sorted(directory.glob("*.json")):
+            version = json.loads(path.read_text())
+            locator = _document_locator(version, tenant_id)
+            if locator["ehr_id"] != ehr_id:
+                raise ValueError(f"{path.name} belongs to EHR {locator['ehr_id']!r}, not the bound {ehr_id!r}")
+            if locator["version_uid"] in self._versions:
+                raise ValueError(f"duplicate clinical version {locator['version_uid']} in {path.name}")
+            # Verified on load rather than trusted: a directory that cannot be served
+            # admissibly must not start a host that appears to serve it.
+            verify_admitted_version(version, locator, tenant_id, ehr_id)
+            self._versions[locator["version_uid"]] = version
+        if not self._versions:
+            raise ValueError(f"local observation source directory {str(directory)!r} contains no clinical version document")
+
+    def close(self) -> None:
+        return None
+
+    def resolve(self, locator: dict[str, str]) -> dict[str, Any]:
+        validate_locator(locator)
+        if locator["tenant_id"] != self.tenant_id or locator["ehr_id"] != self.ehr_id:
+            raise ObservationError("source_scope_mismatch", "Source reference exceeds the configured tenant/EHR")
+        version = self._versions.get(locator["version_uid"])
+        if version is None:
+            raise ObservationError("source_unavailable", "The authorized clinical source could not be resolved")
+        return verify_admitted_version(version, locator, self.tenant_id, self.ehr_id)

@@ -1,0 +1,63 @@
+# OpenBody reference host, one service per deployment mode.
+#
+#   docker compose --profile catalogue up -d --build
+#   docker compose --profile observations up -d --build
+#
+# Both publish on the loopback interface only. The reference host implements no
+# authorization and advertises none, so the port must never be bound to a public
+# interface directly — a terminating proxy owns authentication (see Caddyfile.example).
+name: openbody
+
+x-openbody-base: &openbody-base
+  build:
+    context: ../..
+    dockerfile: deploy/openbody/Dockerfile
+  image: openbody-host:local
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  env_file:
+    - .env
+
+services:
+  # Multi-tenant-safe: discovery only, no subject-bearing route exists at all.
+  catalogue:
+    <<: *openbody-base
+    profiles: [catalogue]
+    environment:
+      OPENBODY_MODE: catalogue
+      OPENBODY_MODEL_DIRECTORY: /srv/openbody/models
+    ports:
+      - "127.0.0.1:${OPENBODY_PORT:-8797}:8797"
+    volumes:
+      - ${OPENBODY_MODEL_DIRECTORY_HOST:-./models}:/srv/openbody/models:ro
+
+  # Single-tenant by construction: one instance per subject, never a shared process.
+  observations:
+    <<: *openbody-base
+    profiles: [observations]
+    environment:
+      OPENBODY_MODE: observations
+      OPENBODY_SOURCE_TOKEN_FILE: /run/secrets/openbody-source-token
+    ports:
+      - "127.0.0.1:${OPENBODY_PORT:-8797}:8797"
+    volumes:
+      - ${OPENBODY_SOURCE_TOKEN_FILE_HOST:?set OPENBODY_SOURCE_TOKEN_FILE_HOST in .env}:/run/secrets/openbody-source-token:ro
+
+  # The same ingestion path without a clinical API: admitted version documents
+  # resolved from a read-only directory. Not an authorized clinical source.
+  observations-local:
+    <<: *openbody-base
+    profiles: [observations-local]
+    environment:
+      OPENBODY_MODE: observations-local
+      OPENBODY_SOURCE_DIRECTORY: /srv/openbody/observations
+    ports:
+      - "127.0.0.1:${OPENBODY_PORT:-8797}:8797"
+    volumes:
+      - ${OPENBODY_SOURCE_DIRECTORY_HOST:-./observations}:/srv/openbody/observations:ro
