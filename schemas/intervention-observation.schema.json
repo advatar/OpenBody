@@ -1,0 +1,434 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/intervention-observation/1.0",
+  "title": "OpenBody intervention source observation",
+  "description": "A consented, patient-bound source observation of an intervention. It is not an OpenBody-derived assertion, diagnosis, or treatment recommendation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "projection_class",
+    "observation_id",
+    "subject",
+    "subject_binding",
+    "scope",
+    "source",
+    "intervention",
+    "observed_measurements",
+    "evidence",
+    "disclosure",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "openbody.intervention-observation/1.0"
+    },
+    "projection_class": {
+      "const": "source_observation"
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "subject_binding": {
+      "$ref": "#/$defs/SubjectBinding"
+    },
+    "scope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/Coordinate"
+      }
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "intervention": {
+      "$ref": "#/$defs/Intervention"
+    },
+    "observed_measurements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ObservedMeasurement"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EvidenceReference"
+      }
+    },
+    "user_response": {
+      "$ref": "#/$defs/UserResponse"
+    },
+    "disclosure": {
+      "$ref": "#/$defs/Disclosure"
+    },
+    "claim_boundary": {
+      "$ref": "#/$defs/ClaimBoundary"
+    }
+  },
+  "$defs": {
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^sha256:[A-Fa-f0-9]{64}$"
+    },
+    "URI": {
+      "type": "string",
+      "format": "uri"
+    },
+    "Coordinate": {
+      "type": "string",
+      "pattern": "^ob://[a-z0-9._-]+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+(?:\\?[A-Za-z0-9._~!$&'()*+,;=:@%/?-]+)?$"
+    },
+    "SubjectBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "binding_ref",
+        "issuer",
+        "verified_at",
+        "revocation_ref",
+        "proof_digest"
+      ],
+      "properties": {
+        "status": {
+          "const": "verified"
+        },
+        "binding_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "issuer": {
+          "$ref": "#/$defs/URI"
+        },
+        "verified_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "revocation_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "proof_digest": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["app_id", "app_version"],
+      "properties": {
+        "app_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "app_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      }
+    },
+    "DoseDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "status": {
+          "enum": ["planned", "observed", "patient_reported", "unavailable"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"status": {"enum": ["planned", "observed", "patient_reported"]}},
+            "required": ["status"]
+          },
+          "then": {
+            "required": ["value", "unit"]
+          }
+        },
+        {
+          "if": {
+            "properties": {"status": {"const": "unavailable"}},
+            "required": ["status"]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {"required": ["value"]},
+                {"required": ["unit"]}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "connectivity"],
+      "properties": {
+        "manufacturer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "connectivity": {
+          "enum": ["none", "bluetooth", "other", "unknown"]
+        }
+      }
+    },
+    "Intervention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intervention_id",
+        "family",
+        "started_at",
+        "ended_at",
+        "completion",
+        "delivery_mode",
+        "dose"
+      ],
+      "properties": {
+        "intervention_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "family": {
+          "enum": [
+            "neuromodulation",
+            "respiratory",
+            "biofeedback",
+            "mind_body",
+            "thermal",
+            "physical",
+            "sensory",
+            "circadian",
+            "clinical",
+            "other"
+          ]
+        },
+        "protocol_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "protocol_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "started_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "ended_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "completion": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "delivery_mode": {
+          "enum": ["manual", "app_guided", "app_controlled", "clinician_directed", "self_reported"]
+        },
+        "device": {
+          "$ref": "#/$defs/Device"
+        },
+        "dose": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DoseDimension"
+          }
+        }
+      }
+    },
+    "ObservedMeasurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "metric", "value", "unit", "observed_at", "source_ref"],
+      "properties": {
+        "phase": {
+          "enum": ["before", "end", "follow_up"]
+        },
+        "follow_up_offset_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metric": {
+          "enum": [
+            "heart_rate",
+            "resting_heart_rate",
+            "hrv_sdnn",
+            "respiratory_rate",
+            "sleep_duration",
+            "step_count",
+            "heart_breath_synchronization",
+            "eeg_delta_relative_power",
+            "eeg_theta_relative_power",
+            "eeg_alpha_relative_power",
+            "eeg_beta_relative_power",
+            "eeg_gamma_relative_power"
+          ]
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"phase": {"const": "follow_up"}},
+            "required": ["phase"]
+          },
+          "then": {
+            "required": ["follow_up_offset_seconds"]
+          },
+          "else": {
+            "not": {"required": ["follow_up_offset_seconds"]}
+          }
+        }
+      ]
+    },
+    "EvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "canonical_ref",
+        "content_digest",
+        "observed_at",
+        "contains_raw_signal"
+      ],
+      "properties": {
+        "kind": {
+          "enum": ["healthkit_sample", "vagus_analysis", "eeg_derived_features", "patient_report", "other"]
+        },
+        "canonical_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "content_digest": {
+          "$ref": "#/$defs/Digest"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "contains_raw_signal": {
+          "const": false
+        }
+      }
+    },
+    "UserResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["felt", "recorded_at"],
+      "properties": {
+        "felt": {
+          "enum": ["better", "same", "worse", "not_reported"]
+        },
+        "recorded_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "Disclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose", "consent_ref", "authorized_at", "fields"],
+      "properties": {
+        "purpose": {
+          "enum": ["direct_care", "care_coordination", "self_record"]
+        },
+        "consent_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "authorized_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "intervention",
+              "observed_measurements",
+              "evidence",
+              "user_response"
+            ]
+          }
+        }
+      }
+    },
+    "ClaimBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["epistemic_class", "causal_claim", "diagnosis", "treatment_recommendation"],
+      "properties": {
+        "epistemic_class": {
+          "const": "observation"
+        },
+        "causal_claim": {
+          "const": false
+        },
+        "diagnosis": {
+          "const": false
+        },
+        "treatment_recommendation": {
+          "const": false
+        }
+      }
+    }
+  }
+}

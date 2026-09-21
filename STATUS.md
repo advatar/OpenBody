@@ -1,5 +1,35 @@
 # Status
 
+## Implemented — intervention source-observation profile — 2026-09-21
+
+Issue: https://github.com/advatar/OpenBody/issues/28
+Implementation branch: `feat/intervention-observations`.
+
+Adopted from uncommitted working-tree work and landed unchanged apart from a
+README link. A therapy app can now disclose a consented record that an
+intervention occurred, with selected before/end/follow-up measurements and
+derived-analysis references, without that record being admissible as an
+OpenBody-derived assertion.
+
+- [x] `openbody.intervention-observation/1.0` closed schema with
+  `projection_class` fixed to `source_observation`.
+- [x] Validation with stable rejection codes: registry-checked scopes, interval
+  ordering, consent window ordering, and a disclosure allowlist that cannot name
+  absent content.
+- [x] Conformance validator routes documents of this profile to that validator.
+- [x] Profile documentation, a bounded example, and 7 tests including the
+  negative that a source observation still fails the clinical-assertion boundary.
+
+Boundary preserved: raw ECG/EEG sample arrays are outside the profile, absent
+measurements are omitted rather than filled, an `unavailable` dose cannot carry a
+value, and changing `projection_class` does not convert an observation into a
+derived object. Clinical admission still requires model execution, a receipt, and
+an `openbody.clinical-assertion-reference/1.0` projection.
+
+Not done: no host ingestion path for this profile. The replay-safety and
+ID-reuse semantics in the profile document are consumer requirements, not
+behaviour the reference host implements.
+
 ## Implemented — independent deployment handover — 2026-09-21
 
 Issue: https://github.com/advatar/OpenBody/issues/26
