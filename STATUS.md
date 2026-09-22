@@ -25,8 +25,10 @@ the hardening goes all the way to a `2.0` revision rather than staying
 - [x] ARCHITECTURE.md: OpenBody hosts the contract. It does not own custody,
   consent or disclosure decisions.
 - [x] Neutral synthetic example; adversarial tests.
-- [x] `deploy/openbody/CADDY-BLOCK.md` (landing page, unrelated to the profile,
-  carried in by the preservation commit) kept, with its assumptions documented.
+- [x] `deploy/openbody/CADDY-BLOCK.md` (carried in by the preservation commit,
+  unrelated to the profile) removed. It proxied `openbody.invivo.health` to a
+  self-hosted landing page that fails TLS. The landing page is hosted by Lovable
+  at `openbody.advatar.systems`, and DEPLOYMENT.md now says so.
 - [x] Profile revised to `2.0`, since no producer, consumer or published app
   exists: explicit `not_observed` missingness with a reason and a measurement
   origin; UCUM units and ranges per metric and dose dimension; a closed dose
@@ -38,9 +40,8 @@ the hardening goes all the way to a `2.0` revision rather than staying
 - [x] `InterventionObservationIntake`: a reference receiver with required
   subject-binding and consent verifiers, and checks for recipient, consent
   window at receipt, and replay/ID reuse.
-- [ ] Operator decision: `openbody.invivo.health` serves Caddy from a
-  self-hosted address and currently fails TLS. Either fix the certificate or
-  remove `CADDY-BLOCK.md` if the landing page moves to Lovable hosting.
+- [ ] Operator follow-up outside this repo: retire the `openbody.invivo.health`
+  DNS record and Caddy site, which still answer on a self-hosted address.
 
 ## Implemented — intervention source-observation profile — 2026-09-21
 
