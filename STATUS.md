@@ -1,5 +1,34 @@
 # Status
 
+## In review — post-merge qualification audit of 900b064 — 2026-09-22
+
+Issue: https://github.com/advatar/OpenBody/issues/31
+Branch: `fix/intervention-observation-audit` (draft PR, not to be auto-merged).
+
+`900b064` was an intentional preservation commit made during a laptop/worktree
+migration. The process defect was not preserving the work. It was merging
+preserved-but-unreviewed work into `main` without a distinct review step. The
+audit verdict is keep and harden, staying on `1.0`: no producer or consumer
+exists yet, and the example satisfies every new check.
+
+- [x] Exact disclosure: present content that is not disclosed is rejected
+  (`undisclosed_content_present`).
+- [x] Non-finite numbers rejected; measurement phases and the patient response
+  ordered against the session (`invalid_measurement_phase`, `invalid_interval`);
+  zero-length consent window rejected.
+- [x] `tools/validate_openbody.py` no longer crashes on non-object JSON; CI
+  parses the profile schema.
+- [x] Docs carry a claim-to-enforcement table. Missingness is a producer
+  requirement. Subject binding, consent and replay are consumer requirements
+  and are not verified here. Example limitations are stated.
+- [x] ARCHITECTURE.md: OpenBody hosts the contract. It does not own custody,
+  consent or disclosure decisions.
+- [x] Neutral synthetic example; adversarial tests.
+- [x] `deploy/openbody/CADDY-BLOCK.md` (landing page, unrelated to the profile,
+  carried in by the preservation commit) kept, with its assumptions documented.
+- [ ] `1.1` candidates, not started: explicit not-observed measurement status,
+  UCUM metric-unit binding, neutral evidence kinds replacing `vagus_analysis`.
+
 ## Implemented — intervention source-observation profile — 2026-09-21
 
 Issue: https://github.com/advatar/OpenBody/issues/28

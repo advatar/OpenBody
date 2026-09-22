@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import math
+from functools import lru_cache
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -24,6 +26,16 @@ def _load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@lru_cache(maxsize=1)
+def _schema_validator() -> Draft202012Validator:
+    return Draft202012Validator(_load(SCHEMA_PATH), format_checker=FormatChecker())
+
+
+@lru_cache(maxsize=1)
+def _registered_scopes() -> frozenset[str]:
+    return frozenset(entry["coordinate"] for entry in _load(REGISTRY_PATH)["coordinates"])
+
+
 def _reject(code: str, message: str) -> None:
     raise InterventionObservationError(code, message)
 
@@ -35,17 +47,34 @@ def _timestamp(value: str, field: str) -> datetime:
         _reject("structural_invalid", f"{field} is not an RFC 3339 timestamp: {error}")
 
 
+def _non_finite_path(value: Any, path: str = "") -> str | None:
+    if isinstance(value, float) and not math.isfinite(value):
+        return path or "$"
+    if isinstance(value, dict):
+        children = ((f"{path}/{key}".lstrip("/"), child) for key, child in value.items())
+    elif isinstance(value, list):
+        children = ((f"{path}/{index}".lstrip("/"), child) for index, child in enumerate(value))
+    else:
+        return None
+    for child_path, child in children:
+        found = _non_finite_path(child, child_path)
+        if found:
+            return found
+    return None
+
+
 def validate_intervention_observation(observation: dict[str, Any]) -> None:
-    schema = _load(SCHEMA_PATH)
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
-    errors = sorted(validator.iter_errors(observation), key=lambda error: list(error.absolute_path))
+    non_finite = _non_finite_path(observation)
+    if non_finite:
+        _reject("structural_invalid", f"{non_finite}: numbers must be finite")
+
+    errors = sorted(_schema_validator().iter_errors(observation), key=lambda error: list(error.absolute_path))
     if errors:
         error = errors[0]
         location = "/".join(map(str, error.absolute_path)) or "$"
         _reject("structural_invalid", f"{location}: {error.message}")
 
-    registered = {entry["coordinate"] for entry in _load(REGISTRY_PATH)["coordinates"]}
-    unknown = sorted(set(observation["scope"]) - registered)
+    unknown = sorted(set(observation["scope"]) - _registered_scopes())
     if unknown:
         _reject("unsupported_scope", f"Unregistered OpenBody scope: {unknown[0]}")
 
@@ -54,15 +83,40 @@ def validate_intervention_observation(observation: dict[str, Any]) -> None:
     if end < start:
         _reject("invalid_interval", "intervention.ended_at precedes intervention.started_at")
 
+    for measurement in observation["observed_measurements"]:
+        observed_at = _timestamp(measurement["observed_at"], "observed_measurements.observed_at")
+        phase = measurement["phase"]
+        if (
+            (phase == "before" and observed_at > start)
+            or (phase == "end" and observed_at < start)
+            or (phase == "follow_up" and observed_at < end)
+        ):
+            _reject(
+                "invalid_measurement_phase",
+                f"A {phase} measurement observed at {measurement['observed_at']} contradicts the session interval",
+            )
+
+    if "user_response" in observation:
+        recorded_at = _timestamp(observation["user_response"]["recorded_at"], "user_response.recorded_at")
+        if recorded_at < start:
+            _reject("invalid_interval", "user_response.recorded_at precedes intervention.started_at")
+
     disclosure = observation["disclosure"]
     authorized_at = _timestamp(disclosure["authorized_at"], "disclosure.authorized_at")
-    if disclosure.get("expires_at") and _timestamp(disclosure["expires_at"], "disclosure.expires_at") < authorized_at:
-        _reject("invalid_consent_window", "disclosure.expires_at precedes disclosure.authorized_at")
+    if disclosure.get("expires_at") and _timestamp(disclosure["expires_at"], "disclosure.expires_at") <= authorized_at:
+        _reject("invalid_consent_window", "disclosure.expires_at does not follow disclosure.authorized_at")
 
+    # The allowlist is exact: it names every section the payload carries and
+    # nothing it does not. Declaring less than is carried would present
+    # undisclosed content as disclosed.
     disclosed = set(disclosure["fields"])
-    if "user_response" in disclosed and "user_response" not in observation:
-        _reject("disclosed_field_missing", "user_response is disclosed but absent")
-    if "evidence" in disclosed and not observation["evidence"]:
-        _reject("disclosed_field_missing", "evidence is disclosed but empty")
-    if "observed_measurements" in disclosed and not observation["observed_measurements"]:
-        _reject("disclosed_field_missing", "observed_measurements is disclosed but empty")
+    present = {"intervention"}
+    present.update(
+        field for field in ("observed_measurements", "evidence") if observation[field]
+    )
+    if "user_response" in observation:
+        present.add("user_response")
+    for field in sorted(disclosed - present):
+        _reject("disclosed_field_missing", f"{field} is disclosed but absent or empty")
+    for field in sorted(present - disclosed):
+        _reject("undisclosed_content_present", f"{field} is carried but not disclosed")

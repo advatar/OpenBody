@@ -1,0 +1,84 @@
+{
+  "schema_version": "openbody.intervention-observation/1.0",
+  "projection_class": "source_observation",
+  "observation_id": "synthetic-paced-breathing-2026-09-01-001",
+  "subject": "synthetic-subject-002",
+  "subject_binding": {
+    "status": "verified",
+    "binding_ref": "urn:uuid:7a1d2c9e-0b4f-4f3a-9c61-2f8e5d1b4a70",
+    "issuer": "https://clinical-receiver.example",
+    "verified_at": "2026-09-01T06:55:00Z",
+    "revocation_ref": "https://clinical-receiver.example/oauth/revoke",
+    "proof_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "scope": [
+    "ob://human/respiratory"
+  ],
+  "source": {
+    "app_id": "example.paced-breathing",
+    "app_version": "0.1"
+  },
+  "intervention": {
+    "intervention_id": "example.paced-breathing",
+    "family": "respiratory",
+    "protocol_id": "six-per-minute",
+    "protocol_version": "1",
+    "started_at": "2026-09-01T07:00:00Z",
+    "ended_at": "2026-09-01T07:10:00Z",
+    "completion": 0.8,
+    "delivery_mode": "app_guided",
+    "dose": [
+      {
+        "name": "paced_breathing_rate",
+        "value": 6,
+        "unit": "breaths/min",
+        "status": "planned"
+      },
+      {
+        "name": "duration",
+        "value": 480,
+        "unit": "s",
+        "status": "patient_reported"
+      },
+      {
+        "name": "adherence_to_pace",
+        "status": "unavailable"
+      }
+    ]
+  },
+  "observed_measurements": [
+    {
+      "phase": "before",
+      "metric": "respiratory_rate",
+      "value": 14,
+      "unit": "breaths/min",
+      "observed_at": "2026-09-01T06:58:00Z",
+      "source_ref": "device://synthetic/respiratory-rate/before"
+    },
+    {
+      "phase": "end",
+      "metric": "step_count",
+      "value": 0,
+      "unit": "count",
+      "observed_at": "2026-09-01T07:10:00Z",
+      "source_ref": "device://synthetic/step-count/session"
+    }
+  ],
+  "evidence": [],
+  "disclosure": {
+    "purpose": "self_record",
+    "consent_ref": "urn:uuid:0d5b8f44-6a2e-4c1b-8e7f-93a6c2d1e5b8",
+    "authorized_at": "2026-09-01T07:15:00Z",
+    "expires_at": "2026-12-01T00:00:00Z",
+    "fields": [
+      "intervention",
+      "observed_measurements"
+    ]
+  },
+  "claim_boundary": {
+    "epistemic_class": "observation",
+    "causal_claim": false,
+    "diagnosis": false,
+    "treatment_recommendation": false
+  }
+}
