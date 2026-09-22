@@ -19,12 +19,13 @@ from openbody_ref.clinical_reference import ClinicalReferenceError, validate_cli
 from openbody_ref.intervention_observation import (
     ROOT,
     InterventionObservationError,
+    InterventionObservationIntake,
     validate_intervention_observation,
 )
 
 EXAMPLES = [
-    "cymbathera-intervention-observation.v1.json",
-    "paced-breathing-intervention-observation.v1.json",
+    "cymbathera-intervention-observation.v2.json",
+    "paced-breathing-intervention-observation.v2.json",
 ]
 
 SMUGGLE_KEYS = [
@@ -122,8 +123,8 @@ def test_non_finite_numbers_are_rejected(bad):
 
 
 def test_measured_zero_is_legitimate():
-    value = example("paced-breathing-intervention-observation.v1.json")
-    assert value["observed_measurements"][1]["value"] == 0
+    value = example("paced-breathing-intervention-observation.v2.json")
+    assert value["observed_measurements"][2]["value"] == 0
     validate_intervention_observation(value)
 
 
@@ -393,15 +394,234 @@ def test_response_is_a_closed_vocabulary():
 @pytest.mark.parametrize(
     "path,text",
     [
-        (("intervention", "intervention_id"), "HRV improved because of stimulation"),
+        (("observation_id",), "HRV improved because of stimulation"),
+        (("intervention", "intervention_id"), "patient responded to therapy"),
         (("intervention", "protocol_id"), "recommended stimulation: 25 Hz daily"),
-        (("intervention", "dose", 0, "name"), "effective dose"),
         (("intervention", "device", "model"), "diagnosis: autonomic dysfunction"),
+        (("source", "app_version"), "effective dose"),
+        (("observed_measurements", 0, "source_ref"), "healthkit://hr because of stimulation"),
+        (("evidence", 0, "canonical_ref"), "vagal target engaged"),
     ],
 )
-def test_identifier_strings_are_not_semantically_checked(path, text):
-    # Documented limit: identifiers are opaque producer labels. Wording in them
-    # is not a claim the profile carries, and consumers must not read it as one.
+def test_identifiers_and_references_cannot_carry_prose(path, text):
     value = example()
     at(value, path[:-1])[path[-1]] = text
+    rejected(value, "structural_invalid")
+
+
+@pytest.mark.parametrize("name", ["effective_dose", "effective dose", "dose", "intensity"])
+def test_dose_dimensions_are_a_closed_vocabulary(name):
+    value = example()
+    value["intervention"]["dose"][0]["name"] = name
+    rejected(value, "structural_invalid")
+
+
+def test_identifier_tokens_are_still_not_read_for_meaning():
+    # Documented limit: a token forbids prose, not meaning. Consumers must treat
+    # identifiers as opaque.
+    value = example()
+    value["intervention"]["intervention_id"] = "patient_responded_to_therapy"
     validate_intervention_observation(value)
+
+
+# Version 2.0 structure -------------------------------------------------------
+
+
+def test_version_1_documents_fail_closed():
+    value = example()
+    value["schema_version"] = "openbody.intervention-observation/1.0"
+    rejected(value, "structural_invalid")
+
+
+def test_follow_up_offset_is_derived_not_declared():
+    value = example()
+    value["observed_measurements"][2]["follow_up_offset_seconds"] = 900
+    rejected(value, "structural_invalid")
+
+
+@pytest.mark.parametrize("field", ["value", "unit", "observed_at", "source_ref", "origin"])
+def test_not_observed_measurement_carries_nothing_observed(field):
+    value = example()
+    not_observed = value["observed_measurements"][3]
+    assert not_observed["status"] == "not_observed"
+    not_observed[field] = value["observed_measurements"][0][field]
+    rejected(value, "structural_invalid")
+
+
+def test_not_observed_measurement_needs_a_reason_and_observed_forbids_one():
+    value = example()
+    del value["observed_measurements"][3]["reason"]
+    rejected(value, "structural_invalid")
+    value = example()
+    value["observed_measurements"][0]["reason"] = "no_sample"
+    rejected(value, "structural_invalid")
+
+
+@pytest.mark.parametrize("field", ["observed_at", "source_ref", "origin", "unit"])
+def test_observed_measurement_needs_its_provenance(field):
+    value = example()
+    del value["observed_measurements"][0][field]
+    rejected(value, "structural_invalid")
+
+
+@pytest.mark.parametrize(
+    "metric,unit,number",
+    [
+        ("heart_rate", "beats/min", 70),
+        ("heart_rate", "/min", -1),
+        ("hrv_sdnn", "s", 0.05),
+        ("step_count", "{steps}", 1.5),
+        ("eeg_alpha_relative_power", "1", 1.2),
+        ("eeg_alpha_relative_power", "%", 0.3),
+    ],
+)
+def test_measurement_unit_and_range_are_bound_to_metric(metric, unit, number):
+    value = example()
+    value["observed_measurements"][0].update(metric=metric, unit=unit, value=number)
+    rejected(value, "structural_invalid")
+
+
+@pytest.mark.parametrize(
+    "name,unit,number",
+    [("duration", "min", 7), ("duration", "s", -1), ("intensity_setting", "1", 1.5), ("repetitions", "{count}", 2.5)],
+)
+def test_dose_unit_and_range_are_bound_to_dimension(name, unit, number):
+    value = example()
+    value["intervention"]["dose"][0].update(name=name, unit=unit, value=number)
+    rejected(value, "structural_invalid")
+
+
+def test_a_series_cannot_be_carried_as_repeated_measurements():
+    value = example()
+    first = value["observed_measurements"][0]
+    value["observed_measurements"] = [dict(first, value=70 + i % 5) for i in range(40)]
+    rejected(value, "duplicate_measurement")
+    value["observed_measurements"] = [dict(first, value=70 + i % 5) for i in range(65)]
+    rejected(value, "structural_invalid")
+
+
+def test_contradictory_measurements_are_rejected():
+    value = example()
+    value["observed_measurements"].append(
+        {"phase": "before", "metric": "heart_rate", "status": "not_observed", "reason": "no_sample"}
+    )
+    rejected(value, "duplicate_measurement")
+
+
+def test_dose_dimension_appears_once_per_status():
+    value = example()
+    value["intervention"]["dose"].append(dict(value["intervention"]["dose"][0], value=300))
+    rejected(value, "duplicate_dose_dimension")
+    # Planned and observed values of one dimension may both be carried.
+    value = example()
+    value["intervention"]["dose"].append(dict(value["intervention"]["dose"][0], status="planned", value=600))
+    validate_intervention_observation(value)
+
+
+def test_derived_analysis_must_name_its_producer():
+    value = example()
+    del value["evidence"][0]["produced_by"]
+    rejected(value, "structural_invalid")
+    value = example()
+    value["evidence"][0]["kind"] = "patient_report"
+    rejected(value, "structural_invalid")
+
+
+@pytest.mark.parametrize("kind", ["vagus_analysis", "eeg_derived_features", "other", "openbody_state"])
+def test_evidence_kinds_are_neutral_and_closed(kind):
+    value = example()
+    value["evidence"][0]["kind"] = kind
+    rejected(value, "structural_invalid")
+
+
+def test_disclosure_names_a_recipient():
+    value = example()
+    del value["disclosure"]["recipient"]
+    rejected(value, "structural_invalid")
+
+
+def test_subject_binding_precedes_disclosure():
+    value = example()
+    value["subject_binding"]["verified_at"] = "2026-08-30T09:00:00Z"
+    rejected(value, "invalid_subject_binding")
+
+
+# Reference intake: what the payload cannot enforce -------------------------
+
+RECIPIENT = "https://providehr.example/intake"
+RECEIVED_AT = datetime(2026, 8, 30, 9, 0, tzinfo=timezone.utc)
+
+
+def accept(observation, evaluated_at):
+    return True
+
+
+def intake(**overrides):
+    options = dict(recipient=RECIPIENT, verify_subject_binding=accept, verify_consent=accept)
+    options.update(overrides)
+    return InterventionObservationIntake(**options)
+
+
+def refused(receiver, value, code, evaluated_at=RECEIVED_AT):
+    with pytest.raises(InterventionObservationError) as caught:
+        receiver.receive(value, evaluated_at=evaluated_at)
+    assert caught.value.code == code, str(caught.value)
+
+
+def test_intake_requires_both_verifiers():
+    with pytest.raises(TypeError):
+        InterventionObservationIntake(recipient=RECIPIENT, verify_consent=accept)
+    with pytest.raises(TypeError):
+        InterventionObservationIntake(recipient=RECIPIENT, verify_subject_binding=accept)
+
+
+def test_intake_admits_then_treats_identical_retry_as_replay():
+    receiver = intake()
+    first = receiver.receive(example(), evaluated_at=RECEIVED_AT)
+    assert (first.outcome, first.evidence_class) == ("admitted", "source_observation")
+    again = receiver.receive(example(), evaluated_at=RECEIVED_AT)
+    assert again.outcome == "replay"
+    assert again.content_digest == first.content_digest
+
+
+def test_intake_rejects_id_reuse_with_different_content():
+    receiver = intake()
+    receiver.receive(example(), evaluated_at=RECEIVED_AT)
+    changed = example()
+    changed["observed_measurements"][0]["value"] = 72
+    refused(receiver, changed, "observation_id_conflict")
+
+
+@pytest.mark.parametrize(
+    "overrides,code",
+    [
+        ({"verify_subject_binding": lambda o, t: False}, "subject_binding_unverified"),
+        ({"verify_subject_binding": lambda o, t: "yes"}, "subject_binding_unverified"),
+        ({"verify_subject_binding": lambda o, t: 1 / 0}, "subject_binding_unverified"),
+        ({"verify_consent": lambda o, t: False}, "consent_unverified"),
+        ({"verify_consent": lambda o, t: None}, "consent_unverified"),
+        ({"recipient": "https://someone-else.example/intake"}, "recipient_mismatch"),
+    ],
+)
+def test_intake_fails_closed_without_verification(overrides, code):
+    refused(intake(**overrides), example(), code)
+
+
+def test_intake_enforces_the_consent_window_at_receipt():
+    refused(intake(), example(), "consent_not_yet_valid", datetime(2026, 8, 30, 8, 29, tzinfo=timezone.utc))
+    value = example()
+    value["disclosure"]["expires_at"] = "2026-08-30T08:45:00Z"
+    refused(intake(), value, "consent_expired")
+
+
+def test_intake_requires_an_aware_evaluation_time():
+    refused(intake(), example(), "invalid_evaluation_time", datetime(2026, 8, 30, 9, 0))
+
+
+def test_intake_validates_before_verifying():
+    calls = []
+    receiver = intake(verify_subject_binding=lambda o, t: calls.append(o) or True)
+    value = example()
+    value["projection_class"] = "openbody_reference"
+    refused(receiver, value, "structural_invalid")
+    assert calls == []

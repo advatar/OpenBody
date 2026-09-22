@@ -1,5 +1,5 @@
 {
-  "schema_version": "openbody.intervention-observation/1.0",
+  "schema_version": "openbody.intervention-observation/2.0",
   "projection_class": "source_observation",
   "observation_id": "synthetic-paced-breathing-2026-09-01-001",
   "subject": "synthetic-subject-002",
@@ -29,9 +29,9 @@
     "delivery_mode": "app_guided",
     "dose": [
       {
-        "name": "paced_breathing_rate",
+        "name": "breathing_rate",
         "value": 6,
-        "unit": "breaths/min",
+        "unit": "/min",
         "status": "planned"
       },
       {
@@ -41,7 +41,7 @@
         "status": "patient_reported"
       },
       {
-        "name": "adherence_to_pace",
+        "name": "repetitions",
         "status": "unavailable"
       }
     ]
@@ -50,24 +50,35 @@
     {
       "phase": "before",
       "metric": "respiratory_rate",
+      "status": "observed",
       "value": 14,
-      "unit": "breaths/min",
+      "unit": "/min",
       "observed_at": "2026-09-01T06:58:00Z",
-      "source_ref": "device://synthetic/respiratory-rate/before"
+      "source_ref": "device://synthetic/respiratory-rate/before",
+      "origin": "consumer_device"
+    },
+    {
+      "phase": "end",
+      "metric": "respiratory_rate",
+      "status": "not_observed",
+      "reason": "no_sample"
     },
     {
       "phase": "end",
       "metric": "step_count",
+      "status": "observed",
       "value": 0,
-      "unit": "count",
+      "unit": "{steps}",
       "observed_at": "2026-09-01T07:10:00Z",
-      "source_ref": "device://synthetic/step-count/session"
+      "source_ref": "device://synthetic/step-count/session",
+      "origin": "consumer_device"
     }
   ],
   "evidence": [],
   "disclosure": {
     "purpose": "self_record",
     "consent_ref": "urn:uuid:0d5b8f44-6a2e-4c1b-8e7f-93a6c2d1e5b8",
+    "recipient": "https://personal-record.example/",
     "authorized_at": "2026-09-01T07:15:00Z",
     "expires_at": "2026-12-01T00:00:00Z",
     "fields": [

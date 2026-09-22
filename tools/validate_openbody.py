@@ -314,7 +314,7 @@ def main(paths):
             print(f"FAIL {path}")
             print("  document is not a JSON object")
             continue
-        if doc.get("schema_version") == "openbody.intervention-observation/1.0":
+        if str(doc.get("schema_version", "")).startswith("openbody.intervention-observation/"):
             try:
                 validate_intervention_observation(doc)
             except ValueError as error:

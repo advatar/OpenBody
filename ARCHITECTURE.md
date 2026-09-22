@@ -35,7 +35,7 @@ For `health.*` domains the envelope payload carries exactly one of:
 
 - `projectionClass: "source_observation"` — a user-approved summary with no corresponding OpenBody
   assertion yet. Carries `sourceReference` and `contentDigest`. Domain profiles such as
-  [`openbody.intervention-observation/1.0`](schemas/intervention-observation.schema.json) may constrain
+  [`openbody.intervention-observation/2.0`](schemas/intervention-observation.schema.json) may constrain
   its contents without converting it into a core OpenBody-derived object. OpenBody hosts that contract
   and its negative boundary against `openbody.clinical-assertion-reference/1.0`. The observations, the
   consent and disclosure decisions, and clinical intake stay with InVivo and ProvidEHR. See

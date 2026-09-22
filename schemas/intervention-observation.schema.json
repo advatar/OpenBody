@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://openbody.dev/schemas/intervention-observation/1.0",
+  "$id": "https://openbody.dev/schemas/intervention-observation/2.0",
   "title": "OpenBody intervention source observation",
-  "description": "A consented, patient-bound source observation of an intervention. It is not an OpenBody-derived assertion, diagnosis, or treatment recommendation.",
+  "description": "A consented, patient-bound source observation of an intervention. It is not an OpenBody-derived assertion, diagnosis, or treatment recommendation. Declarations in it (subject binding, consent, raw-signal attestation) are the producer's and must be verified by the receiver.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -21,20 +21,16 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "openbody.intervention-observation/1.0"
+      "const": "openbody.intervention-observation/2.0"
     },
     "projection_class": {
       "const": "source_observation"
     },
     "observation_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 200
+      "$ref": "#/$defs/Token"
     },
     "subject": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 200
+      "$ref": "#/$defs/Token"
     },
     "subject_binding": {
       "$ref": "#/$defs/SubjectBinding"
@@ -55,12 +51,14 @@
     },
     "observed_measurements": {
       "type": "array",
+      "maxItems": 64,
       "items": {
-        "$ref": "#/$defs/ObservedMeasurement"
+        "$ref": "#/$defs/Measurement"
       }
     },
     "evidence": {
       "type": "array",
+      "maxItems": 32,
       "items": {
         "$ref": "#/$defs/EvidenceReference"
       }
@@ -76,6 +74,11 @@
     }
   },
   "$defs": {
+    "Token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@+/-]{0,199}$",
+      "description": "An opaque identifier. No whitespace, so it cannot carry prose."
+    },
     "Timestamp": {
       "type": "string",
       "format": "date-time"
@@ -86,7 +89,8 @@
     },
     "URI": {
       "type": "string",
-      "format": "uri"
+      "format": "uri",
+      "maxLength": 500
     },
     "Coordinate": {
       "type": "string",
@@ -95,6 +99,7 @@
     "SubjectBinding": {
       "type": "object",
       "additionalProperties": false,
+      "description": "The producer's declaration that an issuer verified this subject binding. The receiver verifies it independently.",
       "required": [
         "status",
         "binding_ref",
@@ -127,63 +132,319 @@
     "Source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["app_id", "app_version"],
+      "required": [
+        "app_id",
+        "app_version"
+      ],
       "properties": {
         "app_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 200
+          "$ref": "#/$defs/Token"
         },
         "app_version": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100
+          "$ref": "#/$defs/Token"
         }
       }
     },
     "DoseDimension": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "status"],
+      "required": [
+        "name",
+        "status"
+      ],
       "properties": {
         "name": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100
+          "enum": [
+            "duration",
+            "frequency",
+            "pulse_width",
+            "current_amplitude",
+            "intensity_setting",
+            "breathing_rate",
+            "repetitions",
+            "temperature",
+            "illuminance"
+          ]
         },
         "value": {
           "type": "number"
         },
         "unit": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 60
+          "type": "string"
         },
         "status": {
-          "enum": ["planned", "observed", "patient_reported", "unavailable"]
+          "enum": [
+            "planned",
+            "observed",
+            "patient_reported",
+            "unavailable"
+          ]
         }
       },
       "allOf": [
         {
           "if": {
-            "properties": {"status": {"enum": ["planned", "observed", "patient_reported"]}},
-            "required": ["status"]
+            "properties": {
+              "status": {
+                "enum": [
+                  "planned",
+                  "observed",
+                  "patient_reported"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
           },
           "then": {
-            "required": ["value", "unit"]
+            "required": [
+              "value",
+              "unit"
+            ]
           }
         },
         {
           "if": {
-            "properties": {"status": {"const": "unavailable"}},
-            "required": ["status"]
+            "properties": {
+              "status": {
+                "const": "unavailable"
+              }
+            },
+            "required": [
+              "status"
+            ]
           },
           "then": {
             "not": {
               "anyOf": [
-                {"required": ["value"]},
-                {"required": ["unit"]}
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                }
               ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "duration"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "s"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "frequency"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "Hz"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "pulse_width"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "us"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "current_amplitude"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "mA"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "intensity_setting"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "breathing_rate"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "/min"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "repetitions"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "{count}"
+              },
+              "value": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "temperature"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "Cel"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "illuminance"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "lx"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
             }
           }
         }
@@ -192,20 +453,24 @@
     "Device": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["model", "connectivity"],
+      "required": [
+        "model",
+        "connectivity"
+      ],
       "properties": {
         "manufacturer": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
+          "$ref": "#/$defs/Token"
         },
         "model": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
+          "$ref": "#/$defs/Token"
         },
         "connectivity": {
-          "enum": ["none", "bluetooth", "other", "unknown"]
+          "enum": [
+            "none",
+            "bluetooth",
+            "other",
+            "unknown"
+          ]
         }
       }
     },
@@ -223,9 +488,7 @@
       ],
       "properties": {
         "intervention_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 200
+          "$ref": "#/$defs/Token"
         },
         "family": {
           "enum": [
@@ -242,14 +505,10 @@
           ]
         },
         "protocol_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 200
+          "$ref": "#/$defs/Token"
         },
         "protocol_version": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100
+          "$ref": "#/$defs/Token"
         },
         "started_at": {
           "$ref": "#/$defs/Timestamp"
@@ -263,30 +522,42 @@
           "maximum": 1
         },
         "delivery_mode": {
-          "enum": ["manual", "app_guided", "app_controlled", "clinician_directed", "self_reported"]
+          "enum": [
+            "manual",
+            "app_guided",
+            "app_controlled",
+            "clinician_directed",
+            "self_reported"
+          ]
         },
         "device": {
           "$ref": "#/$defs/Device"
         },
         "dose": {
           "type": "array",
+          "maxItems": 32,
           "items": {
             "$ref": "#/$defs/DoseDimension"
           }
         }
       }
     },
-    "ObservedMeasurement": {
+    "Measurement": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["phase", "metric", "value", "unit", "observed_at", "source_ref"],
+      "description": "One value per metric and phase. `not_observed` says a value was expected but none exists; it never carries a value.",
+      "required": [
+        "phase",
+        "metric",
+        "status"
+      ],
       "properties": {
         "phase": {
-          "enum": ["before", "end", "follow_up"]
-        },
-        "follow_up_offset_seconds": {
-          "type": "integer",
-          "minimum": 0
+          "enum": [
+            "before",
+            "end",
+            "follow_up"
+          ]
         },
         "metric": {
           "enum": [
@@ -296,7 +567,6 @@
             "respiratory_rate",
             "sleep_duration",
             "step_count",
-            "heart_breath_synchronization",
             "eeg_delta_relative_power",
             "eeg_theta_relative_power",
             "eeg_alpha_relative_power",
@@ -304,34 +574,382 @@
             "eeg_gamma_relative_power"
           ]
         },
+        "status": {
+          "enum": [
+            "observed",
+            "not_observed"
+          ]
+        },
         "value": {
           "type": "number"
         },
         "unit": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 60
+          "type": "string"
         },
         "observed_at": {
           "$ref": "#/$defs/Timestamp"
         },
         "source_ref": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 500
+          "$ref": "#/$defs/URI"
+        },
+        "origin": {
+          "enum": [
+            "consumer_device",
+            "medical_device",
+            "app_computed",
+            "patient_reported"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "no_sample",
+            "device_not_worn",
+            "permission_not_granted",
+            "not_collected",
+            "source_error"
+          ]
         }
       },
       "allOf": [
         {
           "if": {
-            "properties": {"phase": {"const": "follow_up"}},
-            "required": ["phase"]
+            "properties": {
+              "status": {
+                "const": "observed"
+              }
+            },
+            "required": [
+              "status"
+            ]
           },
           "then": {
-            "required": ["follow_up_offset_seconds"]
+            "required": [
+              "value",
+              "unit",
+              "observed_at",
+              "source_ref",
+              "origin"
+            ],
+            "not": {
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "not_observed"
+              }
+            },
+            "required": [
+              "status"
+            ]
           },
-          "else": {
-            "not": {"required": ["follow_up_offset_seconds"]}
+          "then": {
+            "required": [
+              "reason"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "observed_at"
+                  ]
+                },
+                {
+                  "required": [
+                    "source_ref"
+                  ]
+                },
+                {
+                  "required": [
+                    "origin"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "heart_rate"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "/min"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "resting_heart_rate"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "/min"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "hrv_sdnn"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "ms"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "respiratory_rate"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "/min"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "sleep_duration"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "s"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "step_count"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "{steps}"
+              },
+              "value": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "eeg_delta_relative_power"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "eeg_theta_relative_power"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "eeg_alpha_relative_power"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "eeg_beta_relative_power"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "metric": {
+                "const": "eeg_gamma_relative_power"
+              }
+            },
+            "required": [
+              "metric",
+              "value"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
           }
         }
       ]
@@ -348,12 +966,14 @@
       ],
       "properties": {
         "kind": {
-          "enum": ["healthkit_sample", "vagus_analysis", "eeg_derived_features", "patient_report", "other"]
+          "enum": [
+            "device_sample_summary",
+            "derived_analysis",
+            "patient_report"
+          ]
         },
         "canonical_ref": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 500
+          "$ref": "#/$defs/URI"
         },
         "content_digest": {
           "$ref": "#/$defs/Digest"
@@ -362,17 +982,72 @@
           "$ref": "#/$defs/Timestamp"
         },
         "contains_raw_signal": {
-          "const": false
+          "const": false,
+          "description": "Producer attestation about the referenced artifact."
+        },
+        "produced_by": {
+          "$ref": "#/$defs/Producer"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "derived_analysis"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "produced_by"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "produced_by"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "software_id",
+        "software_version"
+      ],
+      "description": "The non-OpenBody software that derived the referenced analysis.",
+      "properties": {
+        "software_id": {
+          "$ref": "#/$defs/Token"
+        },
+        "software_version": {
+          "$ref": "#/$defs/Token"
         }
       }
     },
     "UserResponse": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["felt", "recorded_at"],
+      "required": [
+        "felt",
+        "recorded_at"
+      ],
       "properties": {
         "felt": {
-          "enum": ["better", "same", "worse", "not_reported"]
+          "enum": [
+            "better",
+            "same",
+            "worse",
+            "not_reported"
+          ]
         },
         "recorded_at": {
           "$ref": "#/$defs/Timestamp"
@@ -382,12 +1057,25 @@
     "Disclosure": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["purpose", "consent_ref", "authorized_at", "fields"],
+      "required": [
+        "purpose",
+        "consent_ref",
+        "recipient",
+        "authorized_at",
+        "fields"
+      ],
       "properties": {
         "purpose": {
-          "enum": ["direct_care", "care_coordination", "self_record"]
+          "enum": [
+            "direct_care",
+            "care_coordination",
+            "self_record"
+          ]
         },
         "consent_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "recipient": {
           "$ref": "#/$defs/URI"
         },
         "authorized_at": {
@@ -414,7 +1102,12 @@
     "ClaimBoundary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["epistemic_class", "causal_claim", "diagnosis", "treatment_recommendation"],
+      "required": [
+        "epistemic_class",
+        "causal_claim",
+        "diagnosis",
+        "treatment_recommendation"
+      ],
       "properties": {
         "epistemic_class": {
           "const": "observation"
