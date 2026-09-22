@@ -150,3 +150,12 @@ G3/G4 consumption and model qualification are tracked by Metabolog#1129.
 - [ ] Execute the bounded plan in the issue without weakening existing authority, privacy, provenance, or release gates.
 - [ ] Add adversarial/negative-control coverage appropriate to this track and record qualification evidence before promotion.
 
+## 2026-09-22 — Whole-person state contract for interoperable executable human models
+
+GitHub issue: #30
+
+- [ ] Inventory existing canonical contracts and baselines before implementation; do not duplicate authority, provenance, state, or evaluation primitives.
+- [ ] Implement the bounded architecture and adversarial/negative-control plan recorded in issue #30.
+- [ ] Add machine-readable evidence and non-vacuous qualification gates; distinguish implementation, local qualification, CI qualification, and any remaining research/clinical limits.
+- [ ] Preserve existing privacy, consent, authority, provenance and release boundaries; do not promote experimental results without preregistered/explicit gates.
+
