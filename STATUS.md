@@ -40,8 +40,10 @@ the hardening goes all the way to a `2.0` revision rather than staying
 - [x] `InterventionObservationIntake`: a reference receiver with required
   subject-binding and consent verifiers, and checks for recipient, consent
   window at receipt, and replay/ID reuse.
-- [ ] Operator follow-up outside this repo: retire the `openbody.invivo.health`
-  DNS record and Caddy site, which still answer on a self-hosted address.
+- [ ] Operator decision outside this repo: `openbody.invivo.health` points at
+  the home connection, where Caddy answers without a certificate. No OpenBody
+  protocol host is publicly deployed anywhere. Either repurpose the name for a
+  `catalogue`-mode host (DEPLOYMENT.md) or retire the record.
 
 ## Implemented — intervention source-observation profile — 2026-09-21
 
