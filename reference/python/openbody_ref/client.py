@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import quote
+
+from .observation import validate_locator, validate_observation
 
 import httpx
 
@@ -24,6 +27,25 @@ class OpenBodyClient:
         response = self._client.get("/v1/capabilities")
         response.raise_for_status()
         return response.json()
+
+    def ingest_observation(self, locator: dict[str, str]) -> dict[str, Any]:
+        validate_locator(locator)
+        response = self._client.post("/v1/observations", json=locator)
+        response.raise_for_status()
+        value = response.json()
+        validate_observation(value, subject=f"subject:providehr:ehr:{locator['ehr_id']}")
+        if value["source"]["clinical_version"] != locator:
+            raise ValueError("observation response source does not match request")
+        return value
+
+    def observation(self, observation_id: str, *, subject: str) -> dict[str, Any]:
+        response = self._client.get(f"/v1/observations/{quote(observation_id, safe='')}")
+        response.raise_for_status()
+        value = response.json()
+        validate_observation(value, subject=subject)
+        if value["id"] != observation_id:
+            raise ValueError("observation response identity does not match request")
+        return value
 
     def state(self) -> dict[str, Any]:
         response = self._client.get("/v1/state")

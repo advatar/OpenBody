@@ -1,0 +1,107 @@
+{
+  "schema_version": "openbody.intervention-observation/1.0",
+  "projection_class": "source_observation",
+  "observation_id": "cymbathera-session-2026-08-30-001",
+  "subject": "ehr-demo-subject-001",
+  "subject_binding": {
+    "status": "verified",
+    "binding_ref": "urn:uuid:3c636f7f-2b8e-4f62-9d22-6542886f2f0c",
+    "issuer": "https://providehr.example",
+    "verified_at": "2026-08-30T08:00:00Z",
+    "revocation_ref": "https://providehr.example/oauth/revoke",
+    "proof_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "scope": [
+    "ob://human/neural/autonomic/vagus",
+    "ob://human/cardiovascular",
+    "ob://human/respiratory"
+  ],
+  "source": {
+    "app_id": "systems.advatar.cymbathera",
+    "app_version": "1.0"
+  },
+  "intervention": {
+    "intervention_id": "cymbathera.transcutaneous-vagus-stimulation",
+    "family": "neuromodulation",
+    "protocol_id": "settle",
+    "protocol_version": "1",
+    "started_at": "2026-08-30T08:01:00Z",
+    "ended_at": "2026-08-30T08:08:00Z",
+    "completion": 1.0,
+    "delivery_mode": "manual",
+    "device": {
+      "manufacturer": "Cymbathera",
+      "model": "Cymbathera 1.0",
+      "connectivity": "none"
+    },
+    "dose": [
+      {
+        "name": "duration",
+        "value": 420,
+        "unit": "s",
+        "status": "observed"
+      },
+      {
+        "name": "intensity",
+        "status": "unavailable"
+      }
+    ]
+  },
+  "observed_measurements": [
+    {
+      "phase": "before",
+      "metric": "heart_rate",
+      "value": 71,
+      "unit": "beats/min",
+      "observed_at": "2026-08-30T08:00:30Z",
+      "source_ref": "healthkit://quantity/heart-rate/before"
+    },
+    {
+      "phase": "end",
+      "metric": "heart_rate",
+      "value": 65,
+      "unit": "beats/min",
+      "observed_at": "2026-08-30T08:08:30Z",
+      "source_ref": "healthkit://quantity/heart-rate/end"
+    },
+    {
+      "phase": "follow_up",
+      "follow_up_offset_seconds": 900,
+      "metric": "hrv_sdnn",
+      "value": 47,
+      "unit": "ms",
+      "observed_at": "2026-08-30T08:23:00Z",
+      "source_ref": "healthkit://quantity/hrv-sdnn/follow-up"
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "vagus_analysis",
+      "canonical_ref": "vagus-cardio://analysis/synchronization/analysis-001",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_at": "2026-08-30T08:23:00Z",
+      "contains_raw_signal": false
+    }
+  ],
+  "user_response": {
+    "felt": "better",
+    "recorded_at": "2026-08-30T08:09:00Z"
+  },
+  "disclosure": {
+    "purpose": "direct_care",
+    "consent_ref": "urn:uuid:5e2acb3b-49e6-489d-a7a9-846e75c5f725",
+    "authorized_at": "2026-08-30T08:30:00Z",
+    "fields": [
+      "intervention",
+      "observed_measurements",
+      "evidence",
+      "user_response"
+    ]
+  },
+  "claim_boundary": {
+    "epistemic_class": "observation",
+    "causal_claim": false,
+    "diagnosis": false,
+    "treatment_recommendation": false
+  }
+}
