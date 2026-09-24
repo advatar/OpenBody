@@ -1,0 +1,47 @@
+# Systemd unit for a non-container install.
+#
+#   install -d -o openbody -g openbody /opt/openbody
+#   git clone <repo> /opt/openbody/src            # the whole checkout is the runtime
+#   python3.12 -m venv /opt/openbody/venv
+#   /opt/openbody/venv/bin/pip install -r /opt/openbody/src/requirements-dev.txt
+#   install -m 0640 -o root -g openbody deploy/openbody/env.example /etc/openbody/host.env
+#   systemctl enable --now openbody-host
+#
+# The unit is bound to 127.0.0.1 because the host implements no authorization.
+
+[Unit]
+Description=OpenBody reference host
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=openbody
+Group=openbody
+WorkingDirectory=/opt/openbody/src
+EnvironmentFile=/etc/openbody/host.env
+Environment=PYTHONPATH=/opt/openbody/src/reference/python:/opt/openbody/src/deploy/openbody
+ExecStart=/opt/openbody/venv/bin/uvicorn openbody_asgi:create_app_from_env --factory --host 127.0.0.1 --port 8797
+Restart=on-failure
+RestartSec=5
+
+# The host keeps all protocol state in memory and writes nothing.
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadOnlyPaths=/opt/openbody
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

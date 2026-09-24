@@ -2,6 +2,10 @@
 
 This package is the conformance-first reference implementation for OpenBody 0.1.
 
+For admitted clinical input, the optional [observation profile](../../docs/ADMITTED_OBSERVATIONS.md)
+resolves authorized ProvidEHR versions and supports ingestion/read without loading
+a demo BodyState. Its additive schema is separate from the core 0.1 contract.
+
 Run locally:
 
 ```bash

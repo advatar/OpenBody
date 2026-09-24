@@ -1,0 +1,40 @@
+# Terminating proxy for an OpenBody deployment.
+#
+# The reference host advertises `authorization: {"schemes": []}` and implements
+# none. Everything that makes a deployment safe to expose lives in this file or
+# in the network around it. Copy the block you need; do not expose the upstream
+# port directly.
+
+# --- catalogue -------------------------------------------------------------
+# Safe to publish: discovery-only hosting has no subject-bearing route, and every
+# descriptor is forced to `subject:catalogue` at startup. Still read-only in public.
+catalogue.openbody.example {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+	}
+	@writes not method GET HEAD OPTIONS
+	respond @writes 405
+	reverse_proxy 127.0.0.1:8797
+}
+
+# --- subject API -----------------------------------------------------------
+# Never publish this without an authenticated boundary. Client-certificate
+# authentication is shown because it needs no identity provider; `forward_auth`
+# to an existing one is equally valid. One instance per subject: the hosted twin
+# is bound at startup, not per request.
+twin.openbody.example {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+	}
+	tls {
+		client_auth {
+			mode require_and_verify
+			trust_pool file /etc/caddy/openbody-clients.pem
+		}
+	}
+	reverse_proxy 127.0.0.1:8797
+}

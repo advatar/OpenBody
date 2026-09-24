@@ -1,0 +1,469 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.org/schemas/admitted-observation.v1.schema.json",
+  "title": "OpenBody admitted clinical Observation profile v1",
+  "description": "Measured clinical observation admitted by its source authority; distinct from model-derived state, simulation and clinical assertions.",
+  "$defs": {
+    "Concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "code",
+        "display",
+        "snomed_code",
+        "snomed_display",
+        "omop_concept_id",
+        "omop_domain"
+      ],
+      "properties": {
+        "system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snomed_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "snomed_display": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "omop_concept_id": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "omop_domain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "system",
+        "code",
+        "display"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "system": {
+          "const": "http://unitsofmeasure.org"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ClinicalVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tenant_id",
+        "ehr_id",
+        "composition_uid",
+        "version_uid"
+      ],
+      "properties": {
+        "tenant_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "ehr_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "composition_uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "version_uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        }
+      }
+    },
+    "Normalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "source",
+        "concept",
+        "quantity",
+        "rule_pack",
+        "trace",
+        "review_reasons"
+      ],
+      "properties": {
+        "status": {
+          "const": "normalized"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_id",
+            "source_type",
+            "coding",
+            "quantity",
+            "effective_time"
+          ],
+          "properties": {
+            "source_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source_type": {
+              "const": "fhir_r4"
+            },
+            "coding": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "system",
+                "code",
+                "display"
+              ],
+              "properties": {
+                "system": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "code": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "display": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "quantity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value",
+                "unit",
+                "system",
+                "code"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "system": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "effective_time": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "concept": {
+          "$ref": "#/$defs/Concept"
+        },
+        "quantity": {
+          "$ref": "#/$defs/Quantity"
+        },
+        "rule_pack": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pack_id",
+            "version",
+            "content_hash"
+          ],
+          "properties": {
+            "pack_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "content_hash": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        },
+        "trace": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rule_id",
+              "rule_version",
+              "action"
+            ],
+            "properties": {
+              "rule_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rule_version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "review_reasons": {
+          "type": "array",
+          "maxItems": 0
+        }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clinical_version",
+        "system",
+        "resource_ref",
+        "resource_version",
+        "resource_digest",
+        "parent",
+        "patient_external_id"
+      ],
+      "properties": {
+        "clinical_version": {
+          "$ref": "#/$defs/ClinicalVersion"
+        },
+        "system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resource_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "parent": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "resource_ref",
+                "payload_hash",
+                "path",
+                "subject_reference"
+              ],
+              "properties": {
+                "resource_ref": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "payload_hash": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "subject_reference": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          ]
+        },
+        "patient_external_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "epistemic",
+        "aleatoric",
+        "coverage",
+        "out_of_distribution",
+        "reasons"
+      ],
+      "properties": {
+        "epistemic": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "aleatoric": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "coverage": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "out_of_distribution": {
+          "enum": [
+            true,
+            false,
+            "unknown"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile",
+    "schema_version",
+    "kind",
+    "id",
+    "subject",
+    "code",
+    "quantity",
+    "effective_time",
+    "source",
+    "normalization",
+    "uncertainty"
+  ],
+  "properties": {
+    "profile": {
+      "const": "openbody.admitted-observation.v1"
+    },
+    "schema_version": {
+      "const": "0.1"
+    },
+    "kind": {
+      "const": "Observation"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^subject:providehr:ehr:[^\\s]+$"
+    },
+    "code": {
+      "$ref": "#/$defs/Concept"
+    },
+    "quantity": {
+      "$ref": "#/$defs/Quantity"
+    },
+    "effective_time": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "normalization": {
+      "$ref": "#/$defs/Normalization"
+    },
+    "uncertainty": {
+      "$ref": "#/$defs/Uncertainty"
+    }
+  }
+}
