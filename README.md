@@ -76,18 +76,18 @@ See [`OVERSIGHT.md`](OVERSIGHT.md) for the clinical multi-agent oversight profil
 - [`OPENBODY.md`](OPENBODY.md) — normative protocol draft.
 - [`schemas/openbody.schema.json`](schemas/openbody.schema.json) — JSON Schema 2020-12 definitions for the core state/model/simulation/outcome objects.
 - [`schemas/clinical-assertion-reference.schema.json`](schemas/clinical-assertion-reference.schema.json) — fail-closed consumer projection contract for model-derived clinical references.
-- [`schemas/intervention-observation.schema.json`](schemas/intervention-observation.schema.json) — consented source-observation profile for intervention sessions and selected derived measurements; raw signals are excluded.
+- [`schemas/intervention-observation.schema.json`](schemas/intervention-observation.schema.json) — source-observation profile for intervention sessions and selected derived measurements; raw sample arrays cannot be carried, and missing values are explicit. A reference intake enforces subject-binding and consent verification, the recipient, and replay safety.
 - [`registry/coordinates.json`](registry/coordinates.json) — initial machine-readable `ob://` biological coordinate registry.
 - [`openapi/openbody.openapi.json`](openapi/openbody.openapi.json) — OpenAPI 3.1 HTTP profile.
 - [`profiles/mcp/tools.json`](profiles/mcp/tools.json) — agent/MCP semantic capability profile.
 - [`examples/post-meal-walk.scenario.json`](examples/post-meal-walk.scenario.json) — first end-to-end simulated scenario, aligned with the InVivo personal CGM/walking model.
 - [`examples/insufficient-evidence.abstention.json`](examples/insufficient-evidence.abstention.json) — fail-closed response example.
 - [`examples/clinical-assertion-references.v1.json`](examples/clinical-assertion-references.v1.json) — executable admission/rejection fixtures for clinical consumers.
-- [`examples/cymbathera-intervention-observation.v1.json`](examples/cymbathera-intervention-observation.v1.json) — bounded Cymbathera source-observation example for clinical handoff.
+- [`examples/cymbathera-intervention-observation.v2.json`](examples/cymbathera-intervention-observation.v2.json) and [`examples/paced-breathing-intervention-observation.v2.json`](examples/paced-breathing-intervention-observation.v2.json) — synthetic source-observation examples (one product-shaped, one neutral); neither shows a treatment effect.
 - [`docs/CLINICAL_ASSERTION_REFERENCES.md`](docs/CLINICAL_ASSERTION_REFERENCES.md) — projection, subject-binding, uncertainty, applicability, and retraction semantics.
 - [`docs/LONGITUDINAL_QUERY_RESEARCH.md`](docs/LONGITUDINAL_QUERY_RESEARCH.md) — protocol-0.2 deterministic longitudinal-query implementation and WearableQA evaluation plan; not part of the frozen 0.1 wire contract.
 - [`results/wearableqa-signal-summary-v0.1/REPORT.md`](results/wearableqa-signal-summary-v0.1/REPORT.md) — coverage-aware deterministic result for the reviewed WearableQA `signal_summary` slice.
-- [`docs/INTERVENTION_OBSERVATIONS.md`](docs/INTERVENTION_OBSERVATIONS.md) — source-observation, disclosure, missingness, and raw-signal boundaries for therapy apps.
+- [`docs/INTERVENTION_OBSERVATIONS.md`](docs/INTERVENTION_OBSERVATIONS.md) — source-observation boundaries for therapy apps, and which of them the reference validator enforces.
 - [`tools/validate_openbody.py`](tools/validate_openbody.py) — schema + protocol-invariant conformance validator.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — running a host on your own server: modes, container/systemd assets, and the operator responsibilities the reference host deliberately leaves open.
 - [`OVERSIGHT.md`](OVERSIGHT.md) — clinical multi-agent oversight architecture and protocol-0.2 design record.

@@ -1,6 +1,49 @@
 # Status
 
-## Active — Specialist composition and durable synthetic twin — issue #13
+## In review — post-merge qualification audit of 900b064 — 2026-09-22
+
+Issue: https://github.com/advatar/OpenBody/issues/31
+Branch: `fix/intervention-observation-audit` (draft PR, not to be auto-merged).
+
+`900b064` was an intentional preservation commit made during a laptop/worktree
+migration. The process defect was not preserving the work. It was merging
+preserved-but-unreviewed work into `main` without a distinct review step. The
+audit verdict is keep and harden. Because nothing depends on the profile yet,
+the hardening goes all the way to a `2.0` revision rather than staying
+1.0-compatible.
+
+- [x] Exact disclosure: present content that is not disclosed is rejected
+  (`undisclosed_content_present`).
+- [x] Non-finite numbers rejected; measurement phases and the patient response
+  ordered against the session (`invalid_measurement_phase`, `invalid_interval`);
+  zero-length consent window rejected.
+- [x] `tools/validate_openbody.py` no longer crashes on non-object JSON; CI
+  parses the profile schema.
+- [x] Docs carry a claim-to-enforcement table that separates schema, validator
+  and intake enforcement from what no payload can prove (a fabricated value, a
+  meaningful token, a raw-signal attestation). Example limitations are stated.
+- [x] ARCHITECTURE.md: OpenBody hosts the contract. It does not own custody,
+  consent or disclosure decisions.
+- [x] Neutral synthetic example; adversarial tests.
+- [x] `deploy/openbody/CADDY-BLOCK.md` (carried in by the preservation commit,
+  unrelated to the profile) removed. It proxied `openbody.invivo.health` to a
+  self-hosted landing page that fails TLS. The landing page is hosted by Lovable
+  at `openbody.advatar.systems`, and DEPLOYMENT.md now says so.
+- [x] Profile revised to `2.0`, since no producer, consumer or published app
+  exists: explicit `not_observed` missingness with a reason and a measurement
+  origin; UCUM units and ranges per metric and dose dimension; a closed dose
+  vocabulary; token identifiers and URI references; neutral evidence kinds with
+  a named producer for derived analyses; a required disclosure recipient; one
+  entry per metric and phase; subject binding ordered before disclosure;
+  `follow_up_offset_seconds` and `heart_breath_synchronization` removed. 1.0 is
+  withdrawn and fails conformance.
+- [x] `InterventionObservationIntake`: a reference receiver with required
+  subject-binding and consent verifiers, and checks for recipient, consent
+  window at receipt, and replay/ID reuse.
+- [ ] Operator decision outside this repo: `openbody.invivo.health` points at
+  the home connection, where Caddy answers without a certificate. No OpenBody
+  protocol host is publicly deployed anywhere. Either repurpose the name for a
+  `catalogue`-mode host (DEPLOYMENT.md) or retire the record.
 
 GitHub issue: https://github.com/advatar/OpenBody/issues/13
 Branch: `feat/13-cognitive-health-demo`
@@ -24,7 +67,6 @@ Implementation progress (2026-09-02): the shared event ABI is pinned. The durabl
 ## M5 deployment follow-up
 
 - [x] Keep repository schemas and fixtures discoverable in the installed demo image (AdvatarDemo #3).
-
 ## Implemented — intervention source-observation profile — 2026-09-21
 
 Issue: https://github.com/advatar/OpenBody/issues/28

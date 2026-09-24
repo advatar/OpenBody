@@ -309,7 +309,12 @@ def main(paths):
         if path.resolve() == FIXTURE_BUNDLE_PATH.resolve():
             continue
         doc = load(path)
-        if doc.get("schema_version") == "openbody.intervention-observation/1.0":
+        if not isinstance(doc, dict):
+            failed = True
+            print(f"FAIL {path}")
+            print("  document is not a JSON object")
+            continue
+        if str(doc.get("schema_version", "")).startswith("openbody.intervention-observation/"):
             try:
                 validate_intervention_observation(doc)
             except ValueError as error:

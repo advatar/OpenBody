@@ -14,7 +14,7 @@ and provenance, which is how the conflict arose.
 | Layer | Owns | Does not own |
 | --- | --- | --- |
 | InVivo | The canonical biological Twin, raw observation custody, consent, disclosure decisions | The wire contract; governed memory |
-| OpenBody | Physiological computation plus neutral, reference-oriented source-observation profiles: state, models, simulation, outcome, calibration, abstention | Raw observation custody; medical records; authority; memory |
+| OpenBody | Physiological computation: state, models, simulation, outcome, calibration, abstention. Hosts the neutral wire contracts for observations its models consume and the boundaries those observations must fail | Raw observation custody; consent and disclosure decisions; clinical intake; medical records; authority; memory |
 | OpenMind | Governed memory, projection policy, redaction, retrieval, continuity | Physiological representation; a second `BodyState` |
 | BrIAn | The reasoning and conversational interface | Policy enforcement; physiological inference |
 | ProvidEHR | Clinical evidence, attestation, orders, workflow, authoritative write-back | Twin state; counterfactual computation |
@@ -35,8 +35,12 @@ For `health.*` domains the envelope payload carries exactly one of:
 
 - `projectionClass: "source_observation"` — a user-approved summary with no corresponding OpenBody
   assertion yet. Carries `sourceReference` and `contentDigest`. Domain profiles such as
-  [`openbody.intervention-observation/1.0`](schemas/intervention-observation.schema.json) may constrain
-  its contents without converting it into a core OpenBody-derived object.
+  [`openbody.intervention-observation/2.0`](schemas/intervention-observation.schema.json) may constrain
+  its contents without converting it into a core OpenBody-derived object. OpenBody hosts that contract
+  and its negative boundary against `openbody.clinical-assertion-reference/1.0`. The observations, the
+  consent and disclosure decisions, and clinical intake stay with InVivo and ProvidEHR. See
+  [`docs/INTERVENTION_OBSERVATIONS.md`](docs/INTERVENTION_OBSERVATIONS.md) for what the reference
+  validator enforces and what it leaves to consumers.
 - `projectionClass: "openbody_reference"` — a governed reference to an OpenBody object. Carries
   `objectKind`, `canonicalRef`, `contentDigest`, `epistemicClass`, and the contract identity below.
 

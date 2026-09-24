@@ -1,5 +1,5 @@
 {
-  "schema_version": "openbody.intervention-observation/1.0",
+  "schema_version": "openbody.intervention-observation/2.0",
   "projection_class": "source_observation",
   "observation_id": "cymbathera-session-2026-08-30-001",
   "subject": "ehr-demo-subject-001",
@@ -31,7 +31,7 @@
     "delivery_mode": "manual",
     "device": {
       "manufacturer": "Cymbathera",
-      "model": "Cymbathera 1.0",
+      "model": "cymbathera-1.0",
       "connectivity": "none"
     },
     "dose": [
@@ -42,7 +42,7 @@
         "status": "observed"
       },
       {
-        "name": "intensity",
+        "name": "intensity_setting",
         "status": "unavailable"
       }
     ]
@@ -51,36 +51,51 @@
     {
       "phase": "before",
       "metric": "heart_rate",
+      "status": "observed",
       "value": 71,
-      "unit": "beats/min",
+      "unit": "/min",
       "observed_at": "2026-08-30T08:00:30Z",
-      "source_ref": "healthkit://quantity/heart-rate/before"
+      "source_ref": "healthkit://quantity/heart-rate/before",
+      "origin": "consumer_device"
     },
     {
       "phase": "end",
       "metric": "heart_rate",
+      "status": "observed",
       "value": 65,
-      "unit": "beats/min",
+      "unit": "/min",
       "observed_at": "2026-08-30T08:08:30Z",
-      "source_ref": "healthkit://quantity/heart-rate/end"
+      "source_ref": "healthkit://quantity/heart-rate/end",
+      "origin": "consumer_device"
     },
     {
       "phase": "follow_up",
-      "follow_up_offset_seconds": 900,
       "metric": "hrv_sdnn",
+      "status": "observed",
       "value": 47,
       "unit": "ms",
       "observed_at": "2026-08-30T08:23:00Z",
-      "source_ref": "healthkit://quantity/hrv-sdnn/follow-up"
+      "source_ref": "healthkit://quantity/hrv-sdnn/follow-up",
+      "origin": "consumer_device"
+    },
+    {
+      "phase": "follow_up",
+      "metric": "heart_rate",
+      "status": "not_observed",
+      "reason": "no_sample"
     }
   ],
   "evidence": [
     {
-      "kind": "vagus_analysis",
-      "canonical_ref": "vagus-cardio://analysis/synchronization/analysis-001",
+      "kind": "derived_analysis",
+      "canonical_ref": "cymbathera://analysis/session-2026-08-30-001",
       "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "observed_at": "2026-08-30T08:23:00Z",
-      "contains_raw_signal": false
+      "contains_raw_signal": false,
+      "produced_by": {
+        "software_id": "systems.advatar.cymbathera",
+        "software_version": "1.0"
+      }
     }
   ],
   "user_response": {
@@ -90,6 +105,7 @@
   "disclosure": {
     "purpose": "direct_care",
     "consent_ref": "urn:uuid:5e2acb3b-49e6-489d-a7a9-846e75c5f725",
+    "recipient": "https://providehr.example/intake",
     "authorized_at": "2026-08-30T08:30:00Z",
     "fields": [
       "intervention",

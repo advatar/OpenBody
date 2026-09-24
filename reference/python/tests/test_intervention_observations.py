@@ -14,7 +14,7 @@ from openbody_ref.intervention_observation import (
 
 def fixture():
     return json.loads(
-        (ROOT / "examples" / "cymbathera-intervention-observation.v1.json").read_text(
+        (ROOT / "examples" / "cymbathera-intervention-observation.v2.json").read_text(
             encoding="utf-8"
         )
     )
