@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openbody-demo
+  labels: {app.kubernetes.io/name: openbody-demo, app.kubernetes.io/part-of: cognitive-health-demo}
+spec:
+  serviceName: openbody-demo
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: openbody-demo}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: openbody-demo, app.kubernetes.io/part-of: cognitive-health-demo}
+    spec:
+      securityContext: {runAsNonRoot: true, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: openbody
+          image: cognitive-health-demo/openbody:dev
+          imagePullPolicy: IfNotPresent
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe: {tcpSocket: {port: http}, periodSeconds: 3}
+          livenessProbe: {tcpSocket: {port: http}, periodSeconds: 10}
+          volumeMounts: [{name: state, mountPath: /var/lib/openbody}]
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: "1", memory: 384Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            readOnlyRootFilesystem: true
+      nodeSelector: {kubernetes.io/arch: arm64}
+  volumeClaimTemplates:
+    - metadata: {name: state}
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: {requests: {storage: 1Gi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openbody-demo
+spec:
+  selector: {app.kubernetes.io/name: openbody-demo}
+  ports: [{name: http, port: 8000, targetPort: http}]

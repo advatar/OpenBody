@@ -45,6 +45,28 @@ the hardening goes all the way to a `2.0` revision rather than staying
   protocol host is publicly deployed anywhere. Either repurpose the name for a
   `catalogue`-mode host (DEPLOYMENT.md) or retire the record.
 
+GitHub issue: https://github.com/advatar/OpenBody/issues/13
+Branch: `feat/13-cognitive-health-demo`
+
+- [x] Compose exact specialist outputs only after descriptor, receipt, evidence, scope and horizon validation.
+- [x] Add durable reference storage with unchanged canonical JSON/digest semantics.
+- [x] Support the exact post-meal-walk fixture and intentional fail-closed negative case.
+- [x] Emit a minimized clinical-assertion reference and add restart tests.
+  References carry digests, scope, provenance and qualification state only. The
+  demo declares no validity window, no evaluated applicability and no calibrated
+  uncertainty, so `validate_clinical_reference` refuses it at each gate. Two demo
+  coordinates (`ob://human/behavior/activity_tolerance`,
+  `ob://human/autonomic/recovery_load`) are not in the registry and are returned
+  as explicit projection refusals; registering them is a separate protocol
+  decision.
+
+Boundary: synthetic demonstration only. No clinical validation claim, raw personal data disclosure, authority bypass, or production-security claim.
+
+Implementation progress (2026-09-02): the shared event ABI is pinned. The durable reference twin now exposes `/v1/demo/compose`; three exact specialist results produce a schema-valid BodyState, while missing, duplicated, substituted, or tampered receipts produce an abstention. Minimized clinical assertion emission remains open.
+
+## M5 deployment follow-up
+
+- [x] Keep repository schemas and fixtures discoverable in the installed demo image (AdvatarDemo #3).
 ## Implemented — intervention source-observation profile — 2026-09-21
 
 Issue: https://github.com/advatar/OpenBody/issues/28
@@ -203,4 +225,3 @@ GitHub issue: #30
 - [ ] Implement the bounded architecture and adversarial/negative-control plan recorded in issue #30.
 - [ ] Add machine-readable evidence and non-vacuous qualification gates; distinguish implementation, local qualification, CI qualification, and any remaining research/clinical limits.
 - [ ] Preserve existing privacy, consent, authority, provenance and release boundaries; do not promote experimental results without preregistered/explicit gates.
-

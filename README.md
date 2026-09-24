@@ -85,6 +85,8 @@ See [`OVERSIGHT.md`](OVERSIGHT.md) for the clinical multi-agent oversight profil
 - [`examples/clinical-assertion-references.v1.json`](examples/clinical-assertion-references.v1.json) — executable admission/rejection fixtures for clinical consumers.
 - [`examples/cymbathera-intervention-observation.v2.json`](examples/cymbathera-intervention-observation.v2.json) and [`examples/paced-breathing-intervention-observation.v2.json`](examples/paced-breathing-intervention-observation.v2.json) — synthetic source-observation examples (one product-shaped, one neutral); neither shows a treatment effect.
 - [`docs/CLINICAL_ASSERTION_REFERENCES.md`](docs/CLINICAL_ASSERTION_REFERENCES.md) — projection, subject-binding, uncertainty, applicability, and retraction semantics.
+- [`docs/LONGITUDINAL_QUERY_RESEARCH.md`](docs/LONGITUDINAL_QUERY_RESEARCH.md) — protocol-0.2 deterministic longitudinal-query implementation and WearableQA evaluation plan; not part of the frozen 0.1 wire contract.
+- [`results/wearableqa-signal-summary-v0.1/REPORT.md`](results/wearableqa-signal-summary-v0.1/REPORT.md) — coverage-aware deterministic result for the reviewed WearableQA `signal_summary` slice.
 - [`docs/INTERVENTION_OBSERVATIONS.md`](docs/INTERVENTION_OBSERVATIONS.md) — source-observation boundaries for therapy apps, and which of them the reference validator enforces.
 - [`tools/validate_openbody.py`](tools/validate_openbody.py) — schema + protocol-invariant conformance validator.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — running a host on your own server: modes, container/systemd assets, and the operator responsibilities the reference host deliberately leaves open.
