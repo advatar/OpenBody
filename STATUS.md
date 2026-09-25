@@ -1,5 +1,15 @@
 # Status
 
+## Implemented — landing-page Auctor naming — 2026-09-25
+
+Issue: https://github.com/advatar/OpenBody/issues/37
+
+- [x] Rename the landing page's Authority stack card from Mandamus to Auctor.
+- [x] Build the landing page and verify its rendered copy: production build passed;
+  the production worker returns HTTP 200 with the Auctor heading and no Mandamus reference.
+- [x] Publish `advatar/openbody-display` revision `d43680c` and update the
+  `LandingPage` submodule revision.
+
 ## Active — Specialist composition and durable synthetic twin — issue #13
 
 GitHub issue: https://github.com/advatar/OpenBody/issues/13
