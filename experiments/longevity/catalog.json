@@ -1,0 +1,262 @@
+{
+  "schema": "openbody.longevity.catalog.v1",
+  "reviewed_on": "2026-09-19",
+  "paper": {
+    "title": "An open benchmark and language models for AI in aging biology",
+    "doi": "10.1016/j.cell.2026.08.026",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42753698/"
+  },
+  "dataset": {
+    "repo": "insilicomedicine/longebench",
+    "revision": "40bc2f97b699bca29256c568a824212811091cd9",
+    "license": "CC-BY-NC-4.0",
+    "url": "https://huggingface.co/datasets/insilicomedicine/longebench",
+    "mini_path": "mini/eval-00000-of-00001.parquet",
+    "mini_sha256": "544e0bf2975b04cf1d2be6654b4baccbe04db3cf4f167d80c81e25a9fc3fe72c",
+    "mini_bytes": 6920300,
+    "digest_source": "https://huggingface.co/datasets/insilicomedicine/longebench/commit/40bc2f97b699bca29256c568a824212811091cd9",
+    "admission": "BLOCKED_PENDING_RIGHTS_AND_PROVENANCE_REVIEW"
+  },
+  "models": [
+    {
+      "repo": "insilicomedicine/Qwen3-0.6B-Longevity",
+      "nominal_parameters_billions": 0.6,
+      "license_reported": "CC-BY-ND-4.0",
+      "url": "https://huggingface.co/insilicomedicine/Qwen3-0.6B-Longevity",
+      "revision": null,
+      "weights_sha256": null,
+      "admission": "BLOCKED_UNPINNED_UNREVIEWED"
+    },
+    {
+      "repo": "insilicomedicine/Qwen3-1.7B-Longevity",
+      "nominal_parameters_billions": 1.7,
+      "license_reported": "CC-BY-ND-4.0",
+      "url": "https://huggingface.co/insilicomedicine/Qwen3-1.7B-Longevity",
+      "revision": null,
+      "weights_sha256": null,
+      "admission": "BLOCKED_UNPINNED_UNREVIEWED"
+    },
+    {
+      "repo": "LiquidAI/LFM2-1.2B-Longevity",
+      "nominal_parameters_billions": 1.2,
+      "license_reported": "lfm1.0",
+      "url": "https://huggingface.co/LiquidAI/LFM2-1.2B-Longevity",
+      "revision": null,
+      "weights_sha256": null,
+      "admission": "BLOCKED_UNPINNED_UNREVIEWED"
+    },
+    {
+      "repo": "LiquidAI/LFM2-2.6B-Longevity",
+      "nominal_parameters_billions": 2.6,
+      "license_reported": "lfm1.0",
+      "url": "https://huggingface.co/LiquidAI/LFM2-2.6B-Longevity",
+      "revision": null,
+      "weights_sha256": null,
+      "admission": "BLOCKED_UNPINNED_UNREVIEWED"
+    },
+    {
+      "repo": "insilicomedicine/longevity-llm",
+      "nominal_parameters_billions": 9,
+      "license_reported": "CC-BY-ND-4.0",
+      "url": "https://huggingface.co/insilicomedicine/longevity-llm",
+      "revision": null,
+      "weights_sha256": null,
+      "admission": "BLOCKED_UNPINNED_UNREVIEWED"
+    }
+  ],
+  "agent": {
+    "url": "https://github.com/Insilico-org/longeclaw",
+    "license_reported": "MIT",
+    "admission": "NOT_IMPORTED_OR_EXECUTED",
+    "clock_coefficients_and_other_data_rights": "NOT_REVIEWED"
+  },
+  "tasks": [
+    {
+      "id": "LB-0002",
+      "mini_id": "LB-0301",
+      "pool": "geodnam_age_multiclass",
+      "domain": "epigenomics",
+      "format": "multiclass",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 500,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0006",
+      "mini_id": "LB-0302",
+      "pool": "geodnam_age_pairwise",
+      "domain": "epigenomics",
+      "format": "pairwise",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 500,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0010",
+      "mini_id": "LB-0303",
+      "pool": "geodnam_age_regression",
+      "domain": "epigenomics",
+      "format": "regression",
+      "metric": "mae",
+      "units": "years",
+      "n": 500,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0014",
+      "mini_id": "LB-0304",
+      "pool": "gtex_age_multiclass",
+      "domain": "transcriptomics",
+      "format": "multiclass",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 900,
+      "mini_n": 56
+    },
+    {
+      "id": "LB-0018",
+      "mini_id": "LB-0305",
+      "pool": "gtex_age_pairwise",
+      "domain": "transcriptomics",
+      "format": "pairwise",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 900,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0030",
+      "mini_id": "LB-0306",
+      "pool": "nhanes_age_multiclass",
+      "domain": "clinical",
+      "format": "multiclass",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 4206,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0034",
+      "mini_id": "LB-0307",
+      "pool": "nhanes_age_pairwise",
+      "domain": "clinical",
+      "format": "pairwise",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 2102,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0038",
+      "mini_id": "LB-0308",
+      "pool": "nhanes_age_regression",
+      "domain": "clinical",
+      "format": "regression",
+      "metric": "mae",
+      "units": "years",
+      "n": 4206,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0042",
+      "mini_id": "LB-0309",
+      "pool": "nhanes_mortality_binary",
+      "domain": "clinical",
+      "format": "binary",
+      "metric": "accuracy",
+      "units": null,
+      "n": 4206,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0046",
+      "mini_id": "LB-0310",
+      "pool": "nhanes_mortality_multiclass",
+      "domain": "clinical",
+      "format": "multiclass",
+      "metric": "accuracy",
+      "units": null,
+      "n": 1363,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0050",
+      "mini_id": "LB-0311",
+      "pool": "nhanes_mortality_pairwise",
+      "domain": "clinical",
+      "format": "pairwise",
+      "metric": "accuracy",
+      "units": "months",
+      "n": 3889,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0074",
+      "mini_id": "LB-0312",
+      "pool": "olink_age_multiclass",
+      "domain": "proteomics",
+      "format": "multiclass",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 93,
+      "mini_n": 40
+    },
+    {
+      "id": "LB-0082",
+      "mini_id": "LB-0313",
+      "pool": "olink_age_regression",
+      "domain": "proteomics",
+      "format": "regression",
+      "metric": "mae",
+      "units": "years",
+      "n": 93,
+      "mini_n": 40
+    },
+    {
+      "id": "LB-0086",
+      "mini_id": "LB-0314",
+      "pool": "opengenes_expression_binary",
+      "domain": "genetics",
+      "format": "binary",
+      "metric": "accuracy",
+      "units": null,
+      "n": 332,
+      "mini_n": 45
+    },
+    {
+      "id": "LB-0122",
+      "mini_id": "LB-0315",
+      "pool": "synergyage_lifespan_pairwise_ablated",
+      "domain": "genetics",
+      "format": "pairwise",
+      "metric": "accuracy",
+      "units": "days",
+      "n": 26,
+      "mini_n": 26
+    },
+    {
+      "id": "LB-0126",
+      "mini_id": "LB-0316",
+      "pool": "synergyage_lifespan_regression",
+      "domain": "genetics",
+      "format": "regression",
+      "metric": "mae",
+      "units": "percent",
+      "n": 26,
+      "mini_n": 26
+    },
+    {
+      "id": "LB-0299",
+      "mini_id": "LB-0317",
+      "pool": "olink_age_pairwise",
+      "domain": "proteomics",
+      "format": "pairwise",
+      "metric": "accuracy",
+      "units": "years",
+      "n": 1615,
+      "mini_n": 45
+    }
+  ]
+}

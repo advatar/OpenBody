@@ -1,0 +1,28 @@
+name: Longevity research boundary
+on:
+  pull_request:
+    paths:
+      - 'experiments/longevity/**'
+      - '.github/workflows/longevity-research.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/longevity/**'
+      - '.github/workflows/longevity-research.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Run synthetic tests without upstream models or dependencies
+        run: python3 -m unittest discover -s experiments/longevity -p 'test_*.py' -v
+      - name: Check Python and JSON artifacts
+        run: |
+          python3 -m py_compile experiments/longevity/longevity.py
+          python3 -m json.tool experiments/longevity/catalog.json >/dev/null
+          python3 -m json.tool experiments/longevity/permit.example.json >/dev/null

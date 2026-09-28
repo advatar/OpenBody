@@ -1,0 +1,16 @@
+{
+  "schema": "openbody.longevity.permit.v1",
+  "purpose": "public-benchmark-inference",
+  "data_class": "public_benchmark",
+  "requests_sha256": "REQUIRES_INDEPENDENTLY_FROZEN_BUNDLE_HASH",
+  "reviewer": "",
+  "rights_review": "",
+  "provenance_review": "",
+  "model": "",
+  "model_revision": "REQUIRES_REVIEWED_40_HEX_REVISION",
+  "serving_manifest_sha256": "REQUIRES_REVIEWED_MANIFEST_HASH",
+  "endpoint": "http://127.0.0.1:8000/v1/chat/completions",
+  "max_cases": 728,
+  "not_before": "",
+  "expires_at": ""
+}
