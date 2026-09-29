@@ -13,6 +13,7 @@ from openbody_ref.clinical_reference import FIXTURE_BUNDLE_PATH, validate_fixtur
 from openbody_ref.intervention_observation import validate_intervention_observation
 from openbody_ref.whole_person import evaluate_conformance_corpus as evaluate_whole_person_corpus
 from openbody_ref.whole_person_mapping import evaluate_consumer_mapping as evaluate_whole_person_mapping
+from openbody_ref.healthcare_trace import evaluate_trace as evaluate_healthcare_trace
 
 SCHEMA = ROOT / "schemas" / "openbody.schema.json"
 REGISTRY = ROOT / "registry" / "coordinates.json"
@@ -364,6 +365,15 @@ def main(paths):
         else:
             failed = True
             print(f"FAIL whole-person-state {result.name}: {result.detail}")
+            for failure in result.failures:
+                print(f"  {failure}")
+
+    for result in evaluate_healthcare_trace():
+        if result.passed:
+            print(f"PASS {result.name}: {result.detail}")
+        else:
+            failed = True
+            print(f"FAIL {result.name}: {result.detail}")
             for failure in result.failures:
                 print(f"  {failure}")
 
