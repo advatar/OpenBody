@@ -220,3 +220,26 @@ snapshot + 52 vectors), `tools/check_whole_person_state.py`, corpus wired into
 `tools/validate_openbody.py`, `tests/test_whole_person_state.py`. Remaining open
 items above: downstream consumer qualification (other repositories) and any
 real-cohort evidence; the corpus is synthetic software conformance only.
+
+PR #44 consumer review (pass 1, 2026-09-29), with downstream consumers in view
+(Metabolog main `ec586aeb` incl. merged #1131/#1145, ProvidEHR PR #689 head
+`f01ee445`, TwinSuite #144 spec):
+
+- [x] Record baseline gates (JSON 10/10, validate_openbody 67 PASS, pytest 316,
+  corpus 53/53).
+- [x] Fix assembler defects found in review: ambiguous source identity
+  (`source_identity_conflict`), unversioned record revisions
+  (`record_version_conflict`), code split across domains
+  (`code_domain_ambiguous`), silent within-source same-time tie-break, and
+  `validate_state` accepting a re-digested snapshot with an inconsistent
+  basis/blockers/resolution or unaccounted inputs (`state_inconsistent`).
+  Adds 12 vectors; golden inputs/snapshot and schemas unchanged.
+- [x] Consumer mapping (`openbody_ref/whole_person_mapping.py`,
+  `consumer-mapping.json`, `interop-vectors.json`, tests) and the
+  "Consumer mapping" section with the open acceptance questions in
+  `docs/WHOLE_PERSON_STATE.md`.
+- [ ] Human acceptance decision on the contract and the open questions
+  (canonical digest, native validation subset, value sets, review/confirmation
+  carriers, domain coverage). Not decided by this review.
+- [ ] Separate dependency: model-family contract (#18/#19) for model state,
+  forecasts and counterfactuals that this profile refuses.

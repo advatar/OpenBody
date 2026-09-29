@@ -1215,6 +1215,299 @@
         "outcome": "rejected",
         "error_code": "structural_invalid"
       }
+    },
+    {
+      "name": "identity-record-claimed-by-two-sources",
+      "covers": "consumer source identity agreement: one source record, one source_id (no double-counted corroboration)",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-cgm-001",
+          "patch": {
+            "observation_id": "wp-cgm-twin-emitter-001",
+            "source": {
+              "source_id": "urn:twinsuite:source:cgm:sensor-7731"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "source_identity_conflict"
+      }
+    },
+    {
+      "name": "identity-record-revised-under-same-ref",
+      "covers": "consumer source identity agreement: a revised record needs a version-specific record_ref",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-symptom-001",
+          "patch": {
+            "observation_id": "wp-symptom-001-r2",
+            "source": {
+              "record_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "measurement": {
+              "value": "severe"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "record_version_conflict"
+      }
+    },
+    {
+      "name": "identity-correction-revokes-superseded-version",
+      "covers": "revoked source record: a correction is a new version-specific record and the superseded version is revoked, never silently replaced",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-symptom-001",
+          "patch": {
+            "observation_id": "wp-symptom-001-r2",
+            "source": {
+              "record_ref": "urn:invivo:record:diary:symptom-0917:r2",
+              "record_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "measurement": {
+              "value": "severe"
+            }
+          }
+        }
+      ],
+      "params": {
+        "revoked": [
+          "urn:invivo:record:diary:symptom-0917"
+        ]
+      },
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {
+          "wp-symptom-001": "source_revoked"
+        },
+        "entries": [
+          {
+            "code": "84229001",
+            "resolution": "single_source",
+            "basis": [
+              "wp-symptom-001-r2"
+            ],
+            "candidates": {
+              "wp-symptom-001-r2": {
+                "value": "severe",
+                "epistemic_status": "reported"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "identity-code-in-two-domains",
+      "covers": "no silent source-priority inference: one coded concept cannot be split across domains to avoid a conflict",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-lab-glucose-001",
+          "patch": {
+            "observation_id": "wp-fingerstick-001",
+            "origin": "device_sensor",
+            "epistemic_status": "observed",
+            "validation": null,
+            "source": {
+              "source_id": "urn:invivo:source:meter:bg-1",
+              "source_kind": "cgm_device",
+              "record_ref": "urn:invivo:record:meter:bg-1:001"
+            },
+            "measurement": {
+              "domain": "glucose",
+              "value": 9.9
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "code_domain_ambiguous"
+      }
+    },
+    {
+      "name": "state-basis-not-a-candidate",
+      "covers": "exact provenance survives state assembly",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/1/basis",
+          "value": [
+            "wp-cgm-other-001"
+          ]
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "provenance_lost"
+      }
+    },
+    {
+      "name": "state-admission-despite-blockers",
+      "covers": "unknown uncertainty stays unknown: a blocked entry cannot be re-labelled as an admission candidate",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/8/clinical_use/admission_candidate",
+          "value": true
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "state_inconsistent"
+      }
+    },
+    {
+      "name": "state-blocker-dropped",
+      "covers": "unknown uncertainty stays unknown: blockers cannot be dropped from a snapshot",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/6/clinical_use/blockers",
+          "value": []
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "state_inconsistent"
+      }
+    },
+    {
+      "name": "state-conflict-relabelled-concordant",
+      "covers": "no silent source-priority inference",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/2/resolution",
+          "value": "concordant"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "state_inconsistent"
+      }
+    },
+    {
+      "name": "state-input-unaccounted",
+      "covers": "exact provenance survives state assembly: every input is a candidate or an exclusion",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "remove",
+          "path": "/entries/9"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "state_inconsistent"
+      }
+    },
+    {
+      "name": "state-exclusion-not-an-input",
+      "covers": "exact provenance survives state assembly",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/exclusions",
+          "value": [
+            {
+              "observation_id": "wp-unknown-001",
+              "envelope_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "code": "source_revoked"
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "provenance_lost"
+      }
+    },
+    {
+      "name": "same-source-same-time-disagreement",
+      "covers": "no silent source-priority inference: two records one source stamped at the same time are never tie-broken by id",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-cgm-001",
+          "patch": {
+            "observation_id": "wp-cgm-001-dup-stamp",
+            "source": {
+              "record_ref": "urn:invivo:record:cgm:7731:001b"
+            },
+            "measurement": {
+              "value": 9.9
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "entries": [
+          {
+            "code": "99504-3",
+            "resolution": "unresolved_conflict",
+            "basis": [
+              "wp-cgm-001",
+              "wp-cgm-001-dup-stamp"
+            ],
+            "admission_candidate": false,
+            "blockers_include": [
+              "resolution_unresolved_conflict"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "same-source-same-time-agreement",
+      "covers": "no silent source-priority inference: agreeing same-time records from one source stay single_source with both in the basis",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-cgm-001",
+          "patch": {
+            "observation_id": "wp-cgm-001-dup-stamp",
+            "source": {
+              "record_ref": "urn:invivo:record:cgm:7731:001b"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "entries": [
+          {
+            "code": "99504-3",
+            "resolution": "single_source",
+            "basis": [
+              "wp-cgm-001",
+              "wp-cgm-001-dup-stamp"
+            ],
+            "admission_candidate": true
+          }
+        ]
+      }
     }
   ]
 }

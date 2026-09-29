@@ -285,6 +285,52 @@ def _resolve_exclusions(
     return excluded
 
 
+def _check_source_identity(inputs: dict[str, tuple[dict[str, Any], str]]) -> None:
+    """Reject inputs whose source identity or entry key is ambiguous.
+
+    Consumers mint envelopes independently (Metabolog, TwinSuite, ProvidEHR), so
+    the assembler must not let an identity disagreement turn into silent
+    corroboration, silent version selection or a silently split entry:
+
+    * one ``record_ref`` belongs to exactly one ``source_id``; two emitters that
+      claim the same source record under different source identities would
+      otherwise count as two agreeing sources (``source_identity_conflict``);
+    * one ``record_ref`` names one immutable record, so it carries one
+      ``record_digest``; a revised record needs a version-specific
+      ``record_ref`` so that the superseded version can be revoked on its own
+      (``record_version_conflict``);
+    * one coded concept (``system`` + ``code``) lives in exactly one domain;
+      otherwise disagreeing values would be assembled into two separate
+      entries and never be reported as a conflict (``code_domain_ambiguous``).
+    """
+
+    record_sources: dict[str, str] = {}
+    record_digests: dict[str, str] = {}
+    code_domains: dict[tuple[str, str], str] = {}
+    for observation_id in sorted(inputs):
+        envelope, _ = inputs[observation_id]
+        source = envelope["source"]
+        record_ref = source["record_ref"]
+        if record_sources.setdefault(record_ref, source["source_id"]) != source["source_id"]:
+            _reject(
+                "source_identity_conflict",
+                f"Source record {record_ref} is claimed by more than one source_id",
+            )
+        if record_digests.setdefault(record_ref, source["record_digest"]) != source["record_digest"]:
+            _reject(
+                "record_version_conflict",
+                f"Source record {record_ref} appears with more than one record_digest; "
+                "use a version-specific record_ref",
+            )
+        measurement = envelope["measurement"]
+        concept = (measurement["code"]["system"], measurement["code"]["code"])
+        if code_domains.setdefault(concept, measurement["domain"]) != measurement["domain"]:
+            _reject(
+                "code_domain_ambiguous",
+                f"Code {concept[0]}|{concept[1]} is used in more than one domain",
+            )
+
+
 def _candidate(envelope: dict[str, Any], digest: str, as_of: datetime) -> dict[str, Any]:
     value, unit = _normalize(envelope)  # type: ignore[misc]
     domain = envelope["measurement"]["domain"]
@@ -325,14 +371,27 @@ def _entry(key: tuple[str, str, str], candidates: list[dict[str, Any]]) -> dict[
 
     # Latest current measurement per exact source. Sources are never ranked
     # against each other.
-    latest: dict[str, dict[str, Any]] = {}
+    # Candidates from one source that share its latest reference time are all
+    # kept: picking one of them by observation_id would be a silent
+    # within-source priority (for example a said and a confirmed statement, or
+    # two readings a device stamped with the same time). Disagreement among
+    # them is a conflict like any other.
+    latest: dict[str, list[dict[str, Any]]] = {}
     for candidate in measured:
-        latest[candidate["source"]["source_id"]] = candidate
-    basis = sorted(latest.values(), key=lambda c: c["observation_id"])
+        source_id = candidate["source"]["source_id"]
+        group = latest.get(source_id)
+        if group and _order(group[0])[0] == _order(candidate)[0]:
+            group.append(candidate)
+        else:
+            latest[source_id] = [candidate]
+    basis = sorted(
+        (candidate for group in latest.values() for candidate in group),
+        key=lambda c: c["observation_id"],
+    )
 
     if basis:
         values = {json.dumps([c["value"], c["unit"]]) for c in basis}
-        if len(basis) == 1:
+        if len(latest) == 1 and len(values) == 1:
             resolution = "single_source"
         elif len(values) == 1:
             resolution = "concordant"
@@ -404,6 +463,7 @@ def assemble_state(
                 "subject_mismatch",
                 f"Observation {envelope['observation_id']} is bound to another subject",
             )
+    _check_source_identity(inputs)
     revoked_set = set(revoked)
     excluded = _resolve_exclusions(inputs, as_of_time, purpose, revoked_set)
 
@@ -474,6 +534,53 @@ def validate_state(snapshot: dict[str, Any]) -> None:
                 _reject("imputation_as_measurement", "An imputed candidate is part of a measurement basis")
         if entry["resolution"] == "unresolved_conflict" and entry["clinical_use"]["admission_candidate"]:
             _reject("conflict_admitted", "An unresolved conflict cannot be an admission candidate")
+    _check_state_consistency(snapshot)
+
+
+def _check_state_consistency(snapshot: dict[str, Any]) -> None:
+    """Every entry must be exactly what policy 1.0 derives from its candidates.
+
+    A re-digested snapshot can otherwise claim a basis that is not a candidate,
+    an admission candidate that still has blockers, or drop a blocker, and
+    downstream consumers would have no way to tell. Every input must also be
+    accounted for exactly once, as a candidate or as an exclusion.
+    """
+
+    inputs = {item["observation_id"]: item["envelope_digest"] for item in snapshot["inputs"]}
+    if len(inputs) != len(snapshot["inputs"]):
+        _reject("state_inconsistent", "An input is listed more than once")
+    accounted: dict[str, str] = {}
+    keys: set[tuple[str, str, str]] = set()
+    for entry in snapshot["entries"]:
+        key = (entry["key"]["domain"], entry["key"]["system"], entry["key"]["code"])
+        if key in keys:
+            _reject("state_inconsistent", f"Entry key {key} appears more than once")
+        keys.add(key)
+        for candidate in entry["candidates"]:
+            if candidate["observation_id"] in accounted:
+                _reject("state_inconsistent", f"Input {candidate['observation_id']} is accounted for twice")
+            accounted[candidate["observation_id"]] = "candidate"
+        candidate_ids = {candidate["observation_id"] for candidate in entry["candidates"]}
+        stray = [observation_id for observation_id in entry["basis"] if observation_id not in candidate_ids]
+        if stray:
+            _reject("provenance_lost", f"Basis {stray[0]} is not a candidate of its entry")
+        expected = _entry(key, entry["candidates"])
+        for field in ("resolution", "basis", "candidates", "clinical_use"):
+            if expected[field] != entry[field]:
+                _reject(
+                    "state_inconsistent",
+                    f"Entry {key[2]} {field} is not what the assembly policy derives from its candidates",
+                )
+    for exclusion in snapshot["exclusions"]:
+        observation_id = exclusion["observation_id"]
+        if inputs.get(observation_id) != exclusion["envelope_digest"]:
+            _reject("provenance_lost", f"Exclusion {observation_id} is not a listed input")
+        if observation_id in accounted:
+            _reject("state_inconsistent", f"Input {observation_id} is accounted for twice")
+        accounted[observation_id] = "excluded"
+    missing = sorted(set(inputs) - set(accounted))
+    if missing:
+        _reject("state_inconsistent", f"Input {missing[0]} is neither a candidate nor an exclusion")
 
 
 # ---------------------------------------------------------------------------

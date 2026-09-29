@@ -1,0 +1,242 @@
+{
+  "description": "Cross-language interoperability vectors for the whole-person contract (issue #30).",
+  "canonical_digest": {
+    "rule": "sha256 over UTF-8 JSON of the parsed value: object keys sorted recursively, separators ',' and ':', no whitespace, non-ASCII and '/' unescaped, array order kept, numbers in the form Python json emits for the parsed value (an integral float keeps '.0').",
+    "vectors": [
+      {
+        "name": "integral-float-keeps-fraction",
+        "wire": "{\"value\": 37.0}",
+        "canonical": "{\"value\":37.0}",
+        "digest": "sha256:6571582367be2ce31da818735962724f9e1b4e2994d4c806f3af64273c60730b",
+        "note": "Python/Rust serde_json keep 37.0; Swift JSONSerialization and JavaScript emit 37, which changes the digest."
+      },
+      {
+        "name": "integer-stays-integer",
+        "wire": "{\"value\": 37}",
+        "canonical": "{\"value\":37}",
+        "digest": "sha256:1e9b74d5a005cba3a57a3ce47825f5713eea92d943b95310d421cbf45442ab76",
+        "note": "Distinct from 37.0: the wire form decides the digest."
+      },
+      {
+        "name": "decimal-fraction",
+        "wire": "{\"value\": 5.6}",
+        "canonical": "{\"value\":5.6}",
+        "digest": "sha256:0031f5218de4b51461b50fe7db578b70b0b9aa941a43af70c783480390fb8b71",
+        "note": ""
+      },
+      {
+        "name": "small-exponent",
+        "wire": "{\"value\": 1e-07}",
+        "canonical": "{\"value\":1e-07}",
+        "digest": "sha256:aece37dfda4992947222ea73b79996bba4aa181345a1fbb7f8c2b56b3fbd6a44",
+        "note": "Python repr form 1e-07."
+      },
+      {
+        "name": "negative-zero",
+        "wire": "{\"value\": -0.0}",
+        "canonical": "{\"value\":-0.0}",
+        "digest": "sha256:c848a4efa987f46ba3bfd46242333afcb1c68c3240e0f35ae9d269b1c980648b",
+        "note": ""
+      },
+      {
+        "name": "slash-not-escaped",
+        "wire": "{\"system\": \"http://loinc.org\"}",
+        "canonical": "{\"system\":\"http://loinc.org\"}",
+        "digest": "sha256:c1f51a195f3d1cea6fa4c4a40717f2bd6295164c9a15623331d67effd5c33d8a",
+        "note": "Swift JSONSerialization escapes / as \\/ unless .withoutEscapingSlashes is set."
+      },
+      {
+        "name": "non-ascii-not-escaped",
+        "wire": "{\"display\": \"°C\"}",
+        "canonical": "{\"display\":\"°C\"}",
+        "digest": "sha256:9c31fb7584ed02baa93eb3ab8659b74327e0680aed5c55f4cd52a27781eda162",
+        "note": "UTF-8, not \\u00b0."
+      },
+      {
+        "name": "keys-sorted-recursively",
+        "wire": "{\"b\": {\"d\": 1, \"c\": 2}, \"a\": [3, 1]}",
+        "canonical": "{\"a\":[3,1],\"b\":{\"c\":2,\"d\":1}}",
+        "digest": "sha256:c2b0f25dbc43518bbf6b8af2b924c6f82eddea20d136b6e6eb18341be5d56d9e",
+        "note": "Array order is preserved."
+      },
+      {
+        "name": "null-kept",
+        "wire": "{\"effective_end\": null}",
+        "canonical": "{\"effective_end\":null}",
+        "digest": "sha256:6554ad26ebe8af555d7e3c439787ebbbe84c2e844fee4055e7bfdc13104bdaa7",
+        "note": ""
+      }
+    ],
+    "admitted_observation_example": {
+      "source": "examples/local-observations/synthetic-body-temperature.v1.json#/composition/context/openbody_observation",
+      "content_digest": "sha256:5ffaf386e95cf067ff909a1c368d6c1acf93fca721712bbe82c3adb49dc6613f"
+    }
+  },
+  "native_validation": {
+    "consumer": "Metabolog/InVivo OpenBodyObservationSchemaValidator (merged #1131, InVivo/OpenBody/OpenBodyAdmittedObservation.swift)",
+    "supported_keywords": [
+      "$defs",
+      "$id",
+      "$ref",
+      "$schema",
+      "additionalProperties",
+      "const",
+      "description",
+      "enum",
+      "format",
+      "items",
+      "maxItems",
+      "maxLength",
+      "maximum",
+      "minItems",
+      "minLength",
+      "minimum",
+      "oneOf",
+      "pattern",
+      "properties",
+      "required",
+      "title",
+      "type"
+    ],
+    "supported_formats": [
+      "date-time"
+    ],
+    "supported_refs": [
+      "local"
+    ],
+    "schemas": {
+      "whole-person-observation": {
+        "keywords": [
+          "$defs",
+          "$id",
+          "$ref",
+          "$schema",
+          "additionalProperties",
+          "allOf",
+          "anyOf",
+          "const",
+          "description",
+          "else",
+          "enum",
+          "exclusiveMaximum",
+          "exclusiveMinimum",
+          "format",
+          "if",
+          "items",
+          "maxLength",
+          "minItems",
+          "minLength",
+          "minimum",
+          "not",
+          "oneOf",
+          "pattern",
+          "properties",
+          "required",
+          "then",
+          "title",
+          "type",
+          "uniqueItems"
+        ],
+        "formats": [
+          "date-time",
+          "uri"
+        ],
+        "refs": [
+          "local"
+        ],
+        "unsupported_keywords": [
+          "allOf",
+          "anyOf",
+          "else",
+          "exclusiveMaximum",
+          "exclusiveMinimum",
+          "if",
+          "not",
+          "then",
+          "uniqueItems"
+        ],
+        "unsupported_formats": [
+          "uri"
+        ],
+        "unsupported_refs": []
+      },
+      "whole-person-state": {
+        "keywords": [
+          "$defs",
+          "$id",
+          "$ref",
+          "$schema",
+          "additionalProperties",
+          "const",
+          "description",
+          "enum",
+          "format",
+          "items",
+          "maxLength",
+          "minItems",
+          "minLength",
+          "minimum",
+          "oneOf",
+          "pattern",
+          "properties",
+          "required",
+          "title",
+          "type",
+          "uniqueItems"
+        ],
+        "formats": [
+          "date-time",
+          "uri"
+        ],
+        "refs": [
+          "external",
+          "local"
+        ],
+        "unsupported_keywords": [
+          "uniqueItems"
+        ],
+        "unsupported_formats": [
+          "uri"
+        ],
+        "unsupported_refs": [
+          "external"
+        ]
+      },
+      "admitted-observation": {
+        "keywords": [
+          "$defs",
+          "$id",
+          "$ref",
+          "$schema",
+          "additionalProperties",
+          "const",
+          "description",
+          "enum",
+          "format",
+          "items",
+          "maxItems",
+          "maxLength",
+          "maximum",
+          "minItems",
+          "minLength",
+          "minimum",
+          "oneOf",
+          "pattern",
+          "properties",
+          "required",
+          "title",
+          "type"
+        ],
+        "formats": [
+          "date-time"
+        ],
+        "refs": [
+          "local"
+        ],
+        "unsupported_keywords": [],
+        "unsupported_formats": [],
+        "unsupported_refs": []
+      }
+    }
+  }
+}
