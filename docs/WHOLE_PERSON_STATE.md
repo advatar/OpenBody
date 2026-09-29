@@ -15,6 +15,8 @@ Tracking issue: [#30](https://github.com/advatar/OpenBody/issues/30).
   (`openbody.whole-person-consumer-mapping/1.0`) and
   [`fixtures/whole-person-state/v1/interop-vectors.json`](../fixtures/whole-person-state/v1/interop-vectors.json);
   see [Consumer mapping](#consumer-mapping)
+- Shared healthcare trace (ProvidEHR -> OpenBody -> Metabolog, replayed in all three repositories):
+  [`docs/HEALTHCARE_TRACE.md`](HEALTHCARE_TRACE.md), [`fixtures/healthcare-trace/v1/trace.json`](../fixtures/healthcare-trace/v1/trace.json)
 
 ## Boundary
 
