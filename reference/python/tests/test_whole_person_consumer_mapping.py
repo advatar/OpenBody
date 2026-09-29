@@ -123,12 +123,27 @@ def test_mapping_is_deterministic_and_does_not_mutate_records():
 
 
 def test_source_identity_is_one_to_one_with_each_consumers_conflict_unit():
-    # ProvidEHR keys its longitudinal state by SourceKey; the envelope uses the same unit.
-    a = {"clinical_system": "ehr-a", "adapter_id": "fhir-style", "connection_id": "conn-1"}
+    # ProvidEHR keys its longitudinal state by SourceKey; the envelope uses the same
+    # unit, scoped by tenant and data controller (owner decision 11 on #30).
+    a = {
+        "clinical_system": "ehr-a",
+        "adapter_id": "fhir-style",
+        "connection_id": "conn-1",
+        "tenant_id": "tenant-1",
+        "data_controller": "region-x",
+    }
     b = dict(a, adapter_id="legacy-journal")
     c = dict(a, connection_id="conn-2")
-    ids = {providehr_source_id(key) for key in (a, b, c)}
-    assert len(ids) == 3
+    d = dict(a, tenant_id="tenant-2")
+    e = dict(a, data_controller="region-y")
+    ids = {providehr_source_id(key) for key in (a, b, c, d, e)}
+    assert len(ids) == 5
+    # An unscoped SourceKey is refused rather than mapped.
+    for field in ("tenant_id", "data_controller"):
+        unscoped = {k: v for k, v in a.items() if k != field}
+        with pytest.raises(MappingRefused) as refused:
+            providehr_source_id(unscoped)
+        assert refused.value.code == "source_scope_missing"
     # Every mapped record_ref is version-specific and names exactly one source.
     by_ref = {}
     for envelope in all_envelopes():
@@ -198,13 +213,23 @@ def test_reported_and_observed_disagreement_is_a_conflict_not_a_ranking():
     assert glucose["clinical_use"]["admission_candidate"] is False
 
 
-def test_cross_consumer_symptom_value_vocabulary_is_an_open_conflict():
-    # InVivo records severity, ProvidEHR records presence for the same SNOMED code.
-    # Without an agreed value set per code this is (correctly) never merged.
-    dizziness = entry(assemble(all_envelopes()), "404640003")
-    assert dizziness["resolution"] == "unresolved_conflict"
-    values = {c["value"] for c in dizziness["candidates"]}
-    assert values == {"moderate", "present"}
+def test_cross_consumer_presence_and_severity_are_separate_dimensions():
+    # Owner decision 3 on #30 replaces the earlier expectation (an open conflict).
+    # InVivo records severity and ProvidEHR records presence for the same SNOMED
+    # code. Under OpenBody's per-code value sets these are separate dimensions:
+    # never merged, never compared, and neither equivalent nor contradictory.
+    snapshot = assemble(all_envelopes())
+    dizziness = [e for e in snapshot["entries"] if e["key"]["code"] == "404640003"]
+    by_dimension = {e["key"]["dimension"]: e for e in dizziness}
+    assert set(by_dimension) == {"presence", "severity"}
+    presence, severity = by_dimension["presence"], by_dimension["severity"]
+    assert {c["value"] for c in presence["candidates"]} == {"present"}
+    assert {c["value"] for c in severity["candidates"]} == {"moderate"}
+    assert presence["basis"] == [mapped("providehr", "ambient-symptom-present")["observation_id"]]
+    assert severity["basis"] == [mapped("metabolog", "timeline-symptom-diary")["observation_id"]]
+    for item in dizziness:
+        assert item["resolution"] == "single_source"
+        assert item["clinical_use"]["admission_candidate"] is False
 
 
 def test_negation_and_hedging_never_become_uncertainty():
@@ -273,7 +298,13 @@ def test_metabolog_model_classes_are_refused(epistemic_class, code):
 
 
 def test_providehr_revocation_and_consent_withdrawal_become_host_revocations():
-    key = {"clinical_system": "ehr-a", "adapter_id": "fhir-style", "connection_id": "conn-1"}
+    key = {
+        "clinical_system": "ehr-a",
+        "adapter_id": "fhir-style",
+        "connection_id": "conn-1",
+        "tenant_id": "tenant-1",
+        "data_controller": "region-x",
+    }
     other = dict(key, connection_id="conn-2")
     sources = [
         {"key": key, "availability": {"availability": "revoked", "reason": "grant withdrawn"}},

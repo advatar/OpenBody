@@ -1,0 +1,470 @@
+{
+  "description": "Cross-language vectors for openbody.canonical-digest/1 (docs/CANONICAL_DIGEST_V1.md). Every implementation (Python, Swift, Kotlin, Rust) must reproduce each 'canonical' byte string and 'digest' exactly from 'wire', and must refuse each negative vector with the listed error class.",
+  "algorithm": "openbody.canonical-digest/1",
+  "specification": "docs/CANONICAL_DIGEST_V1.md",
+  "encoding_note": "'wire' is JSON text given as a JSON string; 'wire_hex' is raw bytes in lowercase hex for byte-level cases. 'canonical_utf8_hex' is the exact byte string that is hashed.",
+  "positive": [
+    {
+      "name": "integral-float-keeps-fraction",
+      "wire": "{\"value\": 37.0}",
+      "canonical": "{\"value\":37.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a33372e307d",
+      "digest": "sha256:6571582367be2ce31da818735962724f9e1b4e2994d4c806f3af64273c60730b",
+      "note": "binary64 with integral value: fixed notation always carries a fraction."
+    },
+    {
+      "name": "integer-stays-integer",
+      "wire": "{\"value\": 37}",
+      "canonical": "{\"value\":37}",
+      "canonical_utf8_hex": "7b2276616c7565223a33377d",
+      "digest": "sha256:1e9b74d5a005cba3a57a3ce47825f5713eea92d943b95310d421cbf45442ab76",
+      "note": "A number token without '.', 'e' or 'E' is an integer; distinct from 37.0."
+    },
+    {
+      "name": "negative-integer-zero",
+      "wire": "{\"value\": -0}",
+      "canonical": "{\"value\":0}",
+      "canonical_utf8_hex": "7b2276616c7565223a307d",
+      "digest": "sha256:23d7b286bd429460b92a2a1c21b6afc34110446c5034c17363fda363aa0a7c5d",
+      "note": "Integer -0 is integer 0."
+    },
+    {
+      "name": "negative-float-zero",
+      "wire": "{\"value\": -0.0}",
+      "canonical": "{\"value\":-0.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a2d302e307d",
+      "digest": "sha256:c848a4efa987f46ba3bfd46242333afcb1c68c3240e0f35ae9d269b1c980648b",
+      "note": "Float negative zero keeps its sign."
+    },
+    {
+      "name": "float-zero",
+      "wire": "{\"value\": 0.0}",
+      "canonical": "{\"value\":0.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a302e307d",
+      "digest": "sha256:d8b42cb220d5fd5974287c09df934755174112a8bea29ae02ca97dd50ea1d337"
+    },
+    {
+      "name": "exponent-token-is-float",
+      "wire": "{\"value\": 1E2}",
+      "canonical": "{\"value\":100.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a3130302e307d",
+      "digest": "sha256:f74df4309975b2515b4c81f690f4b33568899d3d3659fed2ebec7603936f8123",
+      "note": "Any exponent makes the token a float: 100.0."
+    },
+    {
+      "name": "fraction-exponent-token",
+      "wire": "{\"value\": 1.0e2}",
+      "canonical": "{\"value\":100.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a3130302e307d",
+      "digest": "sha256:f74df4309975b2515b4c81f690f4b33568899d3d3659fed2ebec7603936f8123"
+    },
+    {
+      "name": "decimal-fraction",
+      "wire": "{\"value\": 5.6}",
+      "canonical": "{\"value\":5.6}",
+      "canonical_utf8_hex": "7b2276616c7565223a352e367d",
+      "digest": "sha256:0031f5218de4b51461b50fe7db578b70b0b9aa941a43af70c783480390fb8b71"
+    },
+    {
+      "name": "shortest-round-trip",
+      "wire": "{\"value\": 0.1000000000000000055511151231257827}",
+      "canonical": "{\"value\":0.1}",
+      "canonical_utf8_hex": "7b2276616c7565223a302e317d",
+      "digest": "sha256:097a678e9d1339735cc744964f1c2b1271b2e650d7c59c72d2ff1c93064ceb6e",
+      "note": "Parsed to the nearest binary64, then the shortest digits that round-trip."
+    },
+    {
+      "name": "shortest-round-trip-sum",
+      "wire": "{\"value\": 0.30000000000000004}",
+      "canonical": "{\"value\":0.30000000000000004}",
+      "canonical_utf8_hex": "7b2276616c7565223a302e33303030303030303030303030303030347d",
+      "digest": "sha256:036c1902dbf44cd0afd8ccc8665d3156840d0278a131877c0b67dc483efdf4bf"
+    },
+    {
+      "name": "fixed-lower-boundary",
+      "wire": "{\"value\": 0.0001}",
+      "canonical": "{\"value\":0.0001}",
+      "canonical_utf8_hex": "7b2276616c7565223a302e303030317d",
+      "digest": "sha256:4e8c736958cd287696c5db2674af41fd38337bb6aa1a732bbfe5d3ff3063a809",
+      "note": "Decimal exponent -4 stays fixed."
+    },
+    {
+      "name": "exponent-below-fixed-range",
+      "wire": "{\"value\": 0.00001}",
+      "canonical": "{\"value\":1e-05}",
+      "canonical_utf8_hex": "7b2276616c7565223a31652d30357d",
+      "digest": "sha256:ae608be085de5ef7c25d252b967f74344a8a3ab7743e361cfea45569321eb6b6",
+      "note": "Decimal exponent -5 uses 'e-05'."
+    },
+    {
+      "name": "small-exponent",
+      "wire": "{\"value\": 1e-07}",
+      "canonical": "{\"value\":1e-07}",
+      "canonical_utf8_hex": "7b2276616c7565223a31652d30377d",
+      "digest": "sha256:aece37dfda4992947222ea73b79996bba4aa181345a1fbb7f8c2b56b3fbd6a44"
+    },
+    {
+      "name": "fixed-upper-boundary",
+      "wire": "{\"value\": 1e15}",
+      "canonical": "{\"value\":1000000000000000.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a313030303030303030303030303030302e307d",
+      "digest": "sha256:fdf8fc7ac54b0c8205b61e7d06e65e6833ef93b9631da9e8d92ad12d59efbb29",
+      "note": "Decimal exponent 15 stays fixed: 1000000000000000.0."
+    },
+    {
+      "name": "exponent-above-fixed-range",
+      "wire": "{\"value\": 1e16}",
+      "canonical": "{\"value\":1e+16}",
+      "canonical_utf8_hex": "7b2276616c7565223a31652b31367d",
+      "digest": "sha256:f6b1d8095563fb7f57c554825c9d5402bfc8f69255edfaed38587394a2252515",
+      "note": "Decimal exponent 16 uses 'e+16'."
+    },
+    {
+      "name": "large-exponent-with-fraction",
+      "wire": "{\"value\": 123456789012345678901234567890.0}",
+      "canonical": "{\"value\":1.2345678901234568e+29}",
+      "canonical_utf8_hex": "7b2276616c7565223a312e32333435363738393031323334353638652b32397d",
+      "digest": "sha256:eae8e07f565422c483bc635b689074bd034687daea54732e17e9cb2008db6adc"
+    },
+    {
+      "name": "float-above-2-53-rounds",
+      "wire": "{\"value\": 9007199254740993.0}",
+      "canonical": "{\"value\":9007199254740992.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a393030373139393235343734303939322e307d",
+      "digest": "sha256:da721e82ecf8fccf814ecf4721645537b2da3623970cf595dbc9b36decc08672",
+      "note": "Float token rounds to 9007199254740992.0 (binary64)."
+    },
+    {
+      "name": "max-safe-integer",
+      "wire": "{\"value\": 9007199254740991}",
+      "canonical": "{\"value\":9007199254740991}",
+      "canonical_utf8_hex": "7b2276616c7565223a393030373139393235343734303939317d",
+      "digest": "sha256:16c63bddb910905c4ee8abf36273baa20dba53020dbaf265da5936013ded185d",
+      "note": "Largest integer in the domain."
+    },
+    {
+      "name": "min-safe-integer",
+      "wire": "{\"value\": -9007199254740991}",
+      "canonical": "{\"value\":-9007199254740991}",
+      "canonical_utf8_hex": "7b2276616c7565223a2d393030373139393235343734303939317d",
+      "digest": "sha256:4fcd1f34a0ba00a639b9a6a805c6952838e7f403c126290440bc71e64d01693a"
+    },
+    {
+      "name": "min-subnormal",
+      "wire": "{\"value\": 5e-324}",
+      "canonical": "{\"value\":5e-324}",
+      "canonical_utf8_hex": "7b2276616c7565223a35652d3332347d",
+      "digest": "sha256:8f275eb622ce665f3cf21739b40600308dcea7c36627451f1c210a4152343c85"
+    },
+    {
+      "name": "underflow-to-zero",
+      "wire": "{\"value\": 1e-400}",
+      "canonical": "{\"value\":0.0}",
+      "canonical_utf8_hex": "7b2276616c7565223a302e307d",
+      "digest": "sha256:d8b42cb220d5fd5974287c09df934755174112a8bea29ae02ca97dd50ea1d337",
+      "note": "Rounds to 0.0; not an error."
+    },
+    {
+      "name": "max-double",
+      "wire": "{\"value\": 1.7976931348623157e308}",
+      "canonical": "{\"value\":1.7976931348623157e+308}",
+      "canonical_utf8_hex": "7b2276616c7565223a312e37393736393331333438363233313537652b3330387d",
+      "digest": "sha256:17579ea1287f0c7ed8799e2047914a528123a4c6fb86f604b1d37aa75b09303a"
+    },
+    {
+      "name": "negative-fraction",
+      "wire": "{\"value\": -1.5}",
+      "canonical": "{\"value\":-1.5}",
+      "canonical_utf8_hex": "7b2276616c7565223a2d312e357d",
+      "digest": "sha256:71f66e91bb3a9e703b7eb2aff4a59cadf028b53cd490239b69a4dd69ff4a6331"
+    },
+    {
+      "name": "slash-not-escaped",
+      "wire": "{\"system\": \"http://loinc.org\"}",
+      "canonical": "{\"system\":\"http://loinc.org\"}",
+      "canonical_utf8_hex": "7b2273797374656d223a22687474703a2f2f6c6f696e632e6f7267227d",
+      "digest": "sha256:c1f51a195f3d1cea6fa4c4a40717f2bd6295164c9a15623331d67effd5c33d8a",
+      "note": "'/' is never escaped."
+    },
+    {
+      "name": "non-ascii-not-escaped",
+      "wire": "{\"display\": \"\\u00b0C\"}",
+      "canonical": "{\"display\":\"°C\"}",
+      "canonical_utf8_hex": "7b22646973706c6179223a22c2b043227d",
+      "digest": "sha256:9c31fb7584ed02baa93eb3ab8659b74327e0680aed5c55f4cd52a27781eda162",
+      "note": "UTF-8 bytes, not \\u00b0."
+    },
+    {
+      "name": "astral-not-escaped",
+      "wire": "{\"text\": \"\\ud83d\\ude00\"}",
+      "canonical": "{\"text\":\"😀\"}",
+      "canonical_utf8_hex": "7b2274657874223a22f09f9880227d",
+      "digest": "sha256:bbe73ee4a1d503f8d54b581e002e120f6d1fabc765a1fc99877c416206280469",
+      "note": "A valid surrogate-pair escape is one scalar value, emitted as 4 UTF-8 bytes."
+    },
+    {
+      "name": "line-separator-raw",
+      "wire": "{\"text\": \"a\\u2028b\"}",
+      "canonical": "{\"text\":\"a b\"}",
+      "canonical_utf8_hex": "7b2274657874223a2261e280a862227d",
+      "digest": "sha256:f5af203d76b9dcf362e27d91b153730ad104c6d7c1d65055d2dd6eb4b6f4a71b",
+      "note": "U+2028 is emitted raw."
+    },
+    {
+      "name": "control-short-escapes",
+      "wire": "{\"text\": \"\\b\\f\\n\\r\\t\"}",
+      "canonical": "{\"text\":\"\\b\\f\\n\\r\\t\"}",
+      "canonical_utf8_hex": "7b2274657874223a225c625c665c6e5c725c74227d",
+      "digest": "sha256:9d2cae40093bf57d2f4a49623edf547dd7ebafae18fb6d6461c5e67946ec1583",
+      "note": "The five short escapes."
+    },
+    {
+      "name": "control-hex-escapes",
+      "wire": "{\"text\": \"\\u0000\\u0001\\u001f\"}",
+      "canonical": "{\"text\":\"\\u0000\\u0001\\u001f\"}",
+      "canonical_utf8_hex": "7b2274657874223a225c75303030305c75303030315c7530303166227d",
+      "digest": "sha256:9867f9215fa5541c406d80c2296c442dffd7c1d628620c50f9ad02a44de2035c",
+      "note": "Other C0 controls as \\u00xx with lowercase hex."
+    },
+    {
+      "name": "control-hex-lowercase",
+      "wire": "{\"text\": \"\\u001B\"}",
+      "canonical": "{\"text\":\"\\u001b\"}",
+      "canonical_utf8_hex": "7b2274657874223a225c7530303162227d",
+      "digest": "sha256:82413ce05b31bbaf0e1d19c4fe7e882ed15442ff2b3384375daa19f3402b4f0d",
+      "note": "Escape hex is lowercase: \\u001b."
+    },
+    {
+      "name": "delete-raw",
+      "wire": "{\"text\": \"\\u007f\"}",
+      "canonical": "{\"text\":\"\"}",
+      "canonical_utf8_hex": "7b2274657874223a227f227d",
+      "digest": "sha256:d9cb77a7ba12b2975608c85377ecf653f03a4fc72a61134874d8a2fc8b7eb3ad",
+      "note": "U+007F is not escaped."
+    },
+    {
+      "name": "quote-and-backslash",
+      "wire": "{\"text\": \"say \\\"hi\\\" \\\\ bye\"}",
+      "canonical": "{\"text\":\"say \\\"hi\\\" \\\\ bye\"}",
+      "canonical_utf8_hex": "7b2274657874223a22736179205c2268695c22205c5c20627965227d",
+      "digest": "sha256:ff7ed5615bc8fa39249b4caa43bf6d60b74e997f3e8fa97e7d7c262f88a68714"
+    },
+    {
+      "name": "escaped-solidus-input",
+      "wire": "{\"text\": \"a\\/b\"}",
+      "canonical": "{\"text\":\"a/b\"}",
+      "canonical_utf8_hex": "7b2274657874223a22612f62227d",
+      "digest": "sha256:8fd7a6962cf21bafa5b7bea8b230cef0f445c7e5d58fc1264c00ea64dcef7927",
+      "note": "An escaped solidus on the wire is emitted unescaped."
+    },
+    {
+      "name": "no-unicode-normalization-nfc",
+      "wire": "{\"text\": \"\\u00e9\"}",
+      "canonical": "{\"text\":\"é\"}",
+      "canonical_utf8_hex": "7b2274657874223a22c3a9227d",
+      "digest": "sha256:42d3cbf59fdccced04e5dff14433fb52d34d58e385e9770ffd896ff517d63b92",
+      "note": "Precomposed e-acute."
+    },
+    {
+      "name": "no-unicode-normalization-nfd",
+      "wire": "{\"text\": \"e\\u0301\"}",
+      "canonical": "{\"text\":\"é\"}",
+      "canonical_utf8_hex": "7b2274657874223a2265cc81227d",
+      "digest": "sha256:9b53287cd41955684903378d2b1b4a3ddea9d80d67dcd026319a7c5a9a8a8b42",
+      "note": "Decomposed e-acute: a different digest, no normalization."
+    },
+    {
+      "name": "keys-sorted-recursively",
+      "wire": "{\"b\": {\"d\": 1, \"c\": 2}, \"a\": [3, 1]}",
+      "canonical": "{\"a\":[3,1],\"b\":{\"c\":2,\"d\":1}}",
+      "canonical_utf8_hex": "7b2261223a5b332c315d2c2262223a7b2263223a322c2264223a317d7d",
+      "digest": "sha256:c2b0f25dbc43518bbf6b8af2b924c6f82eddea20d136b6e6eb18341be5d56d9e",
+      "note": "Array order is preserved."
+    },
+    {
+      "name": "keys-code-point-order-case",
+      "wire": "{\"b\": 1, \"a\": 2, \"B\": 3}",
+      "canonical": "{\"B\":3,\"a\":2,\"b\":1}",
+      "canonical_utf8_hex": "7b2242223a332c2261223a322c2262223a317d",
+      "digest": "sha256:dc90221191d2b22a8989ea4861ef4e166dbadb94b59c1275c1a5bf361475ce17",
+      "note": "Upper case sorts before lower case."
+    },
+    {
+      "name": "keys-code-point-order-latin1",
+      "wire": "{\"\\u00e9\": 1, \"z\": 2}",
+      "canonical": "{\"z\":2,\"é\":1}",
+      "canonical_utf8_hex": "7b227a223a322c22c3a9223a317d",
+      "digest": "sha256:ebf5b3ac2125f90b74510656202151eacb0fa0dcdf14105494181e8969b802d5",
+      "note": "U+007A sorts before U+00E9."
+    },
+    {
+      "name": "keys-code-point-not-utf16",
+      "wire": "{\"\\ud83d\\ude00\": 2, \"\\uffff\": 1}",
+      "canonical": "{\"￿\":1,\"😀\":2}",
+      "canonical_utf8_hex": "7b22efbfbf223a312c22f09f9880223a327d",
+      "digest": "sha256:c07399259f29babc3ab550e5dcfa10f3ac14b9e55a39a6b3e9100fc6100ef936",
+      "note": "Code-point order puts U+FFFF before U+1F600; UTF-16 code-unit order (e.g. RFC 8785) would not."
+    },
+    {
+      "name": "empty-key",
+      "wire": "{\"a\": 1, \"\": 0}",
+      "canonical": "{\"\":0,\"a\":1}",
+      "canonical_utf8_hex": "7b22223a302c2261223a317d",
+      "digest": "sha256:801218ec3553a807ca589c308b9bd26b5de587b2f71ee828c30b55153ecec1da"
+    },
+    {
+      "name": "empty-containers",
+      "wire": "{\"a\": {}, \"b\": []}",
+      "canonical": "{\"a\":{},\"b\":[]}",
+      "canonical_utf8_hex": "7b2261223a7b7d2c2262223a5b5d7d",
+      "digest": "sha256:aeeba1e56a144077f89e26c930dad7cf933e9383cfb8e33ddff618233b29be76"
+    },
+    {
+      "name": "null-kept",
+      "wire": "{\"effective_end\": null}",
+      "canonical": "{\"effective_end\":null}",
+      "canonical_utf8_hex": "7b226566666563746976655f656e64223a6e756c6c7d",
+      "digest": "sha256:6554ad26ebe8af555d7e3c439787ebbbe84c2e844fee4055e7bfdc13104bdaa7"
+    },
+    {
+      "name": "booleans",
+      "wire": "[true, false, null]",
+      "canonical": "[true,false,null]",
+      "canonical_utf8_hex": "5b747275652c66616c73652c6e756c6c5d",
+      "digest": "sha256:4d0f18de2133118249c26acc481838d4f6bb6bc1de882d99abbd19ae9397e8df",
+      "note": "Top-level arrays and scalars are allowed."
+    },
+    {
+      "name": "top-level-string",
+      "wire": "\"x\"",
+      "canonical": "\"x\"",
+      "canonical_utf8_hex": "227822",
+      "digest": "sha256:ba2df4903a2c14e86dc3bcca58911b44ac1d2514b7227bf6eb08cfb978f55a1b"
+    },
+    {
+      "name": "whitespace-dropped",
+      "wire": " \n{ \"a\" :\t[ 1 , 2 ] }\r\n",
+      "canonical": "{\"a\":[1,2]}",
+      "canonical_utf8_hex": "7b2261223a5b312c325d7d",
+      "digest": "sha256:01530d164d479cf08e26d3b1ad9bdba927120d97e2d057a6d792db778780d720",
+      "note": "Insignificant whitespace is removed."
+    },
+    {
+      "name": "array-of-objects",
+      "wire": "[{\"b\": 1, \"a\": 2}, {\"d\": [], \"c\": {}}]",
+      "canonical": "[{\"a\":2,\"b\":1},{\"c\":{},\"d\":[]}]",
+      "canonical_utf8_hex": "5b7b2261223a322c2262223a317d2c7b2263223a7b7d2c2264223a5b5d7d5d",
+      "digest": "sha256:21f3f23fbc3edec4a2d24f4da51442839ba5e0d4200987e68c6607f7f5c2f906"
+    }
+  ],
+  "negative": [
+    {
+      "name": "duplicate-key",
+      "wire": "{\"a\": 1, \"a\": 2}",
+      "error": "duplicate_key"
+    },
+    {
+      "name": "nan-token",
+      "wire": "{\"value\": NaN}",
+      "error": "non_finite_number"
+    },
+    {
+      "name": "infinity-token",
+      "wire": "{\"value\": Infinity}",
+      "error": "non_finite_number"
+    },
+    {
+      "name": "negative-infinity-token",
+      "wire": "{\"value\": -Infinity}",
+      "error": "non_finite_number"
+    },
+    {
+      "name": "float-overflow",
+      "wire": "{\"value\": 1e400}",
+      "error": "non_finite_number"
+    },
+    {
+      "name": "float-overflow-near-max",
+      "wire": "{\"value\": 1.7976931348623159e308}",
+      "error": "non_finite_number"
+    },
+    {
+      "name": "integer-2-53",
+      "wire": "{\"value\": 9007199254740992}",
+      "error": "integer_out_of_range"
+    },
+    {
+      "name": "integer-negative-2-53",
+      "wire": "{\"value\": -9007199254740992}",
+      "error": "integer_out_of_range"
+    },
+    {
+      "name": "lone-high-surrogate",
+      "wire": "{\"text\": \"\\ud800\"}",
+      "error": "lone_surrogate"
+    },
+    {
+      "name": "lone-low-surrogate",
+      "wire": "{\"text\": \"\\udc00\"}",
+      "error": "lone_surrogate"
+    },
+    {
+      "name": "lone-surrogate-in-key",
+      "wire": "{\"\\ud800\": 1}",
+      "error": "lone_surrogate"
+    },
+    {
+      "name": "trailing-comma",
+      "wire": "[1,]",
+      "error": "invalid_json"
+    },
+    {
+      "name": "leading-zero",
+      "wire": "{\"value\": 01}",
+      "error": "invalid_json"
+    },
+    {
+      "name": "single-quotes",
+      "wire": "{'a': 1}",
+      "error": "invalid_json"
+    },
+    {
+      "name": "raw-control-in-string",
+      "wire": "{\"text\": \"a\u0001b\"}",
+      "error": "invalid_json"
+    },
+    {
+      "name": "byte-order-mark",
+      "wire_hex": "efbbbf7b7d",
+      "error": "byte_order_mark"
+    },
+    {
+      "name": "invalid-utf8",
+      "wire_hex": "7b2261223a22ff227d",
+      "error": "invalid_utf8"
+    }
+  ],
+  "corpus": {
+    "description": "Digest of a JSON value selected by an RFC 6901 pointer in a repository file (the empty pointer selects the whole document).",
+    "vectors": [
+      {
+        "name": "observation-schema",
+        "file": "schemas/whole-person-observation.schema.json",
+        "pointer": "",
+        "digest": "sha256:7071eb621e02d1df9cd5599ba19b6a5604a87f4b299f8a01a37cb4694b99881d"
+      },
+      {
+        "name": "golden-input-envelope-cgm",
+        "file": "fixtures/whole-person-state/v1/inputs.json",
+        "pointer": "/envelopes/0",
+        "digest": "sha256:5200d2297ff5da1ee77b0d22a4ba08eb3c178c16dd16887618e3fdf820fa550c"
+      },
+      {
+        "name": "admitted-observation-example",
+        "file": "examples/local-observations/synthetic-body-temperature.v1.json",
+        "pointer": "/composition/context/openbody_observation",
+        "digest": "sha256:5ffaf386e95cf067ff909a1c368d6c1acf93fca721712bbe82c3adb49dc6613f"
+      }
+    ]
+  }
+}

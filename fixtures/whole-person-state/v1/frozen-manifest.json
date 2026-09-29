@@ -1,0 +1,70 @@
+{
+  "manifest_id": "openbody.whole-person-contract/1.0+frozen.2026-09-29",
+  "status": "frozen",
+  "frozen_on": "2026-09-29",
+  "decided_by": "Johan Sellstrom (@advatar), accountable project owner: acceptance decision on advatar/OpenBody#30, v1 corrections #46",
+  "description": "Corrected v1 integration baseline of the whole-person contract. Consumers (Metabolog/InVivo, ProvidEHR, TwinSuite, the healthcare trace) pin this manifest by its SHA-256 and replay the listed artifacts. A change to any listed file is a new contract version: additive work goes to 1.1 (#47) and breaking work to 2.0. v1 is never edited in place. The prose documentation (docs/WHOLE_PERSON_STATE.md) is not pinned.",
+  "versions": {
+    "observation": "openbody.whole-person-observation/1.0",
+    "state": "openbody.whole-person-state/1.0",
+    "assembly_policy": "openbody.whole-person-assembly-policy/1.0",
+    "consumer_mapping": "openbody.whole-person-consumer-mapping/1.0",
+    "value_sets": "openbody.whole-person-value-sets/1.0",
+    "canonical_digest": "openbody.canonical-digest/1",
+    "native_validation": "openbody.whole-person-native-validation/1.0"
+  },
+  "schema_ids": {
+    "observation": "https://openbody.dev/schemas/whole-person-observation/1.0",
+    "state": "https://openbody.dev/schemas/whole-person-state/1.0"
+  },
+  "observation_schema_canonical_digest": "sha256:7071eb621e02d1df9cd5599ba19b6a5604a87f4b299f8a01a37cb4694b99881d",
+  "value_sets_digest": "sha256:c4a4d7b3be2a20a8ac8c16ce9fa8f4f09b657e3fafc1f79a535c78e5e9126541",
+  "golden_snapshot_digest": "sha256:b96bece97849e3118ae24e5930eee7a4146bbfc7b965eb8e8e2795cf440ca295",
+  "file_digest_rule": "sha256 over the exact file bytes, lowercase hex",
+  "files": [
+    {
+      "path": "schemas/whole-person-observation.schema.json",
+      "sha256": "33148d1c384b66a1e9fae9a0538bb312f6554bdde1d3067190f7021644e48581"
+    },
+    {
+      "path": "schemas/whole-person-state.schema.json",
+      "sha256": "e60e2d90ddbc616641d5f52ff668bf864dc97a0aa54a9038d4c7c5294abb6a73"
+    },
+    {
+      "path": "registry/whole-person-value-sets.json",
+      "sha256": "b0b2f11188bc709ba528ea35daac20e97a63e8c29d9ed2a0f7cd6b131c4a2334"
+    },
+    {
+      "path": "docs/CANONICAL_DIGEST_V1.md",
+      "sha256": "3ef40c4c5aacc56d28a7254cbc1ca1fc8ee7b0ddf072ba07091968548e824d3c"
+    },
+    {
+      "path": "fixtures/whole-person-state/v1/inputs.json",
+      "sha256": "a8dfd3cc6c0654c786165292e8e5ea05e03ec4e875c8591a6062322eb0905f33"
+    },
+    {
+      "path": "fixtures/whole-person-state/v1/snapshot.golden.json",
+      "sha256": "57d611425c02abf61e2a5b749a426dada4eacf9c325413c4316b7919d45ea22c"
+    },
+    {
+      "path": "fixtures/whole-person-state/v1/vectors.json",
+      "sha256": "8ce85cef7e77af65ed2917f93305cb2bdd66f004e7571d8ee8e6a5ac7f9adfac"
+    },
+    {
+      "path": "fixtures/whole-person-state/v1/consumer-mapping.json",
+      "sha256": "7bf15d77e7cc64ebea24e4a44591d891664dc4e3d17da62bc86ec93a6047d065"
+    },
+    {
+      "path": "fixtures/whole-person-state/v1/interop-vectors.json",
+      "sha256": "1603310e40ad045c5743b57bf5e34ebb73b0ce433c3a60b7a74c1b032f359844"
+    },
+    {
+      "path": "fixtures/whole-person-state/v1/canonical-digest-vectors.json",
+      "sha256": "8c5d72ab64bfa2d164894605fc9dd23edede9ab1c7739aae829437f7fd8ebaff"
+    },
+    {
+      "path": "fixtures/whole-person-state/v1/native-validation.json",
+      "sha256": "6f9f33f049a8f9066d77730eeae9d9d9af9abe103c8056df00e19439a66f93c5"
+    }
+  ]
+}

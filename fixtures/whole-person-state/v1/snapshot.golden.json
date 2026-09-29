@@ -21,7 +21,9 @@
   },
   "contract": {
     "observation_schema_digest": "sha256:7071eb621e02d1df9cd5599ba19b6a5604a87f4b299f8a01a37cb4694b99881d",
-    "registry_version": "0.2"
+    "registry_version": "0.2",
+    "value_sets_version": "openbody.whole-person-value-sets/1.0",
+    "value_sets_digest": "sha256:c4a4d7b3be2a20a8ac8c16ce9fa8f4f09b657e3fafc1f79a535c78e5e9126541"
   },
   "revocations_applied": [],
   "subject_bindings": [
@@ -780,7 +782,8 @@
       "key": {
         "domain": "symptom",
         "system": "http://snomed.info/sct",
-        "code": "84229001"
+        "code": "84229001",
+        "dimension": "severity"
       },
       "resolution": "single_source",
       "basis": [
@@ -837,5 +840,5 @@
     "authority_granted": false,
     "source_priority": "none"
   },
-  "snapshot_digest": "sha256:e756d5c197311c3cf06ce42350bc0fc8fd2023b8da542e6843d246bfd709ffcd"
+  "snapshot_digest": "sha256:b96bece97849e3118ae24e5930eee7a4146bbfc7b965eb8e8e2795cf440ca295"
 }

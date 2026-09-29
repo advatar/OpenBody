@@ -1,5 +1,5 @@
 {
-  "description": "Adversarial and conformance vectors over inputs.json for openbody.whole-person-state/1.0. Input vectors mutate the golden envelopes (merge-patch or JSON-pointer set/unset) and reassemble; state vectors mutate snapshot.golden.json and re-validate.",
+  "description": "Adversarial and conformance vectors over inputs.json for openbody.whole-person-state/1.0. Input vectors mutate the golden envelopes (merge-patch or JSON-pointer set/unset) and reassemble; state vectors mutate snapshot.golden.json and re-validate. Vectors with target \"state_with_inputs\" mutate snapshot.golden.json and verify it against the input envelopes (decision 10); vectors with target \"present_use\" apply a current revocation set to the golden snapshot (decision 8).",
   "vectors": [
     {
       "name": "determinism-input-order",
@@ -449,7 +449,7 @@
     },
     {
       "name": "concordant-second-source",
-      "covers": "no silent source-priority inference",
+      "covers": "no silent source-priority inference; independent sources carry their own record and record digest (decision 11)",
       "operations": [
         {
           "op": "add",
@@ -458,7 +458,8 @@
             "observation_id": "wp-cgm-other-001",
             "source": {
               "source_id": "urn:invivo:source:cgm:sensor-9001",
-              "record_ref": "urn:invivo:record:cgm:9001:001"
+              "record_ref": "urn:invivo:record:cgm:9001:001",
+              "record_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
             }
           }
         }
@@ -1505,6 +1506,704 @@
               "wp-cgm-001-dup-stamp"
             ],
             "admission_candidate": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "value-set-presence-and-severity-separate",
+      "covers": "decision 3: presence and severity are separate dimensions, neither equivalent nor contradictory",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-symptom-001",
+          "patch": {
+            "observation_id": "wp-symptom-presence-001",
+            "origin": "conversation",
+            "source": {
+              "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
+              "source_kind": "ehr",
+              "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-9:1",
+              "record_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "measurement": {
+              "value": "present"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {},
+        "entries": [
+          {
+            "code": "84229001",
+            "dimension": "severity",
+            "resolution": "single_source",
+            "basis": [
+              "wp-symptom-001"
+            ]
+          },
+          {
+            "code": "84229001",
+            "dimension": "presence",
+            "resolution": "single_source",
+            "basis": [
+              "wp-symptom-presence-001"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "value-set-absent-and-severity-not-contradictory",
+      "covers": "decision 3: a presence 'absent' is not compared with a severity",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-symptom-001",
+          "patch": {
+            "observation_id": "wp-symptom-presence-001",
+            "origin": "conversation",
+            "source": {
+              "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
+              "source_kind": "ehr",
+              "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-9:1",
+              "record_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "measurement": {
+              "value": "absent"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "entries": [
+          {
+            "code": "84229001",
+            "dimension": "severity",
+            "resolution": "single_source"
+          },
+          {
+            "code": "84229001",
+            "dimension": "presence",
+            "resolution": "single_source",
+            "basis": [
+              "wp-symptom-presence-001"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "value-set-presence-disagreement-conflicts",
+      "covers": "decision 3: within one dimension, disagreeing sources remain a conflict",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-symptom-001",
+          "patch": {
+            "observation_id": "wp-symptom-presence-001",
+            "origin": "conversation",
+            "source": {
+              "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
+              "source_kind": "ehr",
+              "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-9:1",
+              "record_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "measurement": {
+              "value": "present"
+            }
+          }
+        },
+        {
+          "op": "add",
+          "from": "wp-symptom-001",
+          "patch": {
+            "observation_id": "wp-symptom-presence-002",
+            "origin": "conversation",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:agent-2",
+              "source_kind": "conversational_agent",
+              "record_ref": "urn:invivo:conversation:utt-0100:rev:1",
+              "record_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "measurement": {
+              "value": "absent"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "entries": [
+          {
+            "code": "84229001",
+            "dimension": "presence",
+            "resolution": "unresolved_conflict",
+            "basis": [
+              "wp-symptom-presence-001",
+              "wp-symptom-presence-002"
+            ],
+            "admission_candidate": false
+          },
+          {
+            "code": "84229001",
+            "dimension": "severity",
+            "resolution": "single_source"
+          }
+        ]
+      }
+    },
+    {
+      "name": "value-set-unlisted-value-excluded",
+      "covers": "decision 3: an unlisted categorical value is excluded, never guessed",
+      "operations": [
+        {
+          "op": "set",
+          "observation_id": "wp-symptom-001",
+          "path": "/measurement/value",
+          "value": "very_bad"
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {
+          "wp-symptom-001": "categorical_value_unrecognized"
+        },
+        "entries": [
+          {
+            "code": "84229001",
+            "absent": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "value-set-case-sensitive",
+      "covers": "decision 3: values are compared exactly, without case folding",
+      "operations": [
+        {
+          "op": "set",
+          "observation_id": "wp-symptom-001",
+          "path": "/measurement/value",
+          "value": "Moderate"
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {
+          "wp-symptom-001": "categorical_value_unrecognized"
+        }
+      }
+    },
+    {
+      "name": "value-set-unlisted-code-excluded",
+      "covers": "decision 3: a categorical code without an OpenBody value set is excluded",
+      "operations": [
+        {
+          "op": "patch",
+          "observation_id": "wp-symptom-001",
+          "patch": {
+            "measurement": {
+              "code": {
+                "code": "22253000",
+                "display": "Pain"
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {
+          "wp-symptom-001": "categorical_value_unrecognized"
+        }
+      }
+    },
+    {
+      "name": "value-set-code-requires-categorical",
+      "covers": "decision 3: a value-set code carried as free text is excluded",
+      "operations": [
+        {
+          "op": "set",
+          "observation_id": "wp-symptom-001",
+          "path": "/measurement/value_type",
+          "value": "text"
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {
+          "wp-symptom-001": "categorical_value_unrecognized"
+        }
+      }
+    },
+    {
+      "name": "state-dimension-relabelled",
+      "covers": "decision 3: an entry's dimension must be what the value set gives its values",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/9/key/dimension",
+          "value": "presence"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "candidate_misplaced"
+      }
+    },
+    {
+      "name": "state-dimension-dropped",
+      "covers": "decision 3: categorical values need a dimension",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "remove",
+          "path": "/entries/9/key/dimension"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "candidate_misplaced"
+      }
+    },
+    {
+      "name": "state-dimension-on-quantity",
+      "covers": "decision 3: a code without a value set has no dimension",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/0/key/dimension",
+          "value": "severity"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "candidate_misplaced"
+      }
+    },
+    {
+      "name": "state-value-sets-pin-altered",
+      "covers": "decision 3: a snapshot is only verified under the value sets it pins",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/contract/value_sets_digest",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "contract_mismatch"
+      }
+    },
+    {
+      "name": "validation-after-as-of-excluded",
+      "covers": "decision 8: a validation receipt dated after as_of did not exist at as_of",
+      "operations": [
+        {
+          "op": "set",
+          "observation_id": "wp-lab-glucose-001",
+          "path": "/validation/validated_at",
+          "value": "2026-09-20T09:00:00Z"
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {
+          "wp-lab-glucose-001": "validation_after_as_of"
+        },
+        "entries": [
+          {
+            "code": "2339-0",
+            "absent": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "validation-at-as-of-kept",
+      "covers": "decision 8: a validation dated exactly at as_of counts",
+      "operations": [
+        {
+          "op": "set",
+          "observation_id": "wp-lab-glucose-001",
+          "path": "/validation/validated_at",
+          "value": "2026-09-20T08:00:00Z"
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "exclusions": {},
+        "entries": [
+          {
+            "code": "2339-0",
+            "resolution": "single_source",
+            "admission_candidate": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "replay-earlier-as-of-before-validation",
+      "covers": "decision 8: replay at an earlier as_of does not see a later validation",
+      "operations": [],
+      "params": {
+        "as_of": "2026-09-18T15:30:00Z"
+      },
+      "expect": {
+        "outcome": "accepted",
+        "exclusions_include": {
+          "wp-lab-glucose-001": "validation_after_as_of"
+        },
+        "entries": [
+          {
+            "code": "2339-0",
+            "absent": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "state-validation-after-as-of",
+      "covers": "decision 8: validate_state rejects a candidate validated after as_of",
+      "target": "state",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/5/candidates/0/validation/validated_at",
+          "value": "2026-09-21T00:00:00Z"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "validation_after_as_of"
+      }
+    },
+    {
+      "name": "present-use-no-new-revocation",
+      "covers": "decision 8: a historical snapshot with no current revocation is usable",
+      "target": "present_use",
+      "params": {
+        "current_revoked": []
+      },
+      "expect": {
+        "outcome": "accepted",
+        "affected": {}
+      }
+    },
+    {
+      "name": "present-use-record-revoked-since-snapshot",
+      "covers": "decision 8: a record revoked after as_of blocks present use, including derived candidates",
+      "target": "present_use",
+      "params": {
+        "current_revoked": [
+          "urn:invivo:record:cgm:7731:001"
+        ]
+      },
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "revoked_since_snapshot",
+        "affected": {
+          "wp-cgm-001": "source_revoked",
+          "wp-cgm-imputed-001": "derivation_parent_revoked"
+        }
+      }
+    },
+    {
+      "name": "present-use-consent-withdrawn-since-snapshot",
+      "covers": "decision 8: consent withdrawn after as_of blocks present use",
+      "target": "present_use",
+      "params": {
+        "current_revoked": [
+          "urn:invivo:consent:wp-0001:clinical-records"
+        ]
+      },
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "revoked_since_snapshot",
+        "affected": {
+          "wp-lab-glucose-001": "consent_revoked",
+          "wp-lab-hba1c-001": "consent_revoked"
+        }
+      }
+    },
+    {
+      "name": "present-use-clinical-version-revoked-since-snapshot",
+      "covers": "decision 8: a clinical version revoked after as_of blocks present use",
+      "target": "present_use",
+      "params": {
+        "current_revoked": [
+          "urn:providehr:ehr:ehr-9f1:composition:c-77::v2"
+        ]
+      },
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "revoked_since_snapshot",
+        "affected": {
+          "wp-lab-hba1c-001": "source_revoked"
+        }
+      }
+    },
+    {
+      "name": "present-use-binding-revoked-since-snapshot",
+      "covers": "decision 8: a subject binding revoked after as_of blocks every candidate",
+      "target": "present_use",
+      "params": {
+        "current_revoked": [
+          "urn:openbody:binding:wp-0001:revocation"
+        ]
+      },
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "revoked_since_snapshot",
+        "affected_count": 14
+      }
+    },
+    {
+      "name": "placement-golden-verified-against-inputs",
+      "covers": "decision 10: the golden snapshot is reproducible from its envelopes",
+      "target": "state_with_inputs",
+      "operations": [],
+      "expect": {
+        "outcome": "accepted"
+      }
+    },
+    {
+      "name": "placement-entry-code-relabelled",
+      "covers": "decision 10: a candidate filed under another code is caught against its envelope",
+      "target": "state_with_inputs",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/3/key/code",
+          "value": "80405-4"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "candidate_misplaced"
+      }
+    },
+    {
+      "name": "placement-entry-domain-relabelled",
+      "covers": "decision 10: a candidate filed under another domain is caught against its envelope",
+      "target": "state_with_inputs",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/8/key/domain",
+          "value": "activity"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "candidate_misplaced"
+      }
+    },
+    {
+      "name": "placement-candidate-value-altered",
+      "covers": "decision 10: a consistent but altered candidate differs from its envelope",
+      "target": "state_with_inputs",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/entries/3/candidates/0/value",
+          "value": 43.0
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "candidate_mismatch"
+      }
+    },
+    {
+      "name": "placement-envelope-missing",
+      "covers": "decision 10: every listed input needs its envelope",
+      "target": "state_with_inputs",
+      "operations": [],
+      "input_operations": [
+        {
+          "op": "remove",
+          "observation_id": "wp-env-001"
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "provenance_lost"
+      }
+    },
+    {
+      "name": "placement-envelope-substituted",
+      "covers": "decision 10: a substituted envelope does not match the listed digest",
+      "target": "state_with_inputs",
+      "operations": [],
+      "input_operations": [
+        {
+          "op": "set",
+          "observation_id": "wp-env-001",
+          "path": "/measurement/value",
+          "value": 12.4
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "provenance_lost"
+      }
+    },
+    {
+      "name": "placement-revocations-tampered",
+      "covers": "decision 10: a snapshot that is not what its inputs assemble to is rejected",
+      "target": "state_with_inputs",
+      "redigest": true,
+      "operations": [
+        {
+          "op": "set",
+          "path": "/revocations_applied",
+          "value": [
+            "urn:invivo:record:cgm:7731:001"
+          ]
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "state_not_reproducible"
+      }
+    },
+    {
+      "name": "independence-shared-record-digest-not-corroboration",
+      "covers": "decision 11: another emitter of the same underlying record (same record digest) is not independent corroboration",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-cgm-001",
+          "patch": {
+            "observation_id": "wp-cgm-mirror-001",
+            "source": {
+              "source_id": "urn:invivo:source:cgm:sensor-7731-bridge",
+              "record_ref": "urn:invivo:record:cgm-bridge:7731:001"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "entries": [
+          {
+            "code": "99504-3",
+            "resolution": "single_source",
+            "basis": [
+              "wp-cgm-001",
+              "wp-cgm-mirror-001"
+            ],
+            "admission_candidate": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "independence-mirror-plus-independent-source",
+      "covers": "decision 11: a mirrored record counts once; a separate record from another source still corroborates",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-cgm-001",
+          "patch": {
+            "observation_id": "wp-cgm-mirror-001",
+            "source": {
+              "source_id": "urn:invivo:source:cgm:sensor-7731-bridge",
+              "record_ref": "urn:invivo:record:cgm-bridge:7731:001"
+            }
+          }
+        },
+        {
+          "op": "add",
+          "from": "wp-cgm-001",
+          "patch": {
+            "observation_id": "wp-cgm-other-001",
+            "source": {
+              "source_id": "urn:invivo:source:cgm:sensor-9001",
+              "record_ref": "urn:invivo:record:cgm:9001:001",
+              "record_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "entries": [
+          {
+            "code": "99504-3",
+            "resolution": "concordant",
+            "basis": [
+              "wp-cgm-001",
+              "wp-cgm-mirror-001",
+              "wp-cgm-other-001"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "independence-same-record-second-connection",
+      "covers": "decision 11: the same ProvidEHR record through another adapter or connection is not a second source",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-lab-hba1c-001",
+          "patch": {
+            "observation_id": "wp-lab-hba1c-conn2",
+            "source": {
+              "source_id": "urn:providehr:source:ehr:tenant-1:conn-2"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "rejected",
+        "error_code": "source_identity_conflict"
+      }
+    },
+    {
+      "name": "independence-disagreeing-mirror-is-conflict",
+      "covers": "decision 11: a mirror that disagrees is still a conflict, never silently merged",
+      "operations": [
+        {
+          "op": "add",
+          "from": "wp-cgm-001",
+          "patch": {
+            "observation_id": "wp-cgm-mirror-001",
+            "source": {
+              "source_id": "urn:invivo:source:cgm:sensor-7731-bridge",
+              "record_ref": "urn:invivo:record:cgm-bridge:7731:001"
+            },
+            "measurement": {
+              "value": 6.2
+            }
+          }
+        }
+      ],
+      "expect": {
+        "outcome": "accepted",
+        "entries": [
+          {
+            "code": "99504-3",
+            "resolution": "unresolved_conflict",
+            "admission_candidate": false
           }
         ]
       }

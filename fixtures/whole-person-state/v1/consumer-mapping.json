@@ -4,7 +4,8 @@
   "contract": {
     "observation": "openbody.whole-person-observation/1.0",
     "state": "openbody.whole-person-state/1.0",
-    "policy": "openbody.whole-person-assembly-policy/1.0"
+    "policy": "openbody.whole-person-assembly-policy/1.0",
+    "value_sets": "openbody.whole-person-value-sets/1.0"
   },
   "subject": "subject:openbody:wp-0001",
   "consumers": [
@@ -913,9 +914,9 @@
       },
       "field_map": [
         {
-          "consumer_field": "SourceKey (clinical_system, adapter_id, connection_id)",
+          "consumer_field": "SourceKey (clinical_system, adapter_id, connection_id) + tenant_id + data_controller",
           "contract_path": "source.source_id",
-          "rule": "urn:providehr:source:<clinical_system>:<adapter_id>:<connection_id>; the same conflict unit on both sides"
+          "rule": "urn:providehr:source:<tenant_id>:<data_controller>:<clinical_system>:<adapter_id>:<connection_id> (each part percent-encoded); refused without tenant and controller (source_scope_missing). This is the conflict unit, but not the independence unit (decision 11)."
         },
         {
           "consumer_field": "vendor + clinical_source.version",
@@ -925,7 +926,7 @@
         {
           "consumer_field": "source_record_type, source_record_id, source_version",
           "contract_path": "source.record_ref",
-          "rule": "version-specific source record; revoking it revokes all its facts"
+          "rule": "urn:providehr:record:<tenant_id>:<data_controller>:<clinical_system>:<source_record_type>:<source_record_id>:<source_version>; the underlying record version, independent of adapter and connection, so another path to the same record is never independent corroboration; revoking it revokes all its facts"
         },
         {
           "consumer_field": "source_sha256 (hex)",
@@ -988,9 +989,9 @@
           "rule": "consent_ref / source_id"
         },
         {
-          "consumer_field": "transport_provider, normalizer_id/version, data_controller, tenant_id, spans",
+          "consumer_field": "transport_provider, normalizer_id/version, spans",
           "contract_path": "(not carried)",
-          "rule": "stay in ProvidEHR; reachable through source.record_ref"
+          "rule": "stay in ProvidEHR; reachable through source.record_ref (tenant_id and data_controller are carried in source_id and record_ref)"
         }
       ],
       "records": [
@@ -1025,7 +1026,9 @@
                 "end_byte": 19,
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
-            ]
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1088,10 +1091,10 @@
                 "ob://human/whole_body"
               ],
               "source": {
-                "source_id": "urn:providehr:source:synthetic-fhir-ehr:fhir-style:conn-1",
+                "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
                 "source_kind": "ehr",
                 "source_version": "synthetic-vendor-a/synthetic-fhir-ehr/2026.3",
-                "record_ref": "urn:providehr:record:Encounter:enc-1:3",
+                "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-1:3",
                 "record_digest": "sha256:4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2"
               },
               "origin": "conversation",
@@ -1169,7 +1172,9 @@
                 "end_byte": 19,
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
-            ]
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1232,10 +1237,10 @@
                 "ob://human/whole_body"
               ],
               "source": {
-                "source_id": "urn:providehr:source:synthetic-fhir-ehr:fhir-style:conn-1",
+                "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
                 "source_kind": "ehr",
                 "source_version": "synthetic-vendor-a/synthetic-fhir-ehr/2026.3",
-                "record_ref": "urn:providehr:record:Encounter:enc-1:3",
+                "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-1:3",
                 "record_digest": "sha256:4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2"
               },
               "origin": "conversation",
@@ -1313,7 +1318,9 @@
                 "end_byte": 19,
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
-            ]
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1376,10 +1383,10 @@
                 "ob://human/whole_body"
               ],
               "source": {
-                "source_id": "urn:providehr:source:synthetic-fhir-ehr:fhir-style:conn-1",
+                "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
                 "source_kind": "ehr",
                 "source_version": "synthetic-vendor-a/synthetic-fhir-ehr/2026.3",
-                "record_ref": "urn:providehr:record:Encounter:enc-1:3",
+                "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-1:3",
                 "record_digest": "sha256:4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2"
               },
               "origin": "conversation",
@@ -1459,7 +1466,9 @@
                 "end_byte": 19,
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
-            ]
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1541,7 +1550,9 @@
                 "end_byte": 19,
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
-            ]
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1624,7 +1635,9 @@
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
             ],
-            "value": "162/98 mmHg"
+            "value": "162/98 mmHg",
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1706,7 +1719,9 @@
                 "end_byte": 19,
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
-            ]
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1788,7 +1803,9 @@
                 "end_byte": 19,
                 "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
               }
-            ]
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
           },
           "context": {
             "subject": "subject:openbody:wp-0001",
@@ -1837,6 +1854,88 @@
           },
           "expect": {
             "refused": "temporality_unsupported"
+          }
+        },
+        {
+          "name": "ambient-symptom-unscoped-source",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0099",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "symptom",
+            "concept": "dizziness",
+            "assertion": "present",
+            "temporality": "current",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ]
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "refused": "source_scope_missing"
           }
         }
       ]
@@ -2849,6 +2948,7 @@
         {
           "domain": "meal",
           "code": "meal-category",
+          "dimension": "meal_category",
           "resolution": "single_source",
           "basis": [
             "twinsuite:utt-0042:rev:1:inferred"
@@ -2877,6 +2977,7 @@
         {
           "domain": "symptom",
           "code": "267036007",
+          "dimension": "presence",
           "resolution": "single_source",
           "basis": [
             "providehr:fact:fact-0003"
@@ -2889,6 +2990,7 @@
         {
           "domain": "symptom",
           "code": "29857009",
+          "dimension": "presence",
           "resolution": "single_source",
           "basis": [
             "providehr:fact:fact-0002"
@@ -2901,14 +3003,26 @@
         {
           "domain": "symptom",
           "code": "404640003",
-          "resolution": "unresolved_conflict",
+          "dimension": "presence",
+          "resolution": "single_source",
           "basis": [
-            "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a3:rev:2026-09-20T07:31:00Z",
             "providehr:fact:fact-0001"
           ],
           "blockers": [
             "quality_not_acceptable",
-            "resolution_unresolved_conflict",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "symptom",
+          "code": "404640003",
+          "dimension": "severity",
+          "resolution": "single_source",
+          "basis": [
+            "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a3:rev:2026-09-20T07:31:00Z"
+          ],
+          "blockers": [
+            "quality_not_acceptable",
             "uncertainty_unknown"
           ]
         },
@@ -2926,7 +3040,54 @@
           ]
         }
       ],
-      "snapshot_digest": "sha256:a1ba2ffdbc7c33a76e38175da8366788027882a6198d3addcaf8d9285eb87809"
+      "snapshot_digest": "sha256:21cd532ca4ad91a20d223170981902901f033c540074f39021f300e6c899c783"
     }
+  },
+  "terminology": {
+    "description": "Producers own the source-to-contract terminology tables below. OpenBody owns the contract vocabulary (domains, units, registry/whole-person-value-sets.json) and the mapping requirements. Every table here is synthetic and has not been reviewed. It stays labelled synthetic_unreviewed until its owner reviews it and records a review_ref. The checker fails when a context table is not labelled.",
+    "tables": [
+      {
+        "consumer": "metabolog",
+        "table": "concepts",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "metabolog",
+        "table": "symptom_codes",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "metabolog",
+        "table": "severity_values",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "metabolog",
+        "table": "loinc_domains",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "providehr",
+        "table": "concept_codes",
+        "owner": "ProvidEHR",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "providehr",
+        "table": "purpose_map",
+        "owner": "ProvidEHR",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "twinsuite",
+        "table": "concepts",
+        "owner": "TwinSuite (custody InVivo)",
+        "status": "synthetic_unreviewed"
+      }
+    ]
   }
 }
