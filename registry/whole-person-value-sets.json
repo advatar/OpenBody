@@ -1,0 +1,73 @@
+{
+  "value_sets_version": "openbody.whole-person-value-sets/1.0",
+  "owner": "OpenBody (contract vocabulary; owner decision 3 on #30)",
+  "review_status": "unreviewed",
+  "description": "Shared per-code categorical value sets for the whole-person contract v1. OpenBody owns these. Producers map their own vocabularies onto them, and they own those mappings. Each code lists one or more dimensions, and each dimension lists its allowed values. Within one code, no value belongs to two dimensions. Presence and severity are separate dimensions: a presence statement and a severity statement about the same code are neither equivalent nor contradictory. The assembler keeps them in separate entries (entry key `dimension`). A categorical value that is not listed for its code is excluded as `categorical_value_unrecognized`; it is never guessed. The list of codes and the value labels have not had clinical terminology review.",
+  "rules": [
+    "A present categorical measurement must use a code listed here, in the listed domain, with a value from exactly one of that code's dimensions.",
+    "A present measurement of a listed code must be categorical.",
+    "Values are compared exactly (case-sensitive, no normalization). Dimensions are not ordered, and values are not ranked across dimensions.",
+    "Adding a code or a value is an additive, versioned change to this file with conformance cases. Removing or renaming one needs a new version."
+  ],
+  "codes": [
+    {
+      "domain": "symptom",
+      "system": "http://snomed.info/sct",
+      "code": "25064002",
+      "display": "Headache",
+      "dimensions": {
+        "presence": ["absent", "present"],
+        "severity": ["mild", "moderate", "severe"]
+      }
+    },
+    {
+      "domain": "symptom",
+      "system": "http://snomed.info/sct",
+      "code": "267036007",
+      "display": "Dyspnea",
+      "dimensions": {
+        "presence": ["absent", "present"],
+        "severity": ["mild", "moderate", "severe"]
+      }
+    },
+    {
+      "domain": "symptom",
+      "system": "http://snomed.info/sct",
+      "code": "29857009",
+      "display": "Chest pain",
+      "dimensions": {
+        "presence": ["absent", "present"],
+        "severity": ["mild", "moderate", "severe"]
+      }
+    },
+    {
+      "domain": "symptom",
+      "system": "http://snomed.info/sct",
+      "code": "404640003",
+      "display": "Dizziness",
+      "dimensions": {
+        "presence": ["absent", "present"],
+        "severity": ["mild", "moderate", "severe"]
+      }
+    },
+    {
+      "domain": "symptom",
+      "system": "http://snomed.info/sct",
+      "code": "84229001",
+      "display": "Fatigue",
+      "dimensions": {
+        "presence": ["absent", "present"],
+        "severity": ["mild", "moderate", "severe"]
+      }
+    },
+    {
+      "domain": "meal",
+      "system": "https://openbody.dev/codes/whole-person",
+      "code": "meal-category",
+      "display": "Meal category",
+      "dimensions": {
+        "meal_category": ["balanced", "high_carbohydrate", "high_fat", "high_protein"]
+      }
+    }
+  ]
+}

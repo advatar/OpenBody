@@ -60,7 +60,7 @@
     "contract": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["observation_schema_digest", "registry_version"],
+      "required": ["observation_schema_digest", "registry_version", "value_sets_version", "value_sets_digest"],
       "properties": {
         "observation_schema_digest": {
           "$ref": "#/$defs/Digest"
@@ -68,6 +68,12 @@
         "registry_version": {
           "type": "string",
           "minLength": 1
+        },
+        "value_sets_version": {
+          "const": "openbody.whole-person-value-sets/1.0"
+        },
+        "value_sets_digest": {
+          "$ref": "#/$defs/Digest"
         }
       }
     },
@@ -169,7 +175,9 @@
             "purpose_not_permitted",
             "not_yet_ingested",
             "effective_after_as_of",
+            "validation_after_as_of",
             "unit_unrecognized",
+            "categorical_value_unrecognized",
             "derivation_parent_missing",
             "derivation_parent_digest_mismatch",
             "derivation_parent_subject_mismatch",
@@ -197,6 +205,11 @@
               "minLength": 1
             },
             "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dimension": {
+              "description": "Value-set dimension (registry/whole-person-value-sets.json) of a categorical entry, for example presence or severity. Present only when the entry holds categorical values; entries of different dimensions are never compared.",
               "type": "string",
               "minLength": 1
             }

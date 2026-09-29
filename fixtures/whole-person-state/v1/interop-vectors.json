@@ -1,7 +1,11 @@
 {
   "description": "Cross-language interoperability vectors for the whole-person contract (issue #30).",
+  "normative": {
+    "canonical_digest": "docs/CANONICAL_DIGEST_V1.md with fixtures/whole-person-state/v1/canonical-digest-vectors.json (owner decision 1). The vectors below are kept and still hold. The specification is normative.",
+    "native_validation": "fixtures/whole-person-state/v1/native-validation.json (owner decision 2). The inventory below records the gap in InVivo's validator at #1131. A native validator must implement the full published vocabulary and fail closed; a flattened subset profile is not offered."
+  },
   "canonical_digest": {
-    "rule": "sha256 over UTF-8 JSON of the parsed value: object keys sorted recursively, separators ',' and ':', no whitespace, non-ASCII and '/' unescaped, array order kept, numbers in the form Python json emits for the parsed value (an integral float keeps '.0').",
+    "rule": "openbody.canonical-digest/1, specified language-independently in docs/CANONICAL_DIGEST_V1.md: sha256 over the UTF-8 canonical text; object keys sorted by Unicode code point, recursively; separators ',' and ':' with no whitespace; non-ASCII and '/' unescaped; array order kept; integer and float kept distinct by the wire token, with floats in shortest round-trip form (an integral float keeps '.0'). Values outside the domain are refused.",
     "vectors": [
       {
         "name": "integral-float-keeps-fraction",

@@ -38,14 +38,15 @@ import copy
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
-from .validation import canonical_digest
 from .whole_person import (
     CORPUS_DIR,
     OBSERVATION_VERSION,
     ConformanceResult,
     WholePersonStateError,
     assemble_state,
+    canonical_digest,
     validate_observation,
     validate_state,
 )
@@ -277,14 +278,69 @@ def map_metabolog_state_record(record: dict[str, Any], context: dict[str, Any]) 
 # ---------------------------------------------------------------------------
 
 PROVIDEHR_SUPPORTED_KINDS = {"symptom"}
+PROVIDEHR_SCOPE_FIELDS = ("tenant_id", "data_controller")
+
+
+def _urn_part(value: Any) -> str:
+    """Percent-encode one URN component so that ':' inside it cannot merge two identities."""
+
+    return quote(str(value), safe="-._~")
+
+
+def _providehr_scope(source: dict[str, Any]) -> tuple[str, str]:
+    missing = [field for field in PROVIDEHR_SCOPE_FIELDS if not source.get(field)]
+    if missing:
+        _refuse(
+            "source_scope_missing",
+            f"A ProvidEHR SourceKey needs explicit {' and '.join(missing)} scoping (decision 11)",
+        )
+    return str(source["tenant_id"]), str(source["data_controller"])
 
 
 def providehr_source_id(source: dict[str, Any]) -> str:
-    """The ProvidEHR ``SourceKey`` is the conflict unit; map it one-to-one."""
+    """Map a tenant- and controller-scoped ProvidEHR ``SourceKey`` to ``source_id``.
 
-    return (
-        f"urn:providehr:source:{source['clinical_system']}:"
-        f"{source['adapter_id']}:{source['connection_id']}"
+    ``source`` is the ``SourceKey`` (``clinical_system``, ``adapter_id``,
+    ``connection_id``) together with the ``tenant_id`` and ``data_controller``
+    that scope it. Without both scope fields the key is refused
+    (``source_scope_missing``): the same key under two tenants or controllers is
+    two different sources. Each component is percent-encoded.
+
+    ``source_id`` is the conflict unit, but it is not the independence unit.
+    Another adapter or connection that reaches the same underlying record still
+    produces the same ``record_ref`` (see :func:`providehr_record_ref`) and the
+    same source digest, so it never counts as independent corroboration
+    (decision 11).
+    """
+
+    tenant, controller = _providehr_scope(source)
+    return "urn:providehr:source:" + ":".join(
+        _urn_part(part)
+        for part in (tenant, controller, source["clinical_system"], source["adapter_id"], source["connection_id"])
+    )
+
+
+def providehr_record_ref(contribution: dict[str, Any]) -> str:
+    """The underlying clinical record version, independent of adapter and connection.
+
+    The reference is scoped by tenant, data controller and clinical system, and
+    names the controller's own record identity (``source_record_type``,
+    ``source_record_id``, ``source_version``). It never names the adapter or the
+    connection that fetched the record, so every path to the same record yields
+    the same ``record_ref``.
+    """
+
+    tenant, controller = _providehr_scope(contribution)
+    return "urn:providehr:record:" + ":".join(
+        _urn_part(part)
+        for part in (
+            tenant,
+            controller,
+            contribution["source"]["clinical_system"],
+            contribution["source_record_type"],
+            contribution["source_record_id"],
+            contribution["source_version"],
+        )
     )
 
 
@@ -315,18 +371,19 @@ def map_providehr_contribution(
     purpose = context["purpose_map"].get(context["capture_consent"]["purpose"])
     if purpose is None:
         _refuse("purpose_unmapped", "Capture consent purpose has no whole-person purpose")
-    source = contribution["source"]
-    record_ref = (
-        f"urn:providehr:record:{contribution['source_record_type']}:"
-        f"{contribution['source_record_id']}:{contribution['source_version']}"
-    )
+    scoped_source = {
+        **contribution["source"],
+        **{field: contribution.get(field) for field in PROVIDEHR_SCOPE_FIELDS},
+    }
+    source_id = providehr_source_id(scoped_source)
+    record_ref = providehr_record_ref(contribution)
     envelope = _base(context)
     envelope.update(
         {
             "observation_id": f"providehr:fact:{contribution['fact_id']}",
             "scope": ["ob://human/whole_body"],
             "source": {
-                "source_id": providehr_source_id(source),
+                "source_id": source_id,
                 "source_kind": "ehr",
                 "source_version": f"{contribution['vendor']}/{context['clinical_source_version']}",
                 "record_ref": record_ref,
@@ -370,7 +427,8 @@ def providehr_revocations(sources: list[dict[str, Any]], consents: list[dict[str
     """Host-resolved revocations from ProvidEHR source availability and consent.
 
     ``Revoked`` sources revoke their source_id; withdrawn capture consent
-    revokes its consent_ref. ``Unavailable``/``Withheld`` sources produce no
+    revokes its consent_ref. Each source ``key`` carries its tenant and data
+    controller scope, as :func:`providehr_source_id` requires. ``Unavailable``/``Withheld`` sources produce no
     envelopes; ``Stale`` sources still map and the assembler judges freshness.
     """
 
@@ -554,6 +612,7 @@ def evaluate_consumer_mapping(corpus_dir: Path = CORPUS_DIR) -> list[Conformance
             {
                 "domain": entry["key"]["domain"],
                 "code": entry["key"]["code"],
+                **({"dimension": entry["key"]["dimension"]} if "dimension" in entry["key"] else {}),
                 "resolution": entry["resolution"],
                 "basis": entry["basis"],
                 "blockers": entry["clinical_use"]["blockers"],
@@ -565,4 +624,43 @@ def evaluate_consumer_mapping(corpus_dir: Path = CORPUS_DIR) -> list[Conformance
         if snapshot["snapshot_digest"] != expect["snapshot_digest"]:
             failures.append("cross-consumer snapshot digest differs from the fixture")
     results.append(ConformanceResult("consumer-mapping cross-consumer-assembly", failures, detail))
+    failures = terminology_label_failures(corpus)
+    results.append(
+        ConformanceResult(
+            "consumer-mapping terminology-labels",
+            failures,
+            f"{len(corpus.get('terminology', {}).get('tables', []))} tables labelled",
+        )
+    )
     return results
+
+
+# Context keys that are source-to-contract terminology tables (decision 12).
+TERMINOLOGY_TABLES = {"concepts", "symptom_codes", "severity_values", "loinc_domains", "concept_codes", "purpose_map"}
+TERMINOLOGY_STATUSES = {"synthetic_unreviewed", "reviewed"}
+
+
+def terminology_label_failures(corpus: dict[str, Any]) -> list[str]:
+    """Every producer terminology table in the corpus carries an owner and a review label.
+
+    A table stays ``synthetic_unreviewed`` until its owner reviews it. ``reviewed``
+    needs a ``review_ref``. An unlabelled table fails the check, so a synthetic
+    table cannot silently pass as reviewed terminology.
+    """
+
+    labels = {
+        (label["consumer"], label["table"]): label
+        for label in corpus.get("terminology", {}).get("tables", [])
+    }
+    failures: list[str] = []
+    for consumer in corpus["consumers"]:
+        used = sorted({key for item in consumer["records"] for key in item["context"] if key in TERMINOLOGY_TABLES})
+        for table in used:
+            label = labels.get((consumer["consumer"], table))
+            if label is None:
+                failures.append(f"{consumer['consumer']}.{table} has no terminology label")
+            elif label.get("status") not in TERMINOLOGY_STATUSES or not label.get("owner"):
+                failures.append(f"{consumer['consumer']}.{table} label needs an owner and a known status")
+            elif label["status"] == "reviewed" and not label.get("review_ref"):
+                failures.append(f"{consumer['consumer']}.{table} is marked reviewed without a review_ref")
+    return failures

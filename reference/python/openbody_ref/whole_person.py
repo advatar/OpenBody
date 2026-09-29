@@ -20,6 +20,7 @@ Boundaries enforced here:
 from __future__ import annotations
 
 import copy
+import functools
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -28,12 +29,17 @@ from typing import Any, Iterable
 from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
-from .validation import canonical_digest
+from .canonical_json import CanonicalDomainError
+from .canonical_json import digest as _canonical_digest_v1
+from .schema_keywords import schema_vocabulary
 
 ROOT = Path(__file__).resolve().parents[3]
 OBSERVATION_SCHEMA_PATH = ROOT / "schemas" / "whole-person-observation.schema.json"
 STATE_SCHEMA_PATH = ROOT / "schemas" / "whole-person-state.schema.json"
 REGISTRY_PATH = ROOT / "registry" / "coordinates.json"
+VALUE_SETS_PATH = ROOT / "registry" / "whole-person-value-sets.json"
+NATIVE_VALIDATION_PATH = ROOT / "fixtures" / "whole-person-state" / "v1" / "native-validation.json"
+VALUE_SETS_VERSION = "openbody.whole-person-value-sets/1.0"
 
 OBSERVATION_VERSION = "openbody.whole-person-observation/1.0"
 STATE_VERSION = "openbody.whole-person-state/1.0"
@@ -95,12 +101,39 @@ def _reject(code: str, message: str) -> None:
     raise WholePersonStateError(code, message)
 
 
+def canonical_digest(value: Any) -> str:
+    """``openbody.canonical-digest/1`` (docs/CANONICAL_DIGEST_V1.md), failing closed.
+
+    Values outside the specified domain (non-finite numbers, integers beyond
+    +/-(2**53 - 1), lone surrogates, non-string keys) are rejected rather than
+    digested in a way other languages could not reproduce.
+    """
+
+    try:
+        return _canonical_digest_v1(value)
+    except CanonicalDomainError as error:
+        _reject("canonical_domain_violation", f"{error.code}: {error}")
+        return ""  # pragma: no cover
+
+
 def _load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _time(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    """Parse an RFC 3339 date-time (the schema checks the format first).
+
+    RFC 3339 allows lower-case ``t`` and ``z``; they are accepted as upper case.
+    Fractions are compared at microsecond precision, and further digits are
+    truncated. Anything the parser cannot read is ``structural_invalid``, never
+    an unhandled error.
+    """
+
+    try:
+        return datetime.fromisoformat(value.upper().replace("Z", "+00:00"))
+    except (AttributeError, ValueError) as error:
+        _reject("structural_invalid", f"Not an RFC 3339 date-time: {value!r} ({error})")
+        raise  # pragma: no cover
 
 
 def _iso(value: datetime) -> str:
@@ -111,14 +144,53 @@ def _utc(value: str) -> datetime:
     return _time(value).astimezone(timezone.utc)
 
 
-def _schema_errors(schema_path: Path, value: Any) -> list[str]:
+def published_native_vocabulary() -> dict[str, Any]:
+    """The vocabulary a validator must implement for the v1 schemas (decision 2)."""
+
+    return _load(NATIVE_VALIDATION_PATH)["required_vocabulary"]
+
+
+def _require_supported_vocabulary(schema: dict[str, Any], format_checker: FormatChecker) -> None:
+    """Fail closed when a schema uses a constraint outside the published vocabulary.
+
+    JSON Schema validators ignore unknown keywords, and the Python format checker
+    silently accepts formats it has no checker for. Either would weaken the
+    contract without any visible error, so both are refused here, as a native
+    validator must refuse them.
+    """
+
+    published = published_native_vocabulary()
+    used = schema_vocabulary(schema)
+    unknown = sorted(set(used["keywords"]) - set(published["keywords"]))
+    if unknown:
+        _reject("schema_vocabulary_unsupported", f"Schema keyword {unknown[0]} is not in the published vocabulary")
+    unknown = sorted(set(used["formats"]) - set(published["formats"]))
+    if unknown:
+        _reject("schema_vocabulary_unsupported", f"Schema format {unknown[0]} is not in the published vocabulary")
+    unchecked = sorted(set(used["formats"]) - set(format_checker.checkers))
+    if unchecked:
+        _reject("schema_vocabulary_unsupported", f"No checker is installed for format {unchecked[0]}")
+    unknown = sorted(set(used["refs"]) - set(published["refs"]))
+    if unknown:
+        _reject("schema_vocabulary_unsupported", f"Schema reference kind {unknown[0]} is not supported")
+
+
+@functools.lru_cache(maxsize=4)
+def _validator(schema_path: Path) -> Draft202012Validator:
     observation_schema = _load(OBSERVATION_SCHEMA_PATH)
+    schema = _load(schema_path)
+    format_checker = FormatChecker()
+    _require_supported_vocabulary(schema, format_checker)
+    if schema_path != OBSERVATION_SCHEMA_PATH:
+        _require_supported_vocabulary(observation_schema, format_checker)
     registry = Registry().with_resource(
         observation_schema["$id"], Resource.from_contents(observation_schema)
     )
-    validator = Draft202012Validator(
-        _load(schema_path), registry=registry, format_checker=FormatChecker()
-    )
+    return Draft202012Validator(schema, registry=registry, format_checker=format_checker)
+
+
+def _schema_errors(schema_path: Path, value: Any) -> list[str]:
+    validator = _validator(schema_path)
     errors = sorted(validator.iter_errors(value), key=lambda error: list(error.absolute_path))
     return [f"{'/'.join(map(str, error.absolute_path)) or '$'}: {error.message}" for error in errors]
 
@@ -188,6 +260,77 @@ def _normalize(envelope: dict[str, Any]) -> tuple[Any, Any] | None:
     return round(measurement["value"] * factor + offset, 4), table["canonical"]
 
 
+def load_value_sets(path: Path = VALUE_SETS_PATH) -> dict[tuple[str, str], dict[str, Any]]:
+    """Per-code categorical value sets (decision 3), checked for internal consistency.
+
+    Returns ``{(system, code): {"domain": str, "dimensions": {name: frozenset(values)}}}``.
+    Within one code, a value belongs to exactly one dimension, so the dimension of a
+    categorical value is determined by the value set, never guessed.
+    """
+
+    document = _load(path)
+    if document.get("value_sets_version") != VALUE_SETS_VERSION:
+        _reject("value_sets_invalid", f"Unsupported value-set version {document.get('value_sets_version')}")
+    value_sets: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in document["codes"]:
+        key = (item["system"], item["code"])
+        if key in value_sets:
+            _reject("value_sets_invalid", f"Code {key[0]}|{key[1]} is listed twice")
+        dimensions: dict[str, frozenset[str]] = {}
+        seen: set[str] = set()
+        for name, values in item["dimensions"].items():
+            if not values or len(set(values)) != len(values):
+                _reject("value_sets_invalid", f"Dimension {name} of {key[1]} is empty or repeats a value")
+            if seen & set(values):
+                _reject("value_sets_invalid", f"Code {key[1]} shares a value between dimensions")
+            seen |= set(values)
+            dimensions[name] = frozenset(values)
+        if not dimensions:
+            _reject("value_sets_invalid", f"Code {key[1]} has no dimension")
+        value_sets[key] = {"domain": item["domain"], "dimensions": dimensions}
+    return value_sets
+
+
+@functools.lru_cache(maxsize=1)
+def _value_sets() -> dict[tuple[str, str], dict[str, Any]]:
+    return load_value_sets()
+
+
+def value_sets_digest(path: Path = VALUE_SETS_PATH) -> str:
+    return canonical_digest(_load(path))
+
+
+def _categorical_dimension(envelope: dict[str, Any]) -> tuple[bool, str | None]:
+    """Return (recognized, dimension) for an envelope under the shared value sets.
+
+    Only a present value can be placed in a dimension. A non-present record of a
+    value-set code has no value, so it stays in the dimension-less entry.
+    """
+
+    measurement = envelope["measurement"]
+    value_set = _value_sets().get((measurement["code"]["system"], measurement["code"]["code"]))
+    if envelope["missingness"]["status"] != "present":
+        return True, None
+    if value_set is None:
+        return measurement["value_type"] != "categorical", None
+    if measurement["value_type"] != "categorical" or measurement["domain"] != value_set["domain"]:
+        return False, None
+    matches = [name for name, values in value_set["dimensions"].items() if measurement["value"] in values]
+    if len(matches) != 1:
+        return False, None
+    return True, matches[0]
+
+
+def _entry_key(envelope: dict[str, Any]) -> tuple[str, str, str, str]:
+    measurement = envelope["measurement"]
+    dimension = _categorical_dimension(envelope)[1] or ""
+    return (measurement["domain"], measurement["code"]["system"], measurement["code"]["code"], dimension)
+
+
+def _key_tuple(key: dict[str, Any]) -> tuple[str, str, str, str]:
+    return (key["domain"], key["system"], key["code"], key.get("dimension", ""))
+
+
 def _reference_time(envelope: dict[str, Any]) -> datetime:
     timing = envelope["time"]
     return _time(timing["effective_end"] or timing["effective_start"])
@@ -210,12 +353,7 @@ def _dedupe(envelopes: Iterable[dict[str, Any]]) -> dict[str, tuple[dict[str, An
     return by_id
 
 
-def _exclusion(
-    envelope: dict[str, Any],
-    as_of: datetime,
-    purpose: str,
-    revoked: set[str],
-) -> str | None:
+def _revocation_code(envelope: dict[str, Any], revoked: set[str]) -> str | None:
     if envelope["source"]["record_ref"] in revoked or envelope["source"]["source_id"] in revoked:
         return "source_revoked"
     if envelope["consent"]["consent_ref"] in revoked or envelope["consent"]["authority_ref"] in revoked:
@@ -225,6 +363,18 @@ def _exclusion(
     link = envelope.get("clinical_link")
     if link and (link["clinical_version_ref"] in revoked or link["admitted_observation_id"] in revoked):
         return "source_revoked"
+    return None
+
+
+def _exclusion(
+    envelope: dict[str, Any],
+    as_of: datetime,
+    purpose: str,
+    revoked: set[str],
+) -> str | None:
+    code = _revocation_code(envelope, revoked)
+    if code is not None:
+        return code
     consent = envelope["consent"]
     if _time(consent["granted_at"]) > as_of:
         return "consent_not_yet_granted"
@@ -236,8 +386,14 @@ def _exclusion(
         return "not_yet_ingested"
     if _time(envelope["time"]["effective_start"]) > as_of:
         return "effective_after_as_of"
+    validation = envelope.get("validation")
+    if validation is not None and _time(validation["validated_at"]) > as_of:
+        # A receipt dated after as_of did not exist at as_of (decision 8).
+        return "validation_after_as_of"
     if _normalize(envelope) is None:
         return "unit_unrecognized"
+    if not _categorical_dimension(envelope)[0]:
+        return "categorical_value_unrecognized"
     return None
 
 
@@ -363,7 +519,34 @@ def _order(candidate: dict[str, Any]) -> tuple[datetime, str]:
     return (_utc(candidate["effective_end"] or candidate["effective_start"]), candidate["observation_id"])
 
 
-def _entry(key: tuple[str, str, str], candidates: list[dict[str, Any]]) -> dict[str, Any]:
+def _independent_units(groups: dict[str, list[dict[str, Any]]]) -> int:
+    """Count independent sources among per-source groups (decision 11).
+
+    Two source groups are one unit when any of their candidates share a
+    ``record_ref`` or a ``record_digest``: another adapter, connection or emitter
+    that reaches the same underlying record is not independent corroboration.
+    Distinct ``source_id`` values alone are never enough.
+    """
+
+    parent = {source_id: source_id for source_id in groups}
+
+    def find(item: str) -> str:
+        while parent[item] != item:
+            parent[item] = parent[parent[item]]
+            item = parent[item]
+        return item
+
+    owners: dict[tuple[str, str], str] = {}
+    for source_id in sorted(groups):
+        for candidate in groups[source_id]:
+            for marker in (("ref", candidate["source"]["record_ref"]), ("digest", candidate["source"]["record_digest"])):
+                other = owners.setdefault(marker, source_id)
+                if other != source_id:
+                    parent[find(source_id)] = find(other)
+    return len({find(source_id) for source_id in groups})
+
+
+def _entry(key: tuple[str, str, str, str], candidates: list[dict[str, Any]]) -> dict[str, Any]:
     candidates = sorted(candidates, key=_order)
     present = [c for c in candidates if c["missingness"] == "present"]
     current = [c for c in present if c["freshness"] == "current"]
@@ -391,7 +574,7 @@ def _entry(key: tuple[str, str, str], candidates: list[dict[str, Any]]) -> dict[
 
     if basis:
         values = {json.dumps([c["value"], c["unit"]]) for c in basis}
-        if len(latest) == 1 and len(values) == 1:
+        if len(values) == 1 and _independent_units(latest) == 1:
             resolution = "single_source"
         elif len(values) == 1:
             resolution = "concordant"
@@ -419,8 +602,11 @@ def _entry(key: tuple[str, str, str], candidates: list[dict[str, Any]]) -> dict[
         if candidate["clock_status"] == "unknown":
             blockers.add("clock_unknown")
 
+    entry_key = {"domain": key[0], "system": key[1], "code": key[2]}
+    if key[3]:
+        entry_key["dimension"] = key[3]
     return {
-        "key": {"domain": key[0], "system": key[1], "code": key[2]},
+        "key": entry_key,
         "resolution": resolution,
         "basis": [c["observation_id"] for c in basis],
         "candidates": candidates,
@@ -429,6 +615,17 @@ def _entry(key: tuple[str, str, str], candidates: list[dict[str, Any]]) -> dict[
             "blockers": sorted(blockers),
             "requires": "openbody.clinical-assertion-reference/1.0",
         },
+    }
+
+
+def current_contract() -> dict[str, Any]:
+    """The contract pins every v1 snapshot carries and every verifier checks."""
+
+    return {
+        "observation_schema_digest": canonical_digest(_load(OBSERVATION_SCHEMA_PATH)),
+        "registry_version": _load(REGISTRY_PATH)["registry_version"],
+        "value_sets_version": VALUE_SETS_VERSION,
+        "value_sets_digest": value_sets_digest(),
     }
 
 
@@ -467,14 +664,12 @@ def assemble_state(
     revoked_set = set(revoked)
     excluded = _resolve_exclusions(inputs, as_of_time, purpose, revoked_set)
 
-    grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    grouped: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
     for observation_id in sorted(inputs):
         if observation_id in excluded:
             continue
         envelope, digest = inputs[observation_id]
-        measurement = envelope["measurement"]
-        key = (measurement["domain"], measurement["code"]["system"], measurement["code"]["code"])
-        grouped.setdefault(key, []).append(_candidate(envelope, digest, as_of_time))
+        grouped.setdefault(_entry_key(envelope), []).append(_candidate(envelope, digest, as_of_time))
 
     snapshot: dict[str, Any] = {
         "schema_version": STATE_VERSION,
@@ -486,10 +681,7 @@ def assemble_state(
             "clock_skew_tolerance_seconds": CLOCK_SKEW_TOLERANCE_SECONDS,
             "max_age_seconds": dict(sorted(MAX_AGE_SECONDS.items())),
         },
-        "contract": {
-            "observation_schema_digest": canonical_digest(_load(OBSERVATION_SCHEMA_PATH)),
-            "registry_version": _load(REGISTRY_PATH)["registry_version"],
-        },
+        "contract": current_contract(),
         "revocations_applied": sorted(revoked_set),
         "subject_bindings": sorted({e["subject_binding"]["binding_ref"] for e, _ in inputs.values()}),
         "inputs": [
@@ -525,6 +717,12 @@ def validate_state(snapshot: dict[str, Any]) -> None:
     body = {k: v for k, v in snapshot.items() if k != "snapshot_digest"}
     if canonical_digest(body) != snapshot["snapshot_digest"]:
         _reject("snapshot_digest_mismatch", "snapshot_digest does not match content")
+    if snapshot["contract"] != current_contract():
+        _reject(
+            "contract_mismatch",
+            "Snapshot contract pins (observation schema, registry, value sets) differ from this verifier's",
+        )
+    as_of = _time(snapshot["as_of"])
     input_digests = {i["observation_id"]: i["envelope_digest"] for i in snapshot["inputs"]}
     for entry in snapshot["entries"]:
         for candidate in entry["candidates"]:
@@ -532,9 +730,48 @@ def validate_state(snapshot: dict[str, Any]) -> None:
                 _reject("provenance_lost", f"Candidate {candidate['observation_id']} is not a listed input")
             if candidate["epistemic_status"] in NON_MEASUREMENT and candidate["observation_id"] in entry["basis"]:
                 _reject("imputation_as_measurement", "An imputed candidate is part of a measurement basis")
+            validation = candidate["validation"]
+            if validation is not None and _time(validation["validated_at"]) > as_of:
+                _reject(
+                    "validation_after_as_of",
+                    f"Candidate {candidate['observation_id']} carries a validation dated after as_of",
+                )
         if entry["resolution"] == "unresolved_conflict" and entry["clinical_use"]["admission_candidate"]:
             _reject("conflict_admitted", "An unresolved conflict cannot be an admission candidate")
+        _check_value_set_placement(entry)
     _check_state_consistency(snapshot)
+
+
+def _check_value_set_placement(entry: dict[str, Any]) -> None:
+    """A categorical entry's dimension must be what the shared value sets give its values.
+
+    This is the part of candidate placement that a snapshot can show on its own.
+    Placement against the source envelopes is ``verify_state_against_inputs``.
+    """
+
+    key = entry["key"]
+    value_set = _value_sets().get((key["system"], key["code"]))
+    dimension = key.get("dimension")
+    present = [c for c in entry["candidates"] if c["missingness"] == "present"]
+    if value_set is None:
+        if dimension is not None:
+            _reject("candidate_misplaced", f"Entry {key['code']} has a dimension but the code has no value set")
+        return
+    if value_set["domain"] != key["domain"]:
+        _reject("candidate_misplaced", f"Entry {key['code']} is not in its value-set domain")
+    if dimension is None:
+        if present:
+            _reject("candidate_misplaced", f"Entry {key['code']} holds categorical values without a dimension")
+        return
+    allowed = value_set["dimensions"].get(dimension)
+    if allowed is None:
+        _reject("candidate_misplaced", f"Entry {key['code']} names unknown dimension {dimension}")
+    for candidate in present:
+        if candidate["value"] not in allowed:
+            _reject(
+                "candidate_misplaced",
+                f"Candidate {candidate['observation_id']} value is not in dimension {dimension} of {key['code']}",
+            )
 
 
 def _check_state_consistency(snapshot: dict[str, Any]) -> None:
@@ -550,9 +787,9 @@ def _check_state_consistency(snapshot: dict[str, Any]) -> None:
     if len(inputs) != len(snapshot["inputs"]):
         _reject("state_inconsistent", "An input is listed more than once")
     accounted: dict[str, str] = {}
-    keys: set[tuple[str, str, str]] = set()
+    keys: set[tuple[str, str, str, str]] = set()
     for entry in snapshot["entries"]:
-        key = (entry["key"]["domain"], entry["key"]["system"], entry["key"]["code"])
+        key = _key_tuple(entry["key"])
         if key in keys:
             _reject("state_inconsistent", f"Entry key {key} appears more than once")
         keys.add(key)
@@ -581,6 +818,146 @@ def _check_state_consistency(snapshot: dict[str, Any]) -> None:
     missing = sorted(set(inputs) - set(accounted))
     if missing:
         _reject("state_inconsistent", f"Input {missing[0]} is neither a candidate nor an exclusion")
+
+
+def _inputs_by_id(snapshot: dict[str, Any], envelopes: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Resolve every listed snapshot input to its envelope, bound by digest."""
+
+    supplied = _dedupe(envelopes)
+    resolved: dict[str, dict[str, Any]] = {}
+    for item in snapshot["inputs"]:
+        found = supplied.get(item["observation_id"])
+        if found is None:
+            _reject("provenance_lost", f"Input {item['observation_id']} has no supplied envelope")
+        if found[1] != item["envelope_digest"]:
+            _reject("provenance_lost", f"Input {item['observation_id']} envelope digest does not match the snapshot")
+        resolved[item["observation_id"]] = found[0]
+    return resolved
+
+
+def verify_state_against_inputs(snapshot: dict[str, Any], envelopes: Iterable[dict[str, Any]]) -> None:
+    """Validate a snapshot against the envelopes it lists (decision 10).
+
+    v1 candidates do not repeat their measurement code, so a snapshot on its own
+    cannot show that a candidate sits under the right key. Given the input
+    envelopes, this checks:
+
+    * every listed input has an envelope with that exact digest (``provenance_lost``);
+    * each candidate sits under the key (domain, system, code and value-set
+      dimension) of its own envelope (``candidate_misplaced``);
+    * each candidate equals what the policy derives from its envelope at
+      ``as_of`` (``candidate_mismatch``);
+    * the whole snapshot is exactly what the assembler produces from these
+      envelopes, ``as_of``, purpose and revocations (``state_not_reproducible``).
+
+    An explicit key on candidates in 1.1 (#47) will not replace this check.
+    """
+
+    validate_state(snapshot)
+    by_id = _inputs_by_id(snapshot, envelopes)
+    as_of = _time(snapshot["as_of"])
+    for entry in snapshot["entries"]:
+        key = _key_tuple(entry["key"])
+        for candidate in entry["candidates"]:
+            envelope = by_id[candidate["observation_id"]]
+            if _entry_key(envelope) != key:
+                _reject(
+                    "candidate_misplaced",
+                    f"Candidate {candidate['observation_id']} is filed under {key[2]} "
+                    f"but its envelope is {_entry_key(envelope)[2]}",
+                )
+            if _candidate(envelope, candidate["envelope_digest"], as_of) != candidate:
+                _reject(
+                    "candidate_mismatch",
+                    f"Candidate {candidate['observation_id']} differs from what its envelope derives",
+                )
+    rebuilt = assemble_state(
+        list(by_id.values()),
+        subject=snapshot["subject"],
+        as_of=snapshot["as_of"],
+        purpose=snapshot["purpose"],
+        revoked=snapshot["revocations_applied"],
+    )
+    if rebuilt != snapshot:
+        _reject("state_not_reproducible", "The snapshot is not what these inputs assemble to")
+
+
+def present_use(
+    snapshot: dict[str, Any],
+    envelopes: Iterable[dict[str, Any]],
+    current_revoked: Iterable[str],
+) -> dict[str, Any]:
+    """Apply the *current* revocation set to a snapshot before present use (decision 8).
+
+    A snapshot records the revocations resolved at its ``as_of``. A revocation
+    that arrives later still constrains any present use of that historical
+    snapshot. This returns every candidate whose source, record, clinical version,
+    consent, authority or subject binding is revoked now, together with every
+    candidate derived from one of them, and the entries whose ``basis`` they
+    touch. It does not re-date the snapshot. The current set cannot establish
+    what was authorized at an earlier time; that needs time-aware revocation
+    evidence (#47).
+    """
+
+    verify_state_against_inputs(snapshot, envelopes)
+    by_id = _inputs_by_id(snapshot, envelopes)
+    revoked = set(current_revoked)
+    codes: dict[str, str] = {}
+
+    def revocation(observation_id: str, trail: tuple[str, ...]) -> str | None:
+        if observation_id in codes:
+            return codes[observation_id]
+        envelope = by_id.get(observation_id)
+        if envelope is None or observation_id in trail:
+            return None
+        # Only revocation applies here; time, consent window and purpose were
+        # judged at as_of and are not re-dated.
+        code = _revocation_code(envelope, revoked)
+        if code is None:
+            for parent in envelope.get("derivation", {}).get("parents", []):
+                if revocation(parent["observation_id"], trail + (observation_id,)) is not None:
+                    code = "derivation_parent_revoked"
+                    break
+        if code is not None:
+            codes[observation_id] = code
+        return code
+
+    candidate_ids = [c["observation_id"] for e in snapshot["entries"] for c in e["candidates"]]
+    for observation_id in sorted(candidate_ids):
+        revocation(observation_id, ())
+    affected = {observation_id: codes[observation_id] for observation_id in sorted(candidate_ids) if observation_id in codes}
+    entries = [
+        entry["key"]
+        for entry in snapshot["entries"]
+        if any(candidate["observation_id"] in affected for candidate in entry["candidates"])
+    ]
+    basis_affected = [
+        entry["key"]
+        for entry in snapshot["entries"]
+        if any(observation_id in affected for observation_id in entry["basis"])
+    ]
+    return {
+        "usable": not affected,
+        "affected": affected,
+        "entries_affected": entries,
+        "basis_affected": basis_affected,
+    }
+
+
+def require_present_use(
+    snapshot: dict[str, Any],
+    envelopes: Iterable[dict[str, Any]],
+    current_revoked: Iterable[str],
+) -> None:
+    """Raise ``revoked_since_snapshot`` unless no candidate is revoked now."""
+
+    report = present_use(snapshot, envelopes, current_revoked)
+    if not report["usable"]:
+        first = next(iter(report["affected"]))
+        _reject(
+            "revoked_since_snapshot",
+            f"Candidate {first} is revoked now ({report['affected'][first]}); the snapshot cannot be used as is",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -708,13 +1085,27 @@ def _check_accepted(
         equal = snapshot == golden
         if equal != expect["snapshot_equals_golden"]:
             failures.append(f"snapshot_equals_golden expected {expect['snapshot_equals_golden']}, got {equal}")
-    if "exclusions" in expect:
-        actual = {item["observation_id"]: item["code"] for item in snapshot["exclusions"]}
-        if actual != expect["exclusions"]:
-            failures.append(f"exclusions expected {expect['exclusions']}, got {actual}")
-    entries = {entry["key"]["code"]: entry for entry in snapshot["entries"]}
+    actual_exclusions = {item["observation_id"]: item["code"] for item in snapshot["exclusions"]}
+    if "exclusions" in expect and actual_exclusions != expect["exclusions"]:
+        failures.append(f"exclusions expected {expect['exclusions']}, got {actual_exclusions}")
+    for observation_id, code in expect.get("exclusions_include", {}).items():
+        if actual_exclusions.get(observation_id) != code:
+            failures.append(f"exclusion {observation_id} expected {code}, got {actual_exclusions.get(observation_id)}")
     for expected in expect.get("entries", []):
-        entry = entries.get(expected["code"])
+        # An entry is named by its code, plus its value-set dimension when a code
+        # has more than one entry (decision 3).
+        matches = [
+            entry
+            for entry in snapshot["entries"]
+            if entry["key"]["code"] == expected["code"]
+            and ("dimension" not in expected or entry["key"].get("dimension") == expected["dimension"])
+        ]
+        if len(matches) > 1:
+            failures.append(f"entry {expected['code']} is ambiguous; the vector must name its dimension")
+            continue
+        entry = matches[0] if matches else None
+        if "dimension" in expected and entry is not None and entry["key"].get("dimension") != expected["dimension"]:
+            entry = None
         if entry is None:
             if not expected.get("absent"):
                 failures.append(f"entry {expected['code']} missing")
@@ -781,10 +1172,67 @@ def evaluate_conformance_corpus(corpus_dir: Path = CORPUS_DIR) -> list[Conforman
         failures.append(f"golden inputs rejected: {error.code}: {error}")
     results.append(ConformanceResult("golden-snapshot", failures, golden.get("snapshot_digest", "")))
 
+    if (corpus_dir / FROZEN_MANIFEST_PATH.name).is_file():
+        results.append(
+            ConformanceResult(
+                "frozen-v1-manifest",
+                frozen_manifest_failures(corpus_dir / FROZEN_MANIFEST_PATH.name),
+                _load(corpus_dir / FROZEN_MANIFEST_PATH.name)["manifest_id"],
+            )
+        )
+
+    def golden_variant(vector: dict[str, Any]) -> dict[str, Any]:
+        snapshot = copy.deepcopy(golden)
+        for operation in vector.get("operations", []):
+            _pointer_apply(snapshot, operation)
+        if vector.get("redigest"):
+            snapshot.pop("snapshot_digest", None)
+            snapshot["snapshot_digest"] = canonical_digest(snapshot)
+        return snapshot
+
+    def expect_code(expect: dict[str, Any], actual_code: str | None) -> list[str]:
+        detail = f"rejected ({actual_code})" if actual_code else "accepted"
+        if expect["outcome"] == "rejected" and actual_code != expect["error_code"]:
+            return [f"expected rejected/{expect['error_code']}, got {detail}"]
+        if expect["outcome"] == "accepted" and actual_code is not None:
+            return [f"expected accepted, got {detail}"]
+        return []
+
     for vector in vectors["vectors"]:
         expect = vector["expect"]
         failures = []
         detail = ""
+        if vector.get("target") == "state_with_inputs":
+            # Decision 10: placement of each candidate against its source envelope.
+            snapshot = golden_variant(vector)
+            envelopes = _apply_input_operations(inputs["envelopes"], vector.get("input_operations", []))
+            actual_code = None
+            try:
+                verify_state_against_inputs(snapshot, envelopes)
+            except WholePersonStateError as error:
+                actual_code = error.code
+            detail = f"rejected ({actual_code})" if actual_code else "accepted"
+            results.append(ConformanceResult(vector["name"], expect_code(expect, actual_code), detail))
+            continue
+        if vector.get("target") == "present_use":
+            # Decision 8: current revocations constrain present use of a historical snapshot.
+            snapshot = golden_variant(vector)
+            current = vector["params"]["current_revoked"]
+            actual_code = None
+            report: dict[str, Any] = {"affected": {}}
+            try:
+                report = present_use(snapshot, inputs["envelopes"], current)
+                require_present_use(snapshot, inputs["envelopes"], current)
+            except WholePersonStateError as error:
+                actual_code = error.code
+            detail = f"rejected ({actual_code})" if actual_code else "accepted"
+            failures = expect_code(expect, actual_code)
+            if "affected" in expect and report["affected"] != expect["affected"]:
+                failures.append(f"affected expected {expect['affected']}, got {report['affected']}")
+            if "affected_count" in expect and len(report["affected"]) != expect["affected_count"]:
+                failures.append(f"affected_count expected {expect['affected_count']}, got {len(report['affected'])}")
+            results.append(ConformanceResult(vector["name"], failures, detail))
+            continue
         if vector.get("target") == "state":
             snapshot = copy.deepcopy(golden)
             for operation in vector["operations"]:
@@ -822,6 +1270,44 @@ def evaluate_conformance_corpus(corpus_dir: Path = CORPUS_DIR) -> list[Conforman
                 failures.extend(_check_accepted(snapshot, expect, golden))
         results.append(ConformanceResult(vector["name"], failures, detail))
     return results
+
+
+FROZEN_MANIFEST_PATH = CORPUS_DIR / "frozen-manifest.json"
+
+
+def frozen_manifest_failures(manifest_path: Path = FROZEN_MANIFEST_PATH) -> list[str]:
+    """Check the frozen v1 baseline: every pinned artifact still has its SHA-256.
+
+    A change to any pinned file is a new contract version (additive 1.1 or 2.0,
+    tracked in #47), never an edit of v1. Regenerating a golden file does not
+    unfreeze it.
+    """
+
+    import hashlib
+
+    manifest = _load(manifest_path)
+    failures: list[str] = []
+    for item in manifest["files"]:
+        path = ROOT / item["path"]
+        if not path.is_file():
+            failures.append(f"{item['path']} is missing")
+            continue
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != item["sha256"]:
+            failures.append(f"{item['path']} changed after the v1 freeze (sha256 {actual})")
+    versions = manifest["versions"]
+    expected = {
+        "observation": OBSERVATION_VERSION,
+        "state": STATE_VERSION,
+        "assembly_policy": POLICY_VERSION,
+        "value_sets": VALUE_SETS_VERSION,
+    }
+    for key, value in expected.items():
+        if versions.get(key) != value:
+            failures.append(f"manifest version {key} is {versions.get(key)}, the implementation is {value}")
+    if manifest["observation_schema_canonical_digest"] != current_contract()["observation_schema_digest"]:
+        failures.append("observation schema canonical digest differs from the manifest")
+    return failures
 
 
 def write_golden_snapshot(corpus_dir: Path = CORPUS_DIR) -> dict[str, Any]:

@@ -250,19 +250,26 @@ that the v1 correctness items below are met. The work is tracked in #46, on
 branch `fix/30-v1-corrections` (worktree `worktrees/OpenBody-30-v1`), stacked
 on #44. The 1.1 items are tracked in #47.
 
-- [ ] (1) Canonical digest: language-independent spec, cross-language vectors,
+- [x] (1) Canonical digest: language-independent spec, cross-language vectors,
   strict Python implementation written from the spec.
-- [ ] (2) Native validation: published vocabulary with cases; unsupported
+- [x] (2) Native validation: published vocabulary with cases; unsupported
   constraints fail closed, including in the Python reference.
-- [ ] (3) Per-code categorical value sets owned by OpenBody; presence and
+- [x] (3) Per-code categorical value sets owned by OpenBody; presence and
   severity are separate dimensions.
-- [ ] (8) A validation dated after `as_of` is rejected; current revocations
+- [x] (8) A validation dated after `as_of` is rejected; current revocations
   constrain present use of historical snapshots; historical replay is
   documented.
-- [ ] (10) Each candidate's placement is checked against its source envelope.
-- [ ] (11) ProvidEHR `SourceKey` requires tenant/controller scoping; the
+- [x] (10) Each candidate's placement is checked against its source envelope.
+- [x] (11) ProvidEHR `SourceKey` requires tenant/controller scoping; the
   independence rule is documented and has vectors.
-- [ ] (12) Synthetic terminology tables are labelled, and the checker
+- [x] (12) Synthetic terminology tables are labelled, and the checker
   enforces the label.
-- [ ] Record all 12 decisions in `docs/WHOLE_PERSON_STATE.md` and on #30.
-- [ ] Freeze the corrected v1 baseline (manifest with SHA-256 and a tag).
+- [x] Record all 12 decisions in `docs/WHOLE_PERSON_STATE.md` and on #30.
+- [x] Freeze the corrected v1 baseline (manifest with SHA-256 and a tag).
+  Manifest: `fixtures/whole-person-state/v1/frozen-manifest.json`
+  (`openbody.whole-person-contract/1.0+frozen.2026-09-29`). The tag
+  `whole-person-contract-v1.0` is set on the main merge commit.
+- [ ] Downstream re-pin to the frozen manifest: the healthcare trace (#45)
+  needs the ProvidEHR producer re-run with the scoped `SourceKey`; the Metabolog
+  native digest, validator and value sets; the ProvidEHR Rust digest and
+  scoping. Tracked in those lanes.
