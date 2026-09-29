@@ -188,8 +188,88 @@ G3/G4 consumption and model qualification are tracked by Metabolog#1129.
 ## 2026-09-22 — Whole-person state contract for interoperable executable human models
 
 GitHub issue: #30
+Branch: `feat/30-whole-person-state` (worktree `worktrees/OpenBody-30`).
 
-- [ ] Inventory existing canonical contracts and baselines before implementation; do not duplicate authority, provenance, state, or evaluation primitives.
+- [x] Inventory existing canonical contracts and baselines before implementation; do not duplicate authority, provenance, state, or evaluation primitives.
 - [ ] Implement the bounded architecture and adversarial/negative-control plan recorded in issue #30.
 - [ ] Add machine-readable evidence and non-vacuous qualification gates; distinguish implementation, local qualification, CI qualification, and any remaining research/clinical limits.
 - [ ] Preserve existing privacy, consent, authority, provenance and release boundaries; do not promote experimental results without preregistered/explicit gates.
+
+Work package in this repository (portfolio plan 2026-09-24): freeze the neutral
+contract and conformance vectors. Planned tasks:
+
+- [x] Reuse/gap matrix against admitted-observation, intervention-observation,
+  BodyState and PersonalAdaptiveState; mapping for CGM, sleep, HRV, symptoms,
+  meals, labs, device and clinical-record provenance.
+- [x] `openbody.whole-person-observation/1.0` envelope schema and validator
+  (origin orthogonal to epistemic status; derivation parents; missingness;
+  unknown uncertainty; consent/authority refs; clinical links by reference).
+- [x] `openbody.whole-person-state/1.0` deterministic snapshot assembler: no
+  source-priority inference, conflicts stay unresolved, stale/revoked/imputed
+  inputs block clinical use, snapshot is not a clinical assertion.
+- [x] Shared conformance corpus (golden inputs + snapshot, adversarial vectors)
+  and a checker wired into conformance CI; unit tests.
+
+Out of scope here (other repositories): Metabolog #1129/#1144 native consumer,
+TwinSuite #144 conversational adapter, ProvidEHR #600 encounter integration.
+
+Implemented on `feat/30-whole-person-state`: `docs/WHOLE_PERSON_STATE.md`
+(boundary, assembly rules, source mapping, reuse/gap matrix), both schemas,
+`openbody_ref/whole_person.py`, `fixtures/whole-person-state/v1` (golden
+snapshot + 52 vectors), `tools/check_whole_person_state.py`, corpus wired into
+`tools/validate_openbody.py`, `tests/test_whole_person_state.py`. Remaining open
+items above: downstream consumer qualification (other repositories) and any
+real-cohort evidence; the corpus is synthetic software conformance only.
+
+PR #44 consumer review (pass 1, 2026-09-29), with downstream consumers in view
+(Metabolog main `ec586aeb` incl. merged #1131/#1145, ProvidEHR PR #689 head
+`f01ee445`, TwinSuite #144 spec):
+
+- [x] Record baseline gates (JSON 10/10, validate_openbody 67 PASS, pytest 316,
+  corpus 53/53).
+- [x] Fix assembler defects found in review: ambiguous source identity
+  (`source_identity_conflict`), unversioned record revisions
+  (`record_version_conflict`), code split across domains
+  (`code_domain_ambiguous`), silent within-source same-time tie-break, and
+  `validate_state` accepting a re-digested snapshot with an inconsistent
+  basis/blockers/resolution or unaccounted inputs (`state_inconsistent`).
+  Adds 12 vectors; golden inputs/snapshot and schemas unchanged.
+- [x] Consumer mapping (`openbody_ref/whole_person_mapping.py`,
+  `consumer-mapping.json`, `interop-vectors.json`, tests) and the
+  "Consumer mapping" section with the open acceptance questions in
+  `docs/WHOLE_PERSON_STATE.md`.
+- [ ] Human acceptance decision on the contract and the open questions
+  (canonical digest, native validation subset, value sets, review/confirmation
+  carriers, domain coverage). Not decided by this review.
+- [ ] Separate dependency: model-family contract (#18/#19) for model state,
+  forecasts and counterfactuals that this profile refuses.
+
+Owner acceptance decision (2026-09-29): the owner accepts the
+observation/projection architecture and ownership boundaries, on condition
+that the v1 correctness items below are met. The work is tracked in #46, on
+branch `fix/30-v1-corrections` (worktree `worktrees/OpenBody-30-v1`), stacked
+on #44. The 1.1 items are tracked in #47.
+
+- [x] (1) Canonical digest: language-independent spec, cross-language vectors,
+  strict Python implementation written from the spec.
+- [x] (2) Native validation: published vocabulary with cases; unsupported
+  constraints fail closed, including in the Python reference.
+- [x] (3) Per-code categorical value sets owned by OpenBody; presence and
+  severity are separate dimensions.
+- [x] (8) A validation dated after `as_of` is rejected; current revocations
+  constrain present use of historical snapshots; historical replay is
+  documented.
+- [x] (10) Each candidate's placement is checked against its source envelope.
+- [x] (11) ProvidEHR `SourceKey` requires tenant/controller scoping; the
+  independence rule is documented and has vectors.
+- [x] (12) Synthetic terminology tables are labelled, and the checker
+  enforces the label.
+- [x] Record all 12 decisions in `docs/WHOLE_PERSON_STATE.md` and on #30.
+- [x] Freeze the corrected v1 baseline (manifest with SHA-256 and a tag).
+  Manifest: `fixtures/whole-person-state/v1/frozen-manifest.json`
+  (`openbody.whole-person-contract/1.0+frozen.2026-09-29`). The tag
+  `whole-person-contract-v1.0` is set on the main merge commit.
+- [ ] Downstream re-pin to the frozen manifest: the healthcare trace (#45)
+  needs the ProvidEHR producer re-run with the scoped `SourceKey`; the Metabolog
+  native digest, validator and value sets; the ProvidEHR Rust digest and
+  scoping. Tracked in those lanes.

@@ -1,0 +1,3093 @@
+{
+  "mapping_version": "openbody.whole-person-consumer-mapping/1.0",
+  "description": "Representative downstream consumer records mapped into openbody.whole-person-observation/1.0 (synthetic). Mappers: reference/python/openbody_ref/whole_person_mapping.py. Not real patient data.",
+  "contract": {
+    "observation": "openbody.whole-person-observation/1.0",
+    "state": "openbody.whole-person-state/1.0",
+    "policy": "openbody.whole-person-assembly-policy/1.0",
+    "value_sets": "openbody.whole-person-value-sets/1.0"
+  },
+  "subject": "subject:openbody:wp-0001",
+  "consumers": [
+    {
+      "consumer": "metabolog",
+      "upstream": {
+        "repository": "advatar/Metabolog",
+        "local_repository": "InVivo",
+        "ref": "origin/main ec586aeb",
+        "consumed": [
+          "#1131 merge 167f52b3 (admitted-observation consumer, native schema validator)",
+          "#1145 merge 204c3348 (M0 temporal state graph: OpenBodyStateRecord, OpenBodyEpistemicClass, OpenBodyCymbatheraProjection)",
+          "HealthTimelineEntryRecord (InVivo/HealthTimelineModels.swift)"
+        ],
+        "tracks": [
+          "#1129",
+          "#1144"
+        ]
+      },
+      "field_map": [
+        {
+          "consumer_field": "HealthTimelineEntryRecord.id + updatedAt",
+          "contract_path": "observation_id, source.record_ref",
+          "rule": "revision-specific: urn:invivo:timeline:<id>:rev:<updatedAt>; the SwiftData record is mutable"
+        },
+        {
+          "consumer_field": "canonical export of the record revision",
+          "contract_path": "source.record_digest",
+          "rule": "canonical_digest (see digest-vectors.json)"
+        },
+        {
+          "consumer_field": "HealthTimelineEntryRecord.source",
+          "contract_path": "(not identity)",
+          "rule": "intake channel only; source.source_id/source_kind/device come from HealthKit/device provenance supplied by the custodian"
+        },
+        {
+          "consumer_field": "kind + payload.manualReading",
+          "contract_path": "origin, epistemic_status",
+          "rule": "manual entry -> self_report/reported; device-provenanced sample -> device_sensor/observed"
+        },
+        {
+          "consumer_field": "kind",
+          "contract_path": "measurement.domain + code",
+          "rule": "explicit concept table; unmapped kinds (ketone, lipidPanel, medicine, supplement, bioScan, autonomic) are refused"
+        },
+        {
+          "consumer_field": "timestamp",
+          "contract_path": "time.effective_start",
+          "rule": "effective_end null"
+        },
+        {
+          "consumer_field": "createdAt",
+          "contract_path": "time.ingested_at",
+          "rule": ""
+        },
+        {
+          "consumer_field": "value, unit",
+          "contract_path": "measurement.value, measurement.unit",
+          "rule": "UCUM; symptom severity -> categorical value"
+        },
+        {
+          "consumer_field": "(none)",
+          "contract_path": "uncertainty",
+          "rule": "{status: unknown}; never derived from confidence"
+        },
+        {
+          "consumer_field": "OpenBodyAdmittedObservation.id",
+          "contract_path": "clinical_link.admitted_observation_id, clinical_link.clinical_version_ref, source.record_ref",
+          "rule": "urn:openbody:observation:<version_uid> is already the immutable version"
+        },
+        {
+          "consumer_field": "admitted document",
+          "contract_path": "clinical_link.content_digest",
+          "rule": "canonical_digest of the admitted-observation.v1 JSON"
+        },
+        {
+          "consumer_field": "admitted source.resource_digest",
+          "contract_path": "source.record_digest",
+          "rule": ""
+        },
+        {
+          "consumer_field": "admitted uncertainty (epistemic/aleatoric/coverage)",
+          "contract_path": "uncertainty",
+          "rule": "all null -> unknown; any number -> refused (uncertainty_not_representable)"
+        },
+        {
+          "consumer_field": "admitted subject subject:providehr:ehr:<ehr_id>",
+          "contract_path": "(not subject)",
+          "rule": "subject and subject_binding come from the InVivo binding; equality is never inferred"
+        },
+        {
+          "consumer_field": "OpenBodyEpistemicClass observed",
+          "contract_path": "observed | reported",
+          "rule": "decided by origin"
+        },
+        {
+          "consumer_field": "OpenBodyEpistemicClass derived / statistical_inference",
+          "contract_path": "derived / inferred",
+          "rule": "requires derivation parents bound by envelope digest"
+        },
+        {
+          "consumer_field": "OpenBodyEpistemicClass mechanistic_inference",
+          "contract_path": "(refused)",
+          "rule": "model-family contract (OpenBody #18/#19)"
+        },
+        {
+          "consumer_field": "OpenBodyStateRecord (PhysiologicalState)",
+          "contract_path": "(refused)",
+          "rule": "model output; evidence observations map individually"
+        },
+        {
+          "consumer_field": "Cymbathera quality qualified/limited/unknown",
+          "contract_path": "quality.status acceptable/degraded/unknown",
+          "rule": "the derived confidence 1/0.5/nil is never uncertainty"
+        }
+      ],
+      "records": [
+        {
+          "name": "timeline-glucose-meter-healthkit",
+          "mapper": "metabolog.timeline_entry",
+          "note": "HealthKit sample with Bluetooth meter provenance: device_sensor/observed.",
+          "record": {
+            "id": "5f0c1a52-0b1e-4c11-9d7e-0000000000a1",
+            "kind": "glucose",
+            "timestamp": "2026-09-20T07:40:00Z",
+            "title": "Glucose",
+            "detail": "HealthKit",
+            "value": 6.1,
+            "unit": "mmol/L",
+            "source": "healthkit",
+            "healthKitStored": true,
+            "createdAt": "2026-09-20T07:41:10Z",
+            "updatedAt": "2026-09-20T07:41:10Z",
+            "payload": null
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:self-tracking",
+              "authority_ref": "urn:invivo:grant:wp-0001:self-tracking",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "glucose": {
+                "domain": "glucose",
+                "code": {
+                  "system": "http://loinc.org",
+                  "code": "41653-7",
+                  "display": "Glucose [Mass/volume] in Capillary blood by Glucometer"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "symptom_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              }
+            },
+            "severity_values": {
+              "1": "mild",
+              "2": "moderate",
+              "3": "severe"
+            },
+            "entry_method": "device",
+            "clock_status": "synchronized",
+            "source": {
+              "source_id": "urn:invivo:source:healthkit:meter-contour-1",
+              "source_kind": "wearable",
+              "source_version": "invivo-ios/2.14.0",
+              "device": {
+                "model": "synthetic-bg-meter",
+                "firmware": "1.0"
+              }
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a1:rev:2026-09-20T07:41:10Z",
+              "scope": [
+                "ob://human/metabolic/glucose_regulation"
+              ],
+              "source": {
+                "source_id": "urn:invivo:source:healthkit:meter-contour-1",
+                "source_kind": "wearable",
+                "source_version": "invivo-ios/2.14.0",
+                "device": {
+                  "model": "synthetic-bg-meter",
+                  "firmware": "1.0"
+                },
+                "record_ref": "urn:invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a1:rev:2026-09-20T07:41:10Z",
+                "record_digest": "sha256:92790218b3397a98d135e35b6c5951544c2e062bdb60c9222039426bd3ced9b3"
+              },
+              "origin": "device_sensor",
+              "epistemic_status": "observed",
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:40:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:41:10Z",
+                "clock": {
+                  "status": "synchronized"
+                }
+              },
+              "measurement": {
+                "domain": "glucose",
+                "code": {
+                  "system": "http://loinc.org",
+                  "code": "41653-7",
+                  "display": "Glucose [Mass/volume] in Capillary blood by Glucometer"
+                },
+                "value_type": "quantity",
+                "value": 6.1,
+                "unit": "mmol/L"
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:self-tracking",
+                "authority_ref": "urn:invivo:grant:wp-0001:self-tracking",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "name": "timeline-glucose-typed-by-person",
+          "mapper": "metabolog.timeline_entry",
+          "note": "ManualReadingPayload typed in the app: self_report/reported even though a meter produced the number.",
+          "record": {
+            "id": "5f0c1a52-0b1e-4c11-9d7e-0000000000a2",
+            "kind": "glucose",
+            "timestamp": "2026-09-20T07:45:00Z",
+            "title": "Glucose",
+            "detail": "Manual",
+            "value": 104,
+            "unit": "mg/dL",
+            "source": "health-intake",
+            "healthKitStored": false,
+            "createdAt": "2026-09-20T07:46:00Z",
+            "updatedAt": "2026-09-20T07:46:00Z",
+            "payload": {
+              "manualReading": {
+                "kind": "glucose",
+                "value": 104,
+                "unit": "mg/dL",
+                "healthKitStatus": "notStored"
+              }
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:self-tracking",
+              "authority_ref": "urn:invivo:grant:wp-0001:self-tracking",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "glucose": {
+                "domain": "glucose",
+                "code": {
+                  "system": "http://loinc.org",
+                  "code": "41653-7",
+                  "display": "Glucose [Mass/volume] in Capillary blood by Glucometer"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "symptom_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              }
+            },
+            "severity_values": {
+              "1": "mild",
+              "2": "moderate",
+              "3": "severe"
+            },
+            "entry_method": "manual",
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:invivo:source:app:manual-entry",
+              "source_kind": "phone_app",
+              "source_version": "invivo-ios/2.14.0"
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a2:rev:2026-09-20T07:46:00Z",
+              "scope": [
+                "ob://human/metabolic/glucose_regulation"
+              ],
+              "source": {
+                "source_id": "urn:invivo:source:app:manual-entry",
+                "source_kind": "phone_app",
+                "source_version": "invivo-ios/2.14.0",
+                "record_ref": "urn:invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a2:rev:2026-09-20T07:46:00Z",
+                "record_digest": "sha256:232041ab5727e13669ade1043c7726947deb6cc3ad8f00d56cacbc8e0ee48669"
+              },
+              "origin": "self_report",
+              "epistemic_status": "reported",
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:45:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:46:00Z",
+                "clock": {
+                  "status": "unknown"
+                }
+              },
+              "measurement": {
+                "domain": "glucose",
+                "code": {
+                  "system": "http://loinc.org",
+                  "code": "41653-7",
+                  "display": "Glucose [Mass/volume] in Capillary blood by Glucometer"
+                },
+                "value_type": "quantity",
+                "value": 104,
+                "unit": "mg/dL"
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:self-tracking",
+                "authority_ref": "urn:invivo:grant:wp-0001:self-tracking",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "name": "timeline-symptom-diary",
+          "mapper": "metabolog.timeline_entry",
+          "record": {
+            "id": "5f0c1a52-0b1e-4c11-9d7e-0000000000a3",
+            "kind": "symptom",
+            "timestamp": "2026-09-20T07:30:00Z",
+            "title": "Symptom",
+            "detail": "Dizziness",
+            "value": null,
+            "unit": null,
+            "source": "health-intake",
+            "healthKitStored": false,
+            "createdAt": "2026-09-20T07:31:00Z",
+            "updatedAt": "2026-09-20T07:31:00Z",
+            "payload": {
+              "symptom": {
+                "kind": "dizziness",
+                "severity": 2
+              }
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:self-tracking",
+              "authority_ref": "urn:invivo:grant:wp-0001:self-tracking",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "glucose": {
+                "domain": "glucose",
+                "code": {
+                  "system": "http://loinc.org",
+                  "code": "41653-7",
+                  "display": "Glucose [Mass/volume] in Capillary blood by Glucometer"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "symptom_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              }
+            },
+            "severity_values": {
+              "1": "mild",
+              "2": "moderate",
+              "3": "severe"
+            },
+            "entry_method": "manual",
+            "clock_status": "synchronized",
+            "source": {
+              "source_id": "urn:invivo:source:app:symptom-diary",
+              "source_kind": "phone_app",
+              "source_version": "invivo-ios/2.14.0"
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a3:rev:2026-09-20T07:31:00Z",
+              "scope": [
+                "ob://human/whole_body"
+              ],
+              "source": {
+                "source_id": "urn:invivo:source:app:symptom-diary",
+                "source_kind": "phone_app",
+                "source_version": "invivo-ios/2.14.0",
+                "record_ref": "urn:invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a3:rev:2026-09-20T07:31:00Z",
+                "record_digest": "sha256:6a910929f1130f147b3bba54266da2c9e09c296b4163196ca427c4dddc8214b2"
+              },
+              "origin": "self_report",
+              "epistemic_status": "reported",
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:30:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:31:00Z",
+                "clock": {
+                  "status": "synchronized"
+                }
+              },
+              "measurement": {
+                "domain": "symptom",
+                "code": {
+                  "system": "http://snomed.info/sct",
+                  "code": "404640003",
+                  "display": "Dizziness"
+                },
+                "value_type": "categorical",
+                "value": "moderate",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:self-tracking",
+                "authority_ref": "urn:invivo:grant:wp-0001:self-tracking",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "name": "timeline-ketone-has-no-domain",
+          "mapper": "metabolog.timeline_entry",
+          "record": {
+            "id": "5f0c1a52-0b1e-4c11-9d7e-0000000000a4",
+            "kind": "ketone",
+            "timestamp": "2026-09-20T07:35:00Z",
+            "title": "Ketones",
+            "detail": "",
+            "value": 0.4,
+            "unit": "mmol/L",
+            "source": "health-intake",
+            "healthKitStored": false,
+            "createdAt": "2026-09-20T07:36:00Z",
+            "updatedAt": "2026-09-20T07:36:00Z",
+            "payload": null
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:self-tracking",
+              "authority_ref": "urn:invivo:grant:wp-0001:self-tracking",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "glucose": {
+                "domain": "glucose",
+                "code": {
+                  "system": "http://loinc.org",
+                  "code": "41653-7",
+                  "display": "Glucose [Mass/volume] in Capillary blood by Glucometer"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "symptom_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              }
+            },
+            "severity_values": {
+              "1": "mild",
+              "2": "moderate",
+              "3": "severe"
+            },
+            "entry_method": "manual",
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:invivo:source:app:manual-entry",
+              "source_kind": "phone_app",
+              "source_version": "invivo-ios/2.14.0"
+            }
+          },
+          "expect": {
+            "refused": "domain_unsupported"
+          }
+        },
+        {
+          "name": "admitted-body-temperature",
+          "mapper": "metabolog.admitted_observation",
+          "note": "The admitted-observation.v1 document from examples/local-observations/synthetic-body-temperature.v1.json, as InVivo validates and caches it.",
+          "record": {
+            "code": {
+              "code": "8310-5",
+              "display": "Body temperature",
+              "omop_concept_id": null,
+              "omop_domain": null,
+              "snomed_code": "276885007",
+              "snomed_display": "Core body temperature",
+              "system": "http://loinc.org"
+            },
+            "effective_time": "2026-09-14T12:00:00Z",
+            "id": "urn:openbody:observation:22222222-2222-4222-8222-222222222222::provid-ehr::1",
+            "kind": "Observation",
+            "normalization": {
+              "concept": {
+                "code": "8310-5",
+                "display": "Body temperature",
+                "omop_concept_id": null,
+                "omop_domain": null,
+                "snomed_code": "276885007",
+                "snomed_display": "Core body temperature",
+                "system": "http://loinc.org"
+              },
+              "quantity": {
+                "code": "Cel",
+                "display": "°C",
+                "system": "http://unitsofmeasure.org",
+                "value": 37.0
+              },
+              "review_reasons": [],
+              "rule_pack": {
+                "content_hash": "sha256:2fb884a2254aa5458ae87ded4d401717c1482c81c7df40377b30f93f0621fd02",
+                "pack_id": "providehr-clinical-normalization",
+                "version": "1.2.0"
+              },
+              "source": {
+                "coding": {
+                  "code": "8310-5",
+                  "display": null,
+                  "system": "http://loinc.org"
+                },
+                "effective_time": "2026-09-14T12:00:00Z",
+                "quantity": {
+                  "code": null,
+                  "system": null,
+                  "unit": "degF",
+                  "value": 98.6
+                },
+                "source_id": "Observation/temperature-1",
+                "source_type": "fhir_r4"
+              },
+              "status": "normalized",
+              "trace": [
+                {
+                  "action": "canonicalized terminology",
+                  "rule_id": "concept.loinc.temperature",
+                  "rule_version": "1.2.0"
+                },
+                {
+                  "action": "canonicalized UCUM quantity",
+                  "rule_id": "unit.fahrenheit-degf",
+                  "rule_version": "1.2.0"
+                }
+              ]
+            },
+            "profile": "openbody.admitted-observation.v1",
+            "quantity": {
+              "code": "Cel",
+              "display": "°C",
+              "system": "http://unitsofmeasure.org",
+              "value": 37.0
+            },
+            "schema_version": "0.1",
+            "source": {
+              "clinical_version": {
+                "composition_uid": "22222222-2222-4222-8222-222222222222",
+                "ehr_id": "11111111-1111-4111-8111-111111111111",
+                "tenant_id": "synthetic-tenant",
+                "version_uid": "22222222-2222-4222-8222-222222222222::provid-ehr::1"
+              },
+              "parent": null,
+              "patient_external_id": "synthetic-1",
+              "resource_digest": "sha256:9de9deeb102f2d10f1cec59b6e4d2bb94606e9f01ef399cd98cdd79e0c2e660b",
+              "resource_ref": "Observation/temperature-1",
+              "resource_version": "source-v1",
+              "system": "cambio-cosmic"
+            },
+            "subject": "subject:providehr:ehr:11111111-1111-4111-8111-111111111111",
+            "uncertainty": {
+              "aleatoric": null,
+              "coverage": null,
+              "epistemic": null,
+              "out_of_distribution": "unknown",
+              "reasons": [
+                "Source admission does not quantify measurement or model uncertainty"
+              ]
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:clinical-records",
+              "authority_ref": "urn:invivo:grant:wp-0001:clinical-records",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "ingested_at": "2026-09-14T12:05:00Z",
+            "clock_status": "synchronized",
+            "loinc_domains": {
+              "8310-5": {
+                "domain": "body_temperature",
+                "scope": [
+                  "ob://human/physiology/thermoregulation"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "invivo:admitted:urn:openbody:observation:22222222-2222-4222-8222-222222222222::provid-ehr::1",
+              "scope": [
+                "ob://human/physiology/thermoregulation"
+              ],
+              "source": {
+                "source_id": "urn:providehr:source:cambio-cosmic:synthetic-tenant",
+                "source_kind": "ehr",
+                "source_version": "providehr-clinical-normalization/1.2.0",
+                "record_ref": "urn:openbody:observation:22222222-2222-4222-8222-222222222222::provid-ehr::1",
+                "record_digest": "sha256:9de9deeb102f2d10f1cec59b6e4d2bb94606e9f01ef399cd98cdd79e0c2e660b"
+              },
+              "origin": "clinical_record",
+              "epistemic_status": "imported",
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-14T12:00:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-14T12:05:00Z",
+                "clock": {
+                  "status": "synchronized"
+                }
+              },
+              "measurement": {
+                "domain": "body_temperature",
+                "code": {
+                  "system": "http://loinc.org",
+                  "code": "8310-5",
+                  "display": "Body temperature"
+                },
+                "value_type": "quantity",
+                "value": 37.0,
+                "unit": "Cel"
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "quality": {
+                "status": "acceptable",
+                "flags": []
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:clinical-records",
+                "authority_ref": "urn:invivo:grant:wp-0001:clinical-records",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              },
+              "clinical_link": {
+                "profile": "openbody.admitted-observation.v1",
+                "admitted_observation_id": "urn:openbody:observation:22222222-2222-4222-8222-222222222222::provid-ehr::1",
+                "clinical_version_ref": "urn:openbody:observation:22222222-2222-4222-8222-222222222222::provid-ehr::1",
+                "content_digest": "sha256:5ffaf386e95cf067ff909a1c368d6c1acf93fca721712bbe82c3adb49dc6613f"
+              }
+            }
+          }
+        },
+        {
+          "name": "state-record-is-model-output",
+          "mapper": "metabolog.state_record",
+          "note": "OpenBodyCymbatheraProjection output (M0 PhysiologicalState).",
+          "record": {
+            "id": "cymbathera-6c1d0b8e-0000-4000-8000-000000000001-before",
+            "subjectID": "invivo-subject-1",
+            "domain": "autonomic",
+            "validFrom": "2026-09-19T20:00:00Z",
+            "validTo": null,
+            "summary": "rmssd=42 ms",
+            "epistemicClass": "derived",
+            "confidence": 1,
+            "uncertainty": null,
+            "modelID": "invivo.cymbathera.autonomic-snapshot",
+            "modelVersion": "1",
+            "evidence": [
+              {
+                "id": "e1",
+                "kind": "rmssd",
+                "sourceReference": "urn:invivo:cymbathera:snapshot:1"
+              }
+            ],
+            "assumptions": [],
+            "conflicts": []
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            }
+          },
+          "expect": {
+            "refused": "model_family_contract_required"
+          }
+        }
+      ]
+    },
+    {
+      "consumer": "providehr",
+      "upstream": {
+        "repository": "advatar/ProvidEHR",
+        "ref": "PR #689 head f01ee445 (branch feat/600-ambient-two-adapter-qualification, open)",
+        "consumed": [
+          "crates/ambient-evidence longitudinal::Contribution, SourceKey, SourceAvailability",
+          "envelope::SourceBinding, CaptureConsent",
+          "extraction::LEXICON (local concepts, not codes)"
+        ],
+        "tracks": [
+          "#600",
+          "#584"
+        ]
+      },
+      "field_map": [
+        {
+          "consumer_field": "SourceKey (clinical_system, adapter_id, connection_id) + tenant_id + data_controller",
+          "contract_path": "source.source_id",
+          "rule": "urn:providehr:source:<tenant_id>:<data_controller>:<clinical_system>:<adapter_id>:<connection_id> (each part percent-encoded); refused without tenant and controller (source_scope_missing). This is the conflict unit, but not the independence unit (decision 11)."
+        },
+        {
+          "consumer_field": "vendor + clinical_source.version",
+          "contract_path": "source.source_version",
+          "rule": ""
+        },
+        {
+          "consumer_field": "source_record_type, source_record_id, source_version",
+          "contract_path": "source.record_ref",
+          "rule": "urn:providehr:record:<tenant_id>:<data_controller>:<clinical_system>:<source_record_type>:<source_record_id>:<source_version>; the underlying record version, independent of adapter and connection, so another path to the same record is never independent corroboration; revoking it revokes all its facts"
+        },
+        {
+          "consumer_field": "source_sha256 (hex)",
+          "contract_path": "source.record_digest",
+          "rule": "sha256:<hex>"
+        },
+        {
+          "consumer_field": "fact_id",
+          "contract_path": "observation_id",
+          "rule": "providehr:fact:<fact_id>"
+        },
+        {
+          "consumer_field": "clinical_time",
+          "contract_path": "time.effective_start",
+          "rule": ""
+        },
+        {
+          "consumer_field": "recorded_at",
+          "contract_path": "time.ingested_at",
+          "rule": ""
+        },
+        {
+          "consumer_field": "kind symptom + local concept",
+          "contract_path": "measurement.domain symptom + agreed code",
+          "rule": "problem, medication, plan and blood-pressure are refused (domain_unsupported)"
+        },
+        {
+          "consumer_field": "assertion present / negated",
+          "contract_path": "measurement.value present / absent",
+          "rule": "categorical"
+        },
+        {
+          "consumer_field": "temporality",
+          "contract_path": "(current only)",
+          "rule": "historical / planned refused (temporality_unsupported)"
+        },
+        {
+          "consumer_field": "uncertain",
+          "contract_path": "quality.flags speaker_hedged",
+          "rule": "never uncertainty"
+        },
+        {
+          "consumer_field": "speaker_role + reviewer_id",
+          "contract_path": "origin conversation, epistemic reported",
+          "rule": "review is not clinician_validated in 1.0 (no receipt slot on reported)"
+        },
+        {
+          "consumer_field": "subject family_member / unknown (family_history, unowned)",
+          "contract_path": "(refused)",
+          "rule": "subject_not_patient"
+        },
+        {
+          "consumer_field": "CaptureConsent.consent_ref, purpose, captured_at",
+          "contract_path": "consent.consent_ref, purposes, granted_at",
+          "rule": "purpose map ambient_documentation -> encounter_context; expires_at null"
+        },
+        {
+          "consumer_field": "CaptureConsent.withdrawn, SourceAvailability::Revoked",
+          "contract_path": "assemble_state revoked",
+          "rule": "consent_ref / source_id"
+        },
+        {
+          "consumer_field": "transport_provider, normalizer_id/version, spans",
+          "contract_path": "(not carried)",
+          "rule": "stay in ProvidEHR; reachable through source.record_ref (tenant_id and data_controller are carried in source_id and record_ref)"
+        }
+      ],
+      "records": [
+        {
+          "name": "ambient-symptom-present",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0001",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "symptom",
+            "concept": "dizziness",
+            "assertion": "present",
+            "temporality": "current",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "providehr:fact:fact-0001",
+              "scope": [
+                "ob://human/whole_body"
+              ],
+              "source": {
+                "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
+                "source_kind": "ehr",
+                "source_version": "synthetic-vendor-a/synthetic-fhir-ehr/2026.3",
+                "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-1:3",
+                "record_digest": "sha256:4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2"
+              },
+              "origin": "conversation",
+              "epistemic_status": "reported",
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:20:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:50:00Z",
+                "clock": {
+                  "status": "synchronized"
+                }
+              },
+              "measurement": {
+                "domain": "symptom",
+                "code": {
+                  "system": "http://snomed.info/sct",
+                  "code": "404640003",
+                  "display": "Dizziness"
+                },
+                "value_type": "categorical",
+                "value": "present",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              },
+              "consent": {
+                "consent_ref": "urn:providehr:consent:enc-1:ambient",
+                "authority_ref": "urn:providehr:grant:enc-1:read",
+                "purposes": [
+                  "encounter_context"
+                ],
+                "granted_at": "2026-09-20T07:00:00Z",
+                "expires_at": null
+              }
+            }
+          }
+        },
+        {
+          "name": "ambient-symptom-negated",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0002",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "symptom",
+            "concept": "chest-pain",
+            "assertion": "negated",
+            "temporality": "current",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "providehr:fact:fact-0002",
+              "scope": [
+                "ob://human/whole_body"
+              ],
+              "source": {
+                "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
+                "source_kind": "ehr",
+                "source_version": "synthetic-vendor-a/synthetic-fhir-ehr/2026.3",
+                "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-1:3",
+                "record_digest": "sha256:4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2"
+              },
+              "origin": "conversation",
+              "epistemic_status": "reported",
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:20:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:50:00Z",
+                "clock": {
+                  "status": "synchronized"
+                }
+              },
+              "measurement": {
+                "domain": "symptom",
+                "code": {
+                  "system": "http://snomed.info/sct",
+                  "code": "29857009",
+                  "display": "Chest pain"
+                },
+                "value_type": "categorical",
+                "value": "absent",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              },
+              "consent": {
+                "consent_ref": "urn:providehr:consent:enc-1:ambient",
+                "authority_ref": "urn:providehr:grant:enc-1:read",
+                "purposes": [
+                  "encounter_context"
+                ],
+                "granted_at": "2026-09-20T07:00:00Z",
+                "expires_at": null
+              }
+            }
+          }
+        },
+        {
+          "name": "ambient-symptom-hedged",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0003",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "symptom",
+            "concept": "dyspnea",
+            "assertion": "present",
+            "temporality": "current",
+            "uncertain": true,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "providehr:fact:fact-0003",
+              "scope": [
+                "ob://human/whole_body"
+              ],
+              "source": {
+                "source_id": "urn:providehr:source:tenant-1:region-x:synthetic-fhir-ehr:fhir-style:conn-1",
+                "source_kind": "ehr",
+                "source_version": "synthetic-vendor-a/synthetic-fhir-ehr/2026.3",
+                "record_ref": "urn:providehr:record:tenant-1:region-x:synthetic-fhir-ehr:Encounter:enc-1:3",
+                "record_digest": "sha256:4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2"
+              },
+              "origin": "conversation",
+              "epistemic_status": "reported",
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:20:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:50:00Z",
+                "clock": {
+                  "status": "synchronized"
+                }
+              },
+              "measurement": {
+                "domain": "symptom",
+                "code": {
+                  "system": "http://snomed.info/sct",
+                  "code": "267036007",
+                  "display": "Dyspnea"
+                },
+                "value_type": "categorical",
+                "value": "present",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "quality": {
+                "status": "unknown",
+                "flags": [
+                  "speaker_hedged"
+                ]
+              },
+              "consent": {
+                "consent_ref": "urn:providehr:consent:enc-1:ambient",
+                "authority_ref": "urn:providehr:grant:enc-1:read",
+                "purposes": [
+                  "encounter_context"
+                ],
+                "granted_at": "2026-09-20T07:00:00Z",
+                "expires_at": null
+              }
+            }
+          }
+        },
+        {
+          "name": "ambient-family-history",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0004",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "problem",
+            "concept": "diabetes",
+            "assertion": "present",
+            "temporality": "current",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "family_member",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "refused": "subject_not_patient"
+          }
+        },
+        {
+          "name": "ambient-unknown-subject",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0005",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "symptom",
+            "concept": "headache",
+            "assertion": "present",
+            "temporality": "current",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "unknown",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "refused": "subject_not_patient"
+          }
+        },
+        {
+          "name": "ambient-blood-pressure",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0006",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "observation",
+            "concept": "blood-pressure",
+            "assertion": "present",
+            "temporality": "current",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "value": "162/98 mmHg",
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "refused": "domain_unsupported"
+          }
+        },
+        {
+          "name": "ambient-medication-historical",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0007",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "medication",
+            "concept": "ibuprofen",
+            "assertion": "present",
+            "temporality": "historical",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "refused": "domain_unsupported"
+          }
+        },
+        {
+          "name": "ambient-symptom-historical",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0008",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "symptom",
+            "concept": "headache",
+            "assertion": "present",
+            "temporality": "historical",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "tenant_id": "tenant-1",
+            "data_controller": "region-x"
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "refused": "temporality_unsupported"
+          }
+        },
+        {
+          "name": "ambient-symptom-unscoped-source",
+          "mapper": "providehr.contribution",
+          "record": {
+            "fact_id": "fact-0099",
+            "source": {
+              "clinical_system": "synthetic-fhir-ehr",
+              "adapter_id": "fhir-style",
+              "connection_id": "conn-1"
+            },
+            "vendor": "synthetic-vendor-a",
+            "source_record_type": "Encounter",
+            "source_record_id": "enc-1",
+            "source_version": "3",
+            "source_sha256": "4b1d0c2f9a8e7d6c5b4a39281706f5e4d3c2b1a0918273645546372819a0b1c2",
+            "clinical_time": "2026-09-20T07:20:00Z",
+            "recorded_at": "2026-09-20T07:50:00Z",
+            "kind": "symptom",
+            "concept": "dizziness",
+            "assertion": "present",
+            "temporality": "current",
+            "uncertain": false,
+            "speaker_role": "patient",
+            "reviewer_id": "clinician-1",
+            "spans": [
+              {
+                "segment_id": "seg-002",
+                "start_byte": 10,
+                "end_byte": 19,
+                "span_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ]
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "subject_role": "patient",
+            "capture_consent": {
+              "consent_ref": "urn:providehr:consent:enc-1:ambient",
+              "purpose": "ambient_documentation",
+              "captured_at": "2026-09-20T07:00:00Z",
+              "withdrawn": false
+            },
+            "authority_ref": "urn:providehr:grant:enc-1:read",
+            "clinical_source_version": "synthetic-fhir-ehr/2026.3",
+            "clock_status": "synchronized",
+            "purpose_map": {
+              "ambient_documentation": "encounter_context"
+            },
+            "concept_codes": {
+              "dizziness": {
+                "system": "http://snomed.info/sct",
+                "code": "404640003",
+                "display": "Dizziness"
+              },
+              "chest-pain": {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              },
+              "dyspnea": {
+                "system": "http://snomed.info/sct",
+                "code": "267036007",
+                "display": "Dyspnea"
+              },
+              "headache": {
+                "system": "http://snomed.info/sct",
+                "code": "25064002",
+                "display": "Headache"
+              }
+            }
+          },
+          "expect": {
+            "refused": "source_scope_missing"
+          }
+        }
+      ]
+    },
+    {
+      "consumer": "twinsuite",
+      "upstream": {
+        "repository": "advatar/TwinSuite",
+        "ref": "issue #144 specification; origin/main 9bd339a3 has no conversation-timeline code",
+        "consumed": [
+          "#144 acceptance: said / inferred / confirmed distinct, custody in InVivo, explicit speaker uncertainty and revocation"
+        ],
+        "tracks": [
+          "#144",
+          "#129"
+        ]
+      },
+      "field_map": [
+        {
+          "consumer_field": "utterance_id + revision",
+          "contract_path": "source.record_ref",
+          "rule": "urn:invivo:conversation:<utterance>:rev:<n> (custody in InVivo)"
+        },
+        {
+          "consumer_field": "utterance content",
+          "contract_path": "source.record_digest",
+          "rule": "canonical_digest"
+        },
+        {
+          "consumer_field": "assertion said",
+          "contract_path": "origin conversation, epistemic reported",
+          "rule": ""
+        },
+        {
+          "consumer_field": "assertion confirmed",
+          "contract_path": "origin conversation, epistemic reported, quality.flags user_confirmed",
+          "rule": "never observed or clinician_validated"
+        },
+        {
+          "consumer_field": "assertion inferred + extractor id/version",
+          "contract_path": "origin model_transform, epistemic inferred, derivation",
+          "rule": "parent is the said envelope, digest-bound"
+        },
+        {
+          "consumer_field": "speaker other / ambiguous",
+          "contract_path": "(refused)",
+          "rule": "speaker_not_subject"
+        },
+        {
+          "consumer_field": "correction (revision n+1)",
+          "contract_path": "new record_ref; host revokes rev n",
+          "rule": "never an in-place replacement"
+        },
+        {
+          "consumer_field": "spoken_at / captured_at",
+          "contract_path": "time.effective_start / time.ingested_at",
+          "rule": "clock unknown unless the capture clock is synchronized"
+        },
+        {
+          "consumer_field": "kind meal / symptom",
+          "contract_path": "domain meal / symptom, text value",
+          "rule": "medication and exercise refused (domain_unsupported)"
+        }
+      ],
+      "records": [
+        {
+          "name": "conversation-said",
+          "mapper": "twinsuite.candidate",
+          "record": {
+            "utterance_id": "utt-0042",
+            "utterance_revision": 1,
+            "assertion": "said",
+            "speaker": "subject",
+            "kind": "meal",
+            "text": "oatmeal with berries",
+            "spoken_at": "2026-09-20T07:10:00Z",
+            "captured_at": "2026-09-20T07:25:00Z",
+            "utterance": {
+              "utterance_id": "utt-0042",
+              "revision": 1,
+              "text": "oatmeal with berries",
+              "speaker": "subject",
+              "spoken_at": "2026-09-20T07:10:00Z"
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+              "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "meal": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation",
+                  "ob://human/gastrointestinal"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:twin-app",
+              "source_kind": "conversational_agent",
+              "source_version": "twinsuite-adapter/0.3.0"
+            },
+            "extractor_source": {
+              "source_id": "urn:twinsuite:source:extractor:meal",
+              "source_kind": "model_host",
+              "source_version": "twinsuite-extractor/0.1.0"
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "twinsuite:utt-0042:rev:1:said",
+              "scope": [
+                "ob://human/metabolic/glucose_regulation",
+                "ob://human/gastrointestinal"
+              ],
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:10:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:25:00Z",
+                "clock": {
+                  "status": "unknown"
+                }
+              },
+              "measurement": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "value_type": "text",
+                "value": "oatmeal with berries",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+                "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              },
+              "source": {
+                "source_id": "urn:twinsuite:source:conversation:twin-app",
+                "source_kind": "conversational_agent",
+                "source_version": "twinsuite-adapter/0.3.0",
+                "record_ref": "urn:invivo:conversation:utt-0042:rev:1",
+                "record_digest": "sha256:b51c0eb4fb7d4480d19bfd2f868dddbe9c325f43ea637c83f26188c41f546a27"
+              },
+              "origin": "conversation",
+              "epistemic_status": "reported",
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              }
+            }
+          }
+        },
+        {
+          "name": "conversation-confirmed",
+          "mapper": "twinsuite.candidate",
+          "record": {
+            "utterance_id": "utt-0042",
+            "utterance_revision": 1,
+            "assertion": "confirmed",
+            "speaker": "subject",
+            "kind": "meal",
+            "text": "oatmeal with berries",
+            "spoken_at": "2026-09-20T07:10:00Z",
+            "captured_at": "2026-09-20T07:27:00Z",
+            "utterance": {
+              "utterance_id": "utt-0042",
+              "revision": 1,
+              "text": "oatmeal with berries",
+              "speaker": "subject",
+              "spoken_at": "2026-09-20T07:10:00Z"
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+              "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "meal": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation",
+                  "ob://human/gastrointestinal"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:twin-app",
+              "source_kind": "conversational_agent",
+              "source_version": "twinsuite-adapter/0.3.0"
+            },
+            "extractor_source": {
+              "source_id": "urn:twinsuite:source:extractor:meal",
+              "source_kind": "model_host",
+              "source_version": "twinsuite-extractor/0.1.0"
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "twinsuite:utt-0042:rev:1:confirmed",
+              "scope": [
+                "ob://human/metabolic/glucose_regulation",
+                "ob://human/gastrointestinal"
+              ],
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:10:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:27:00Z",
+                "clock": {
+                  "status": "unknown"
+                }
+              },
+              "measurement": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "value_type": "text",
+                "value": "oatmeal with berries",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+                "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              },
+              "source": {
+                "source_id": "urn:twinsuite:source:conversation:twin-app",
+                "source_kind": "conversational_agent",
+                "source_version": "twinsuite-adapter/0.3.0",
+                "record_ref": "urn:invivo:conversation:utt-0042:rev:1",
+                "record_digest": "sha256:b51c0eb4fb7d4480d19bfd2f868dddbe9c325f43ea637c83f26188c41f546a27"
+              },
+              "origin": "conversation",
+              "epistemic_status": "reported",
+              "quality": {
+                "status": "unknown",
+                "flags": [
+                  "user_confirmed"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "conversation-inferred",
+          "mapper": "twinsuite.candidate",
+          "parent": "conversation-said",
+          "record": {
+            "utterance_id": "utt-0042",
+            "utterance_revision": 1,
+            "assertion": "inferred",
+            "speaker": "subject",
+            "kind": "meal",
+            "text": "oatmeal with berries",
+            "spoken_at": "2026-09-20T07:10:00Z",
+            "captured_at": "2026-09-20T07:26:00Z",
+            "utterance": {
+              "utterance_id": "utt-0042",
+              "revision": 1,
+              "text": "oatmeal with berries",
+              "speaker": "subject",
+              "spoken_at": "2026-09-20T07:10:00Z"
+            },
+            "extractor": {
+              "id": "urn:twinsuite:transform:meal-category",
+              "version": "0.1.0"
+            },
+            "inferred_measurement": {
+              "domain": "meal",
+              "code": {
+                "system": "https://openbody.dev/codes/whole-person",
+                "code": "meal-category",
+                "display": "Meal category"
+              },
+              "value_type": "categorical",
+              "value": "high_carbohydrate",
+              "unit": null
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+              "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "meal": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation",
+                  "ob://human/gastrointestinal"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:twin-app",
+              "source_kind": "conversational_agent",
+              "source_version": "twinsuite-adapter/0.3.0"
+            },
+            "extractor_source": {
+              "source_id": "urn:twinsuite:source:extractor:meal",
+              "source_kind": "model_host",
+              "source_version": "twinsuite-extractor/0.1.0"
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "twinsuite:utt-0042:rev:1:inferred",
+              "scope": [
+                "ob://human/metabolic/glucose_regulation",
+                "ob://human/gastrointestinal"
+              ],
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:10:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:26:00Z",
+                "clock": {
+                  "status": "unknown"
+                }
+              },
+              "measurement": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-category",
+                  "display": "Meal category"
+                },
+                "value_type": "categorical",
+                "value": "high_carbohydrate",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+                "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              },
+              "source": {
+                "source_id": "urn:twinsuite:source:extractor:meal",
+                "source_kind": "model_host",
+                "source_version": "twinsuite-extractor/0.1.0",
+                "record_ref": "urn:twinsuite:extraction:utt-0042:rev:1",
+                "record_digest": "sha256:5efdda15e0e50177b3bc5894dd75b5afd9c9f3d832be4360ba730b0749b876d0"
+              },
+              "origin": "model_transform",
+              "epistemic_status": "inferred",
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              },
+              "derivation": {
+                "transform_id": "urn:twinsuite:transform:meal-category",
+                "transform_version": "0.1.0",
+                "parents": [
+                  {
+                    "observation_id": "twinsuite:utt-0042:rev:1:said",
+                    "envelope_digest": "sha256:0f2ad8ca4d06112769de8bed59978b025e6d7fd6549368b2aab2852136bbdb8b"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "conversation-ambiguous-speaker",
+          "mapper": "twinsuite.candidate",
+          "record": {
+            "utterance_id": "utt-0043",
+            "utterance_revision": 1,
+            "assertion": "said",
+            "speaker": "ambiguous",
+            "kind": "symptom",
+            "text": "she gets headaches",
+            "spoken_at": "2026-09-20T07:10:00Z",
+            "captured_at": "2026-09-20T07:25:00Z",
+            "utterance": {
+              "utterance_id": "utt-0043",
+              "revision": 1,
+              "text": "she gets headaches",
+              "speaker": "ambiguous",
+              "spoken_at": "2026-09-20T07:10:00Z"
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+              "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "meal": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation",
+                  "ob://human/gastrointestinal"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:twin-app",
+              "source_kind": "conversational_agent",
+              "source_version": "twinsuite-adapter/0.3.0"
+            },
+            "extractor_source": {
+              "source_id": "urn:twinsuite:source:extractor:meal",
+              "source_kind": "model_host",
+              "source_version": "twinsuite-extractor/0.1.0"
+            }
+          },
+          "expect": {
+            "refused": "speaker_not_subject"
+          }
+        },
+        {
+          "name": "conversation-correction-superseded",
+          "mapper": "twinsuite.candidate",
+          "record": {
+            "utterance_id": "utt-0044",
+            "utterance_revision": 1,
+            "assertion": "said",
+            "speaker": "subject",
+            "kind": "symptom",
+            "text": "I have a headache",
+            "spoken_at": "2026-09-20T07:12:00Z",
+            "captured_at": "2026-09-20T07:25:00Z",
+            "utterance": {
+              "utterance_id": "utt-0044",
+              "revision": 1,
+              "text": "I have a headache",
+              "speaker": "subject",
+              "spoken_at": "2026-09-20T07:12:00Z"
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+              "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "meal": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation",
+                  "ob://human/gastrointestinal"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:twin-app",
+              "source_kind": "conversational_agent",
+              "source_version": "twinsuite-adapter/0.3.0"
+            },
+            "extractor_source": {
+              "source_id": "urn:twinsuite:source:extractor:meal",
+              "source_kind": "model_host",
+              "source_version": "twinsuite-extractor/0.1.0"
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "twinsuite:utt-0044:rev:1:said",
+              "scope": [
+                "ob://human/whole_body"
+              ],
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:12:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:25:00Z",
+                "clock": {
+                  "status": "unknown"
+                }
+              },
+              "measurement": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "value_type": "text",
+                "value": "I have a headache",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+                "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              },
+              "source": {
+                "source_id": "urn:twinsuite:source:conversation:twin-app",
+                "source_kind": "conversational_agent",
+                "source_version": "twinsuite-adapter/0.3.0",
+                "record_ref": "urn:invivo:conversation:utt-0044:rev:1",
+                "record_digest": "sha256:915a0b6d2f85634c6c5b32c57381455b26a302db3e40d6837ae74ba8310175d9"
+              },
+              "origin": "conversation",
+              "epistemic_status": "reported",
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              }
+            }
+          }
+        },
+        {
+          "name": "conversation-correction-current",
+          "mapper": "twinsuite.candidate",
+          "record": {
+            "utterance_id": "utt-0044",
+            "utterance_revision": 2,
+            "assertion": "said",
+            "speaker": "subject",
+            "kind": "symptom",
+            "text": "I have a mild headache",
+            "spoken_at": "2026-09-20T07:12:00Z",
+            "captured_at": "2026-09-20T07:28:00Z",
+            "utterance": {
+              "utterance_id": "utt-0044",
+              "revision": 2,
+              "text": "I have a mild headache",
+              "speaker": "subject",
+              "spoken_at": "2026-09-20T07:12:00Z"
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+              "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "meal": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation",
+                  "ob://human/gastrointestinal"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:twin-app",
+              "source_kind": "conversational_agent",
+              "source_version": "twinsuite-adapter/0.3.0"
+            },
+            "extractor_source": {
+              "source_id": "urn:twinsuite:source:extractor:meal",
+              "source_kind": "model_host",
+              "source_version": "twinsuite-extractor/0.1.0"
+            }
+          },
+          "expect": {
+            "envelope": {
+              "schema_version": "openbody.whole-person-observation/1.0",
+              "subject": "subject:openbody:wp-0001",
+              "subject_binding": {
+                "status": "verified",
+                "binding_ref": "urn:openbody:binding:wp-0001:v1",
+                "issuer": "https://invivo.example/identity",
+                "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+                "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+              },
+              "observation_id": "twinsuite:utt-0044:rev:2:said",
+              "scope": [
+                "ob://human/whole_body"
+              ],
+              "context_level": "individual",
+              "time": {
+                "effective_start": "2026-09-20T07:12:00Z",
+                "effective_end": null,
+                "ingested_at": "2026-09-20T07:28:00Z",
+                "clock": {
+                  "status": "unknown"
+                }
+              },
+              "measurement": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "value_type": "text",
+                "value": "I have a mild headache",
+                "unit": null
+              },
+              "missingness": {
+                "status": "present"
+              },
+              "uncertainty": {
+                "status": "unknown"
+              },
+              "consent": {
+                "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+                "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+                "purposes": [
+                  "personal_state",
+                  "encounter_context"
+                ],
+                "granted_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2027-01-01T00:00:00Z"
+              },
+              "source": {
+                "source_id": "urn:twinsuite:source:conversation:twin-app",
+                "source_kind": "conversational_agent",
+                "source_version": "twinsuite-adapter/0.3.0",
+                "record_ref": "urn:invivo:conversation:utt-0044:rev:2",
+                "record_digest": "sha256:785a2a6d89acdc91155efd869e4dac9b722b7b3c0d9982d635bb82a766fe9993"
+              },
+              "origin": "conversation",
+              "epistemic_status": "reported",
+              "quality": {
+                "status": "unknown",
+                "flags": []
+              }
+            }
+          }
+        },
+        {
+          "name": "conversation-medication",
+          "mapper": "twinsuite.candidate",
+          "record": {
+            "utterance_id": "utt-0045",
+            "utterance_revision": 1,
+            "assertion": "said",
+            "speaker": "subject",
+            "kind": "medication",
+            "text": "took metformin",
+            "spoken_at": "2026-09-20T07:10:00Z",
+            "captured_at": "2026-09-20T07:25:00Z",
+            "utterance": {
+              "utterance_id": "utt-0045",
+              "revision": 1,
+              "text": "took metformin",
+              "speaker": "subject",
+              "spoken_at": "2026-09-20T07:10:00Z"
+            }
+          },
+          "context": {
+            "subject": "subject:openbody:wp-0001",
+            "subject_binding": {
+              "status": "verified",
+              "binding_ref": "urn:openbody:binding:wp-0001:v1",
+              "issuer": "https://invivo.example/identity",
+              "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+              "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+            },
+            "consent": {
+              "consent_ref": "urn:invivo:consent:wp-0001:conversation",
+              "authority_ref": "urn:invivo:grant:wp-0001:conversation",
+              "purposes": [
+                "personal_state",
+                "encounter_context"
+              ],
+              "granted_at": "2026-01-01T00:00:00Z",
+              "expires_at": "2027-01-01T00:00:00Z"
+            },
+            "concepts": {
+              "meal": {
+                "domain": "meal",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "meal-description",
+                  "display": "Meal description"
+                },
+                "scope": [
+                  "ob://human/metabolic/glucose_regulation",
+                  "ob://human/gastrointestinal"
+                ]
+              },
+              "symptom": {
+                "domain": "symptom",
+                "code": {
+                  "system": "https://openbody.dev/codes/whole-person",
+                  "code": "symptom-description",
+                  "display": "Symptom description"
+                },
+                "scope": [
+                  "ob://human/whole_body"
+                ]
+              }
+            },
+            "clock_status": "unknown",
+            "source": {
+              "source_id": "urn:twinsuite:source:conversation:twin-app",
+              "source_kind": "conversational_agent",
+              "source_version": "twinsuite-adapter/0.3.0"
+            },
+            "extractor_source": {
+              "source_id": "urn:twinsuite:source:extractor:meal",
+              "source_kind": "model_host",
+              "source_version": "twinsuite-extractor/0.1.0"
+            }
+          },
+          "expect": {
+            "refused": "domain_unsupported"
+          }
+        }
+      ]
+    }
+  ],
+  "assembly": {
+    "as_of": "2026-09-20T08:00:00Z",
+    "purpose": "encounter_context",
+    "revoked": [
+      "urn:invivo:conversation:utt-0044:rev:1"
+    ],
+    "expect": {
+      "exclusions": {
+        "twinsuite:utt-0044:rev:1:said": "source_revoked"
+      },
+      "entries": [
+        {
+          "domain": "body_temperature",
+          "code": "8310-5",
+          "resolution": "stale_only",
+          "basis": [],
+          "blockers": [
+            "resolution_stale_only"
+          ]
+        },
+        {
+          "domain": "glucose",
+          "code": "41653-7",
+          "resolution": "unresolved_conflict",
+          "basis": [
+            "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a1:rev:2026-09-20T07:41:10Z",
+            "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a2:rev:2026-09-20T07:46:00Z"
+          ],
+          "blockers": [
+            "clock_unknown",
+            "quality_not_acceptable",
+            "resolution_unresolved_conflict",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "meal",
+          "code": "meal-category",
+          "dimension": "meal_category",
+          "resolution": "single_source",
+          "basis": [
+            "twinsuite:utt-0042:rev:1:inferred"
+          ],
+          "blockers": [
+            "clock_unknown",
+            "model_output_requires_receipt",
+            "quality_not_acceptable",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "meal",
+          "code": "meal-description",
+          "resolution": "single_source",
+          "basis": [
+            "twinsuite:utt-0042:rev:1:confirmed",
+            "twinsuite:utt-0042:rev:1:said"
+          ],
+          "blockers": [
+            "clock_unknown",
+            "quality_not_acceptable",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "symptom",
+          "code": "267036007",
+          "dimension": "presence",
+          "resolution": "single_source",
+          "basis": [
+            "providehr:fact:fact-0003"
+          ],
+          "blockers": [
+            "quality_not_acceptable",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "symptom",
+          "code": "29857009",
+          "dimension": "presence",
+          "resolution": "single_source",
+          "basis": [
+            "providehr:fact:fact-0002"
+          ],
+          "blockers": [
+            "quality_not_acceptable",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "symptom",
+          "code": "404640003",
+          "dimension": "presence",
+          "resolution": "single_source",
+          "basis": [
+            "providehr:fact:fact-0001"
+          ],
+          "blockers": [
+            "quality_not_acceptable",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "symptom",
+          "code": "404640003",
+          "dimension": "severity",
+          "resolution": "single_source",
+          "basis": [
+            "invivo:timeline:5f0c1a52-0b1e-4c11-9d7e-0000000000a3:rev:2026-09-20T07:31:00Z"
+          ],
+          "blockers": [
+            "quality_not_acceptable",
+            "uncertainty_unknown"
+          ]
+        },
+        {
+          "domain": "symptom",
+          "code": "symptom-description",
+          "resolution": "single_source",
+          "basis": [
+            "twinsuite:utt-0044:rev:2:said"
+          ],
+          "blockers": [
+            "clock_unknown",
+            "quality_not_acceptable",
+            "uncertainty_unknown"
+          ]
+        }
+      ],
+      "snapshot_digest": "sha256:21cd532ca4ad91a20d223170981902901f033c540074f39021f300e6c899c783"
+    }
+  },
+  "terminology": {
+    "description": "Producers own the source-to-contract terminology tables below. OpenBody owns the contract vocabulary (domains, units, registry/whole-person-value-sets.json) and the mapping requirements. Every table here is synthetic and has not been reviewed. It stays labelled synthetic_unreviewed until its owner reviews it and records a review_ref. The checker fails when a context table is not labelled.",
+    "tables": [
+      {
+        "consumer": "metabolog",
+        "table": "concepts",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "metabolog",
+        "table": "symptom_codes",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "metabolog",
+        "table": "severity_values",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "metabolog",
+        "table": "loinc_domains",
+        "owner": "Metabolog/InVivo",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "providehr",
+        "table": "concept_codes",
+        "owner": "ProvidEHR",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "providehr",
+        "table": "purpose_map",
+        "owner": "ProvidEHR",
+        "status": "synthetic_unreviewed"
+      },
+      {
+        "consumer": "twinsuite",
+        "table": "concepts",
+        "owner": "TwinSuite (custody InVivo)",
+        "status": "synthetic_unreviewed"
+      }
+    ]
+  }
+}

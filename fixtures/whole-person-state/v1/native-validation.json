@@ -1,0 +1,1137 @@
+{
+  "vocabulary_version": "openbody.whole-person-native-validation/1.0",
+  "description": "The exact JSON Schema vocabulary that a native validator must implement to validate the whole-person contract v1 schemas without weakening the contract identity (owner decision 2 on #30). There is no flattened or native-subset profile. A validator that does not implement every item below MUST refuse to validate (fail closed). It must not skip the constraint.",
+  "dialect": "https://json-schema.org/draft/2020-12/schema",
+  "schemas": [
+    {
+      "id": "https://openbody.dev/schemas/whole-person-observation/1.0",
+      "file": "schemas/whole-person-observation.schema.json"
+    },
+    {
+      "id": "https://openbody.dev/schemas/whole-person-state/1.0",
+      "file": "schemas/whole-person-state.schema.json"
+    }
+  ],
+  "required_vocabulary": {
+    "keywords": [
+      "$defs",
+      "$id",
+      "$ref",
+      "$schema",
+      "additionalProperties",
+      "allOf",
+      "anyOf",
+      "const",
+      "description",
+      "else",
+      "enum",
+      "exclusiveMaximum",
+      "exclusiveMinimum",
+      "format",
+      "if",
+      "items",
+      "maxLength",
+      "minItems",
+      "minLength",
+      "minimum",
+      "not",
+      "oneOf",
+      "pattern",
+      "properties",
+      "required",
+      "then",
+      "title",
+      "type",
+      "uniqueItems"
+    ],
+    "formats": [
+      "date-time",
+      "uri"
+    ],
+    "refs": [
+      "external",
+      "local"
+    ]
+  },
+  "per_schema": {
+    "whole-person-observation": {
+      "keywords": [
+        "$defs",
+        "$id",
+        "$ref",
+        "$schema",
+        "additionalProperties",
+        "allOf",
+        "anyOf",
+        "const",
+        "description",
+        "else",
+        "enum",
+        "exclusiveMaximum",
+        "exclusiveMinimum",
+        "format",
+        "if",
+        "items",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "minimum",
+        "not",
+        "oneOf",
+        "pattern",
+        "properties",
+        "required",
+        "then",
+        "title",
+        "type",
+        "uniqueItems"
+      ],
+      "formats": [
+        "date-time",
+        "uri"
+      ],
+      "refs": [
+        "local"
+      ]
+    },
+    "whole-person-state": {
+      "keywords": [
+        "$defs",
+        "$id",
+        "$ref",
+        "$schema",
+        "additionalProperties",
+        "const",
+        "description",
+        "enum",
+        "format",
+        "items",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "minimum",
+        "oneOf",
+        "pattern",
+        "properties",
+        "required",
+        "title",
+        "type",
+        "uniqueItems"
+      ],
+      "formats": [
+        "date-time",
+        "uri"
+      ],
+      "refs": [
+        "external",
+        "local"
+      ]
+    }
+  },
+  "semantics": {
+    "annotations": "$schema, $id, title and description have no validation effect, but they must be recognized. $schema must equal the dialect above.",
+    "$ref": "local: a JSON Pointer fragment into the same document ('#/$defs/...', '#/properties/...'). external: exactly the absolute id https://openbody.dev/schemas/whole-person-observation/1.0 plus a pointer fragment, resolved against the bundled observation schema file. No network retrieval. Any other external reference is refused.",
+    "type": "'integer' accepts any number with a zero fractional part (so 300.0 is an integer, per JSON Schema). 'number' accepts integers and floats. A type array such as ['string','null'] means any of them.",
+    "const/enum": "JSON equality: numbers compare by mathematical value (1 equals 1.0), and strings compare by code point with no normalization.",
+    "uniqueItems": "No two items are JSON-equal (deep equality with the numeric rule above; object key order is irrelevant).",
+    "pattern": "ECMA-262 regular expression, matched anywhere in the string (unanchored search). The v1 patterns are anchored. Every pattern used is listed in 'patterns'.",
+    "minLength/maxLength": "Counted in Unicode scalar values (code points), not UTF-16 code units or bytes.",
+    "minItems": "The number of array items, at least the given count.",
+    "required/properties/items": "Standard 2020-12 applicator and assertion semantics. 'items' applies to every array item (no prefixItems in v1).",
+    "minimum/exclusiveMinimum/exclusiveMaximum": "Numeric comparison by mathematical value.",
+    "if/then/else": "If 'if' validates, 'then' applies; otherwise 'else' applies. A missing branch is always valid. The result of 'if' itself never fails the instance.",
+    "allOf/anyOf/oneOf/not": "Standard: all / at least one / exactly one subschema validates; not inverts.",
+    "additionalProperties": "false: any property not listed in 'properties' fails. A schema: additional properties must validate against it.",
+    "format:date-time": "RFC 3339 section 5.6 date-time with a mandatory offset (Z or +hh:mm/-hh:mm) and 'T' as separator (lower-case 't' and 'z' are allowed as in RFC 3339). Calendar-valid dates. Seconds 00-59: second 60 is refused (the reference refuses leap seconds, and a native validator must match it). Any number of fraction digits. Formats are assertions, not annotations: an invalid value fails.",
+    "format:uri": "RFC 3986 'URI' production: an absolute URI with a scheme, optional query and fragment, and no whitespace. A relative or network-path reference is refused. Percent-encoding is allowed. Formats are assertions.",
+    "time_comparison": "Not a schema keyword, but required for identical assembly: the assembler compares date-times as instants at microsecond precision, and fraction digits beyond six are truncated."
+  },
+  "patterns": [
+    "^ob://[a-z0-9._-]+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$",
+    "^sha256:[a-f0-9]{64}$"
+  ],
+  "fail_closed": [
+    "A validator MUST refuse to load a schema that uses a keyword, format or reference kind outside required_vocabulary.",
+    "A validator MUST NOT treat a format it cannot check as an annotation.",
+    "A validator that cannot implement an item MUST report the instance as not validated. It MUST NOT report it as valid.",
+    "The Python reference applies the same rule (whole_person._require_supported_vocabulary, error code schema_vocabulary_unsupported)."
+  ],
+  "cases": {
+    "description": "Each case applies RFC 6901 pointer operations ('set' / 'unset') to a base instance from the corpus, then states whether the named schema must accept it. 'exercises' names the keyword under test. A native validator must reproduce every 'valid' value.",
+    "observation": [
+      {
+        "name": "baseline-envelope-valid",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "all"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [],
+        "valid": true
+      },
+      {
+        "name": "baseline-lab-validated-valid",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "allOf",
+          "if",
+          "then",
+          "else",
+          "not"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-lab-glucose-001"
+        },
+        "operations": [],
+        "valid": true
+      },
+      {
+        "name": "baseline-derived-valid",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "allOf",
+          "if",
+          "then"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-hrv-baseline-001"
+        },
+        "operations": [],
+        "valid": true
+      },
+      {
+        "name": "baseline-non-wear-valid",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "if",
+          "else"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-hr-a-002"
+        },
+        "operations": [],
+        "valid": true
+      },
+      {
+        "name": "baseline-interval-uncertainty-valid",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "if",
+          "then",
+          "anyOf",
+          "exclusiveMinimum",
+          "exclusiveMaximum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-hr-a-001"
+        },
+        "operations": [],
+        "valid": true
+      },
+      {
+        "name": "additional-property-refused",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "additionalProperties"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/extra",
+            "value": 1
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "required-missing",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "required"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "unset",
+            "path": "/consent"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "const-schema-version",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "const"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/schema_version",
+            "value": "openbody.whole-person-observation/1.1"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "enum-origin",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "enum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/origin",
+            "value": "wearable"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "type-value-string-for-quantity",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "allOf",
+          "if",
+          "then",
+          "type"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/measurement/value",
+            "value": "6.1"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "type-unit-must-be-null-for-categorical",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "allOf",
+          "if",
+          "else",
+          "type"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-symptom-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/measurement/unit",
+            "value": "1"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "pattern-digest-uppercase-hex",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "pattern"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/record_digest",
+            "value": "sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "pattern-coordinate",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "pattern"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/scope/0",
+            "value": "ob:/human/x"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "minLength-empty-version",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "minLength"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/source_version",
+            "value": ""
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "maxLength-source-version",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "maxLength"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/source_version",
+            "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "maxLength-counts-code-points",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "maxLength"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/source_version",
+            "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+          }
+        ],
+        "valid": true
+      },
+      {
+        "name": "minItems-empty-scope",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "minItems"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/scope",
+            "value": []
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "uniqueItems-scope",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "uniqueItems"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/scope",
+            "value": [
+              "ob://human/metabolic/glucose_regulation",
+              "ob://human/metabolic/glucose_regulation"
+            ]
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "uniqueItems-flags",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "uniqueItems"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/quality/flags",
+            "value": [
+              "a",
+              "a"
+            ]
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "minimum-negative-sd",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "minimum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/uncertainty",
+            "value": {
+              "status": "quantified",
+              "method": "m",
+              "standard_deviation": -1
+            }
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "minimum-zero-sd-allowed",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "minimum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/uncertainty",
+            "value": {
+              "status": "quantified",
+              "method": "m",
+              "standard_deviation": 0
+            }
+          }
+        ],
+        "valid": true
+      },
+      {
+        "name": "exclusiveMinimum-level-zero",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "exclusiveMinimum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-hr-a-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/uncertainty/interval/level",
+            "value": 0
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "exclusiveMaximum-level-one",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "exclusiveMaximum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-hr-a-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/uncertainty/interval/level",
+            "value": 1
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "exclusiveMaximum-level-one-float",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "exclusiveMaximum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-hr-a-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/uncertainty/interval/level",
+            "value": 1.0
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "anyOf-quantified-needs-sd-or-interval",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "if",
+          "then",
+          "anyOf"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/uncertainty",
+            "value": {
+              "status": "quantified",
+              "method": "m"
+            }
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "then-required-method",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "if",
+          "then",
+          "required"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "unset",
+            "path": "/uncertainty/method"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "not-anyOf-unknown-with-sd",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "if",
+          "else",
+          "not",
+          "anyOf"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-hr-b-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/uncertainty/standard_deviation",
+            "value": 0.2
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "else-not-required-derivation",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "allOf",
+          "if",
+          "else",
+          "not",
+          "required"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/derivation",
+            "value": {
+              "transform_id": "urn:x:t",
+              "transform_version": "1",
+              "parents": [
+                {
+                  "observation_id": "wp-cgm-002",
+                  "envelope_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+                }
+              ]
+            }
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "then-required-validation",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "allOf",
+          "if",
+          "then",
+          "required"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-lab-glucose-001"
+        },
+        "operations": [
+          {
+            "op": "unset",
+            "path": "/validation"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "oneOf-effective-end-null-or-timestamp",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "oneOf"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/time/effective_end",
+            "value": 5
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-date-time-no-offset",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:date-time"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/time/ingested_at",
+            "value": "2026-09-20T07:55:00"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-date-time-space-separator",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:date-time"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/time/ingested_at",
+            "value": "2026-09-20 07:55:00Z"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-date-time-invalid-day",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:date-time"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/time/ingested_at",
+            "value": "2026-02-30T07:55:00Z"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-date-time-leap-second-refused",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:date-time"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/time/ingested_at",
+            "value": "2026-12-31T23:59:60Z"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-date-time-offset-and-fraction",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:date-time"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/time/ingested_at",
+            "value": "2026-09-20T09:55:00.250+02:00"
+          }
+        ],
+        "valid": true
+      },
+      {
+        "name": "format-date-time-lowercase-t-z",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:date-time"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/time/ingested_at",
+            "value": "2026-09-20t07:55:00z"
+          }
+        ],
+        "valid": true
+      },
+      {
+        "name": "format-uri-relative-refused",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:uri"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/source_id",
+            "value": "sensor-7731"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-uri-network-path-refused",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:uri"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/source_id",
+            "value": "//host/sensor-7731"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-uri-space-refused",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:uri"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/source_id",
+            "value": "urn:invivo:source:cgm:sensor 7731"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "format-uri-urn-percent-encoded",
+        "schema": "https://openbody.dev/schemas/whole-person-observation/1.0",
+        "exercises": [
+          "format:uri"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/inputs.json",
+          "observation_id": "wp-cgm-001"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/source/source_id",
+            "value": "urn:providehr:source:tenant%3A1:ctrl:sys:a:c"
+          }
+        ],
+        "valid": true
+      }
+    ],
+    "state": [
+      {
+        "name": "state-baseline-valid",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "all"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [],
+        "valid": true
+      },
+      {
+        "name": "state-external-ref-enum",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "$ref:external",
+          "enum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/entries/0/candidates/0/origin",
+            "value": "wearable"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "state-external-ref-source-additional-property",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "$ref:external",
+          "additionalProperties"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/entries/0/candidates/0/source/extra",
+            "value": "x"
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "state-uniqueItems-revocations",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "uniqueItems"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/revocations_applied",
+            "value": [
+              "urn:x:a",
+              "urn:x:a"
+            ]
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "state-format-uri-revocation",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "format:uri"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/revocations_applied",
+            "value": [
+              "not a uri"
+            ]
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "state-key-dimension-empty",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "minLength"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/entries/0/key/dimension",
+            "value": ""
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "state-exclusion-code-enum",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "enum"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/exclusions",
+            "value": [
+              {
+                "observation_id": "x",
+                "envelope_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+                "code": "guessed"
+              }
+            ]
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "state-integer-type",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "type:integer"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/policy/clock_skew_tolerance_seconds",
+            "value": 1.5
+          }
+        ],
+        "valid": false
+      },
+      {
+        "name": "state-integer-type-accepts-integral-float",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "type:integer"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/policy/clock_skew_tolerance_seconds",
+            "value": 300.0
+          }
+        ],
+        "valid": true
+      },
+      {
+        "name": "state-contract-value-sets-version-const",
+        "schema": "https://openbody.dev/schemas/whole-person-state/1.0",
+        "exercises": [
+          "const"
+        ],
+        "base": {
+          "file": "fixtures/whole-person-state/v1/snapshot.golden.json"
+        },
+        "operations": [
+          {
+            "op": "set",
+            "path": "/contract/value_sets_version",
+            "value": "x"
+          }
+        ],
+        "valid": false
+      }
+    ]
+  }
+}

@@ -88,6 +88,7 @@ See [`OVERSIGHT.md`](OVERSIGHT.md) for the clinical multi-agent oversight profil
 - [`docs/LONGITUDINAL_QUERY_RESEARCH.md`](docs/LONGITUDINAL_QUERY_RESEARCH.md) — protocol-0.2 deterministic longitudinal-query implementation and WearableQA evaluation plan; not part of the frozen 0.1 wire contract.
 - [`results/wearableqa-signal-summary-v0.1/REPORT.md`](results/wearableqa-signal-summary-v0.1/REPORT.md) — coverage-aware deterministic result for the reviewed WearableQA `signal_summary` slice.
 - [`docs/INTERVENTION_OBSERVATIONS.md`](docs/INTERVENTION_OBSERVATIONS.md) — source-observation, disclosure, missingness, and raw-signal boundaries for therapy apps.
+- [`docs/WHOLE_PERSON_STATE.md`](docs/WHOLE_PERSON_STATE.md) — source-neutral whole-person observation envelope, deterministic state snapshot, and conformance corpus (issue #30).
 - [`tools/validate_openbody.py`](tools/validate_openbody.py) — schema + protocol-invariant conformance validator.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — running a host on your own server: modes, container/systemd assets, and the operator responsibilities the reference host deliberately leaves open.
 - [`OVERSIGHT.md`](OVERSIGHT.md) — clinical multi-agent oversight architecture and protocol-0.2 design record.
