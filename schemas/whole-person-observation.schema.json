@@ -1,0 +1,688 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/whole-person-observation/1.0",
+  "title": "OpenBody whole-person observation envelope",
+  "description": "A source-neutral, reference-oriented envelope for one biological, wearable, behavioral, environmental or healthcare observation. It is an input to a whole-person state snapshot. It is not a clinical record, a clinical assertion or an OpenBody-derived BodyState.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observation_id",
+    "subject",
+    "subject_binding",
+    "scope",
+    "source",
+    "origin",
+    "epistemic_status",
+    "context_level",
+    "time",
+    "measurement",
+    "missingness",
+    "uncertainty",
+    "quality",
+    "consent"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "openbody.whole-person-observation/1.0"
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "subject": {
+      "description": "Pseudonymous OpenBody subject. Equality with another system's identifier is never inferred; see subject_binding.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "subject_binding": {
+      "$ref": "#/$defs/SubjectBinding"
+    },
+    "scope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/Coordinate"
+      }
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "origin": {
+      "description": "Where the value came from. Orthogonal to epistemic_status.",
+      "enum": [
+        "device_sensor",
+        "clinical_record",
+        "laboratory",
+        "self_report",
+        "conversation",
+        "environmental_feed",
+        "model_transform"
+      ]
+    },
+    "epistemic_status": {
+      "description": "What kind of knowledge the value is. Import or signature alone is never clinician validation.",
+      "enum": [
+        "observed",
+        "reported",
+        "imported",
+        "derived",
+        "inferred",
+        "imputed",
+        "clinician_validated"
+      ]
+    },
+    "context_level": {
+      "description": "Individual physiology, or household/community context (for example air quality) that must not be read as a personal measurement.",
+      "enum": [
+        "individual",
+        "household",
+        "community"
+      ]
+    },
+    "time": {
+      "$ref": "#/$defs/Time"
+    },
+    "measurement": {
+      "$ref": "#/$defs/Measurement"
+    },
+    "missingness": {
+      "$ref": "#/$defs/Missingness"
+    },
+    "uncertainty": {
+      "$ref": "#/$defs/Uncertainty"
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    },
+    "consent": {
+      "$ref": "#/$defs/Consent"
+    },
+    "derivation": {
+      "$ref": "#/$defs/Derivation"
+    },
+    "clinical_link": {
+      "$ref": "#/$defs/ClinicalLink"
+    },
+    "validation": {
+      "$ref": "#/$defs/Validation"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "epistemic_status": {
+            "enum": ["derived", "inferred", "imputed"]
+          }
+        }
+      },
+      "then": {
+        "required": ["derivation"]
+      },
+      "else": {
+        "not": {
+          "required": ["derivation"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "epistemic_status": {
+            "const": "clinician_validated"
+          }
+        }
+      },
+      "then": {
+        "required": ["validation"]
+      },
+      "else": {
+        "not": {
+          "required": ["validation"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "origin": {
+            "const": "clinical_record"
+          }
+        }
+      },
+      "then": {
+        "required": ["clinical_link"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "origin": {
+            "const": "model_transform"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "epistemic_status": {
+            "enum": ["derived", "inferred", "imputed"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "epistemic_status": {
+            "const": "reported"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "origin": {
+            "enum": ["self_report", "conversation"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "missingness": {
+            "properties": {
+              "status": {
+                "const": "present"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "measurement": {
+            "required": ["value"],
+            "properties": {
+              "value": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "measurement": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "unit": {
+                "type": "null"
+              }
+            }
+          },
+          "uncertainty": {
+            "properties": {
+              "status": {
+                "const": "not_applicable"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "URI": {
+      "type": "string",
+      "format": "uri"
+    },
+    "Coordinate": {
+      "type": "string",
+      "pattern": "^ob://[a-z0-9._-]+/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$"
+    },
+    "SubjectBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "binding_ref", "issuer", "revocation_ref", "proof_digest"],
+      "properties": {
+        "status": {
+          "const": "verified"
+        },
+        "binding_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "issuer": {
+          "$ref": "#/$defs/URI"
+        },
+        "revocation_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "proof_digest": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "Source": {
+      "description": "Exact, immutable source identity. record_digest names the source record as fetched; OpenBody does not hold the raw record.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_kind", "source_version", "record_ref", "record_digest"],
+      "properties": {
+        "source_id": {
+          "$ref": "#/$defs/URI"
+        },
+        "source_kind": {
+          "enum": [
+            "ehr",
+            "laboratory_system",
+            "cgm_device",
+            "wearable",
+            "phone_app",
+            "conversational_agent",
+            "environmental_service",
+            "model_host"
+          ]
+        },
+        "source_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "device": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model", "firmware"],
+          "properties": {
+            "model": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "firmware": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        },
+        "record_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "record_digest": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "Time": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effective_start", "effective_end", "ingested_at", "clock"],
+      "properties": {
+        "effective_start": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "effective_end": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ingested_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "clock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "description": "synchronized: source clock trusted; corrected: effective times already include correction_seconds; unknown: drift not assessed.",
+              "enum": ["synchronized", "corrected", "unknown"]
+            },
+            "correction_seconds": {
+              "type": "number"
+            },
+            "device_reported_start": {
+              "$ref": "#/$defs/Timestamp"
+            }
+          },
+          "if": {
+            "properties": {
+              "status": {
+                "const": "corrected"
+              }
+            }
+          },
+          "then": {
+            "required": ["correction_seconds", "device_reported_start"]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["correction_seconds"]
+                },
+                {
+                  "required": ["device_reported_start"]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "Measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "code", "value_type", "value", "unit"],
+      "properties": {
+        "domain": {
+          "enum": [
+            "glucose",
+            "sleep",
+            "heart_rate_variability",
+            "heart_rate",
+            "body_temperature",
+            "activity",
+            "laboratory",
+            "symptom",
+            "meal",
+            "environment"
+          ]
+        },
+        "code": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["system", "code", "display"],
+          "properties": {
+            "system": {
+              "$ref": "#/$defs/URI"
+            },
+            "code": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "display": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            }
+          }
+        },
+        "value_type": {
+          "enum": ["quantity", "categorical", "text"]
+        },
+        "value": {
+          "type": ["number", "string", "null"]
+        },
+        "unit": {
+          "description": "UCUM unit for quantities; null otherwise.",
+          "type": ["string", "null"],
+          "minLength": 1,
+          "maxLength": 50
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "value_type": {
+                "const": "quantity"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": ["number", "null"]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": ["string", "null"]
+              },
+              "unit": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Missingness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "description": "non_wear is distinct from a zero value and from not_measured; withheld means the source chose not to disclose.",
+          "enum": ["present", "missing", "non_wear", "not_measured", "withheld"]
+        }
+      }
+    },
+    "Uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["quantified", "unknown", "not_applicable"]
+        },
+        "standard_deviation": {
+          "type": "number",
+          "minimum": 0
+        },
+        "interval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lower", "upper", "level"],
+          "properties": {
+            "lower": {
+              "type": "number"
+            },
+            "upper": {
+              "type": "number"
+            },
+            "level": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            }
+          }
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "if": {
+        "properties": {
+          "status": {
+            "const": "quantified"
+          }
+        }
+      },
+      "then": {
+        "required": ["method"],
+        "anyOf": [
+          {
+            "required": ["standard_deviation"]
+          },
+          {
+            "required": ["interval"]
+          }
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": ["standard_deviation"]
+            },
+            {
+              "required": ["interval"]
+            },
+            {
+              "required": ["method"]
+            }
+          ]
+        }
+      }
+    },
+    "Quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "flags"],
+      "properties": {
+        "status": {
+          "enum": ["acceptable", "degraded", "unknown"]
+        },
+        "flags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      }
+    },
+    "Consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["consent_ref", "authority_ref", "purposes", "granted_at", "expires_at"],
+      "properties": {
+        "consent_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "authority_ref": {
+          "description": "A reference to a grant. Possession of the string is not proof of authority.",
+          "$ref": "#/$defs/URI"
+        },
+        "purposes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["personal_state", "encounter_context", "research_simulation"]
+          }
+        },
+        "granted_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "expires_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transform_id", "transform_version", "parents"],
+      "properties": {
+        "transform_id": {
+          "$ref": "#/$defs/URI"
+        },
+        "transform_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "parents": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["observation_id", "envelope_digest"],
+            "properties": {
+              "observation_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "envelope_digest": {
+                "$ref": "#/$defs/Digest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ClinicalLink": {
+      "description": "A reference to an admitted clinical observation. The authoritative record stays with its clinical authority and is not copied.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "admitted_observation_id", "clinical_version_ref", "content_digest"],
+      "properties": {
+        "profile": {
+          "const": "openbody.admitted-observation.v1"
+        },
+        "admitted_observation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "clinical_version_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "content_digest": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "Validation": {
+      "description": "Clinician validation evidenced by a receipt on the existing admission path, never by import or a signature alone.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["validator_ref", "validated_at", "receipt_ref", "receipt_digest"],
+      "properties": {
+        "validator_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "validated_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "receipt_ref": {
+          "$ref": "#/$defs/URI"
+        },
+        "receipt_digest": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    }
+  }
+}

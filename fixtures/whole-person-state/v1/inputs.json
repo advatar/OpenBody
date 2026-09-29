@@ -1,0 +1,1008 @@
+{
+  "description": "Golden whole-person observation inputs (synthetic). Not real-cohort physiology.",
+  "subject": "subject:openbody:wp-0001",
+  "as_of": "2026-09-20T08:00:00Z",
+  "purpose": "encounter_context",
+  "revoked": [],
+  "envelopes": [
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-cgm-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/metabolic/glucose_regulation"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:cgm:sensor-7731",
+        "source_kind": "cgm_device",
+        "source_version": "cgm-app/4.2.0",
+        "record_ref": "urn:invivo:record:cgm:7731:001",
+        "record_digest": "sha256:e8c1dae414e9079595b06ee88c6b03c019dd1624c0b3f0166a5e2336b2687170",
+        "device": {
+          "model": "CGM-G7",
+          "firmware": "2.1.4"
+        }
+      },
+      "origin": "device_sensor",
+      "epistemic_status": "observed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T07:55:00Z",
+        "effective_end": null,
+        "ingested_at": "2026-09-20T07:56:10Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "glucose",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "99504-3",
+          "display": "Glucose [Mass/volume] in Interstitial fluid"
+        },
+        "value_type": "quantity",
+        "value": 6.1,
+        "unit": "mmol/L"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "quantified",
+        "standard_deviation": 0.5,
+        "method": "manufacturer MARD 8.2% applied to reading"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-cgm-002",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/metabolic/glucose_regulation"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:cgm:sensor-7731",
+        "source_kind": "cgm_device",
+        "source_version": "cgm-app/4.2.0",
+        "record_ref": "urn:invivo:record:cgm:7731:002",
+        "record_digest": "sha256:f01fec4c4ef997153e068b1165600cbf2238c3eb7b3c0923684a217648afd059",
+        "device": {
+          "model": "CGM-G7",
+          "firmware": "2.1.4"
+        }
+      },
+      "origin": "device_sensor",
+      "epistemic_status": "observed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T06:40:00Z",
+        "effective_end": null,
+        "ingested_at": "2026-09-20T06:41:05Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "glucose",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "99504-3",
+          "display": "Glucose [Mass/volume] in Interstitial fluid"
+        },
+        "value_type": "quantity",
+        "value": 5.4,
+        "unit": "mmol/L"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "quantified",
+        "standard_deviation": 0.45,
+        "method": "manufacturer MARD 8.2% applied to reading"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-hr-a-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/cardiovascular/heart"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:wearable:ring-a",
+        "source_kind": "wearable",
+        "source_version": "ring-app/3.8.1",
+        "record_ref": "urn:invivo:record:ring-a:hr-001",
+        "record_digest": "sha256:1a674c851032fa5723179d9a916e92df6142de3bcf559410d4faf5ed786121e4",
+        "device": {
+          "model": "Ring-A Gen4",
+          "firmware": "4.9.0"
+        }
+      },
+      "origin": "device_sensor",
+      "epistemic_status": "observed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T07:40:00Z",
+        "effective_end": "2026-09-20T07:45:00Z",
+        "ingested_at": "2026-09-20T07:47:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "heart_rate",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8867-4",
+          "display": "Heart rate"
+        },
+        "value_type": "quantity",
+        "value": 72,
+        "unit": "/min"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "quantified",
+        "interval": {
+          "lower": 69,
+          "upper": 75,
+          "level": 0.95
+        },
+        "method": "PPG beat-detection error model v2"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-hr-b-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/cardiovascular/heart"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:wearable:watch-b",
+        "source_kind": "wearable",
+        "source_version": "watch-os/11.2",
+        "record_ref": "urn:invivo:record:watch-b:hr-001",
+        "record_digest": "sha256:5d78096e717d502bfa5cca31f0c0ca9f47c2b67baadcd9f6b45de9f30a5465b1",
+        "device": {
+          "model": "Watch-B S10",
+          "firmware": "11.2.1"
+        }
+      },
+      "origin": "device_sensor",
+      "epistemic_status": "observed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T07:41:00Z",
+        "effective_end": "2026-09-20T07:46:00Z",
+        "ingested_at": "2026-09-20T07:48:30Z",
+        "clock": {
+          "status": "corrected",
+          "correction_seconds": -90,
+          "device_reported_start": "2026-09-20T07:42:30Z"
+        }
+      },
+      "measurement": {
+        "domain": "heart_rate",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8867-4",
+          "display": "Heart rate"
+        },
+        "value_type": "quantity",
+        "value": 80,
+        "unit": "/min"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "unknown"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-hr-a-002",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/cardiovascular/heart"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:wearable:ring-a",
+        "source_kind": "wearable",
+        "source_version": "ring-app/3.8.1",
+        "record_ref": "urn:invivo:record:ring-a:hr-002",
+        "record_digest": "sha256:648ce10446407d6460d853c0b0b32916be476500c715320108fa5652af29d08e",
+        "device": {
+          "model": "Ring-A Gen4",
+          "firmware": "4.9.0"
+        }
+      },
+      "origin": "device_sensor",
+      "epistemic_status": "observed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T07:50:00Z",
+        "effective_end": "2026-09-20T07:55:00Z",
+        "ingested_at": "2026-09-20T07:57:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "heart_rate",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "8867-4",
+          "display": "Heart rate"
+        },
+        "value_type": "quantity",
+        "value": null,
+        "unit": null
+      },
+      "missingness": {
+        "status": "non_wear"
+      },
+      "uncertainty": {
+        "status": "not_applicable"
+      },
+      "quality": {
+        "status": "unknown",
+        "flags": [
+          "no_skin_contact"
+        ]
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-sleep-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/physiology/sleep"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:wearable:ring-a",
+        "source_kind": "wearable",
+        "source_version": "ring-app/3.8.1",
+        "record_ref": "urn:invivo:record:ring-a:sleep-2026-09-19",
+        "record_digest": "sha256:192e89898d0895948fab85fba87712d1490adb97cf166a9413850642221754bd",
+        "device": {
+          "model": "Ring-A Gen4",
+          "firmware": "4.9.0"
+        }
+      },
+      "origin": "device_sensor",
+      "epistemic_status": "observed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-19T22:50:00Z",
+        "effective_end": "2026-09-20T06:20:00Z",
+        "ingested_at": "2026-09-20T06:31:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "sleep",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "93832-4",
+          "display": "Sleep duration"
+        },
+        "value_type": "quantity",
+        "value": 7.5,
+        "unit": "h"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "unknown"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-hrv-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/neural/autonomic"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:wearable:ring-a",
+        "source_kind": "wearable",
+        "source_version": "ring-app/3.8.1",
+        "record_ref": "urn:invivo:record:ring-a:hrv-2026-09-19",
+        "record_digest": "sha256:6a8484c5a1e3ff09ac82bb4eda590279917512dd08b8eb5de70683452cf5f5be",
+        "device": {
+          "model": "Ring-A Gen4",
+          "firmware": "4.9.0"
+        }
+      },
+      "origin": "device_sensor",
+      "epistemic_status": "observed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-19T22:50:00Z",
+        "effective_end": "2026-09-20T06:20:00Z",
+        "ingested_at": "2026-09-20T06:31:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "heart_rate_variability",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "80404-7",
+          "display": "R-R interval.standard deviation (Heart rate variability)"
+        },
+        "value_type": "quantity",
+        "value": 42,
+        "unit": "ms"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "quantified",
+        "standard_deviation": 4.0,
+        "method": "nocturnal RMSSD/SDNN sampling error estimate v1"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-symptom-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/whole_body"
+      ],
+      "source": {
+        "source_id": "urn:invivo:source:app:symptom-diary",
+        "source_kind": "phone_app",
+        "source_version": "invivo-ios/2.14.0",
+        "record_ref": "urn:invivo:record:diary:symptom-0917",
+        "record_digest": "sha256:6c6ca9ed701fd6d2506bfdcf281836c142553d11eca3c3241c716b6ed65dc322"
+      },
+      "origin": "self_report",
+      "epistemic_status": "reported",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T07:30:00Z",
+        "effective_end": null,
+        "ingested_at": "2026-09-20T07:30:40Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "symptom",
+        "code": {
+          "system": "http://snomed.info/sct",
+          "code": "84229001",
+          "display": "Fatigue"
+        },
+        "value_type": "categorical",
+        "value": "moderate",
+        "unit": null
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "unknown"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-meal-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/metabolic/glucose_regulation",
+        "ob://human/gastrointestinal"
+      ],
+      "source": {
+        "source_id": "urn:twinsuite:source:conversation:agent-1",
+        "source_kind": "conversational_agent",
+        "source_version": "twinsuite-adapter/0.3.0",
+        "record_ref": "urn:twinsuite:record:utterance:0042",
+        "record_digest": "sha256:0fabdb1a62184d00b96db368c49d337e0f1c91881ac69539812ef08d164c4bc2"
+      },
+      "origin": "conversation",
+      "epistemic_status": "reported",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T07:10:00Z",
+        "effective_end": null,
+        "ingested_at": "2026-09-20T07:25:00Z",
+        "clock": {
+          "status": "unknown"
+        }
+      },
+      "measurement": {
+        "domain": "meal",
+        "code": {
+          "system": "https://openbody.dev/codes/whole-person",
+          "code": "meal-description",
+          "display": "Meal description"
+        },
+        "value_type": "text",
+        "value": "oatmeal with berries",
+        "unit": null
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "unknown"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-env-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/respiratory"
+      ],
+      "source": {
+        "source_id": "urn:openbody:source:env:aq-feed-se-sto",
+        "source_kind": "environmental_service",
+        "source_version": "aq-feed/2026.09",
+        "record_ref": "urn:openbody:record:aq:sto:2026-09-20T07",
+        "record_digest": "sha256:eb0f59e9df5749376f495eb0cd2282411a60506f645a6b44c4cb9b679bdfb440"
+      },
+      "origin": "environmental_feed",
+      "epistemic_status": "observed",
+      "context_level": "community",
+      "time": {
+        "effective_start": "2026-09-20T07:00:00Z",
+        "effective_end": "2026-09-20T08:00:00Z",
+        "ingested_at": "2026-09-20T07:05:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "environment",
+        "code": {
+          "system": "https://openbody.dev/codes/environment",
+          "code": "pm2_5",
+          "display": "Particulate matter PM2.5, hourly mean"
+        },
+        "value_type": "quantity",
+        "value": 12.3,
+        "unit": "ug/m3"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "quantified",
+        "standard_deviation": 2.1,
+        "method": "regulatory station reference uncertainty"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-lab-hba1c-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/metabolic/glucose_regulation"
+      ],
+      "source": {
+        "source_id": "urn:providehr:source:ehr:tenant-1",
+        "source_kind": "ehr",
+        "source_version": "providehr-cosmic/1.18.2",
+        "record_ref": "urn:providehr:ehr:ehr-9f1:composition:c-77::v2",
+        "record_digest": "sha256:d1ff1359e4606e47847ca7a009983e694c62b1b5b1ddb7605308228310bb4a10"
+      },
+      "origin": "clinical_record",
+      "epistemic_status": "imported",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-08-01T09:00:00Z",
+        "effective_end": null,
+        "ingested_at": "2026-08-02T12:00:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "laboratory",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "4548-4",
+          "display": "Hemoglobin A1c/Hemoglobin.total in Blood"
+        },
+        "value_type": "quantity",
+        "value": 5.6,
+        "unit": "%"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "unknown"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:clinical-records",
+        "authority_ref": "urn:invivo:grant:wp-0001:clinical-records",
+        "purposes": [
+          "personal_state",
+          "encounter_context"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      },
+      "clinical_link": {
+        "profile": "openbody.admitted-observation.v1",
+        "admitted_observation_id": "providehr:ehr-9f1:c-77:v2:obs-1",
+        "clinical_version_ref": "urn:providehr:ehr:ehr-9f1:composition:c-77::v2",
+        "content_digest": "sha256:309d9199cd5adf0bd9073521475d8129c35e95bda50cfada016987b8b7ca633b"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-lab-glucose-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/metabolic/glucose_regulation"
+      ],
+      "source": {
+        "source_id": "urn:openbody:source:lab:central-lab",
+        "source_kind": "laboratory_system",
+        "source_version": "lis/9.4",
+        "record_ref": "urn:lab:central:accession:A-5531",
+        "record_digest": "sha256:3bf75a95f3902cf2d678cb79e210f269953e4f0b1772a9744e1301b25d31ed3c"
+      },
+      "origin": "laboratory",
+      "epistemic_status": "clinician_validated",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-18T08:15:00Z",
+        "effective_end": null,
+        "ingested_at": "2026-09-18T15:00:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "laboratory",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "2339-0",
+          "display": "Glucose [Mass/volume] in Blood"
+        },
+        "value_type": "quantity",
+        "value": 101,
+        "unit": "mg/dL"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "quantified",
+        "standard_deviation": 2.5,
+        "method": "laboratory CV 2.5% at 100 mg/dL"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:clinical-records",
+        "authority_ref": "urn:invivo:grant:wp-0001:clinical-records",
+        "purposes": [
+          "personal_state",
+          "encounter_context"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      },
+      "validation": {
+        "validator_ref": "urn:providehr:practitioner:p-12",
+        "validated_at": "2026-09-18T16:00:00Z",
+        "receipt_ref": "urn:providehr:receipt:review:r-881",
+        "receipt_digest": "sha256:0ab73e3609d6784f681d04b3da9d94f1a81e091400074940e149e2cf41f30302"
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-hrv-baseline-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/neural/autonomic"
+      ],
+      "source": {
+        "source_id": "urn:openbody:source:model-host:ref",
+        "source_kind": "model_host",
+        "source_version": "openbody-ref/0.2.0",
+        "record_ref": "urn:openbody:run:hrv-baseline:0001",
+        "record_digest": "sha256:cd2b9f7693717fe6207daad81a2cf9806ac119add71cd693a10a40d996ecd47f"
+      },
+      "origin": "model_transform",
+      "epistemic_status": "derived",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-19T22:50:00Z",
+        "effective_end": "2026-09-20T06:20:00Z",
+        "ingested_at": "2026-09-20T06:35:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "heart_rate_variability",
+        "code": {
+          "system": "https://openbody.dev/codes/whole-person",
+          "code": "hrv-sdnn-nocturnal-baseline",
+          "display": "Nocturnal SDNN personal baseline"
+        },
+        "value_type": "quantity",
+        "value": 44.5,
+        "unit": "ms"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "quantified",
+        "interval": {
+          "lower": 40.1,
+          "upper": 48.9,
+          "level": 0.9
+        },
+        "method": "bootstrap over 7 nights"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      },
+      "derivation": {
+        "transform_id": "urn:openbody:transform:hrv-baseline",
+        "transform_version": "1.0.0",
+        "parents": [
+          {
+            "observation_id": "wp-hrv-001",
+            "envelope_digest": "sha256:032f87882b888d8a30b9f5c281fcf65c1f631fc91e5a530cc1495eb0ac5b4aa9"
+          }
+        ]
+      }
+    },
+    {
+      "schema_version": "openbody.whole-person-observation/1.0",
+      "observation_id": "wp-cgm-imputed-001",
+      "subject": "subject:openbody:wp-0001",
+      "subject_binding": {
+        "status": "verified",
+        "binding_ref": "urn:openbody:binding:wp-0001:v1",
+        "issuer": "https://invivo.example/identity",
+        "revocation_ref": "urn:openbody:binding:wp-0001:revocation",
+        "proof_digest": "sha256:09fee08c89e72e452a7cdacfc7b1c1a360d6a73352305745c8767851b4b95d85"
+      },
+      "scope": [
+        "ob://human/metabolic/glucose_regulation"
+      ],
+      "source": {
+        "source_id": "urn:openbody:source:model-host:ref",
+        "source_kind": "model_host",
+        "source_version": "openbody-ref/0.2.0",
+        "record_ref": "urn:openbody:run:cgm-gapfill:0001",
+        "record_digest": "sha256:fe2f8bf1c9dbb14c4e3e4a5b25bdbebd48f30d9b647cf5b1c20dd07a8d1cbcb0"
+      },
+      "origin": "model_transform",
+      "epistemic_status": "imputed",
+      "context_level": "individual",
+      "time": {
+        "effective_start": "2026-09-20T07:58:00Z",
+        "effective_end": null,
+        "ingested_at": "2026-09-20T07:59:00Z",
+        "clock": {
+          "status": "synchronized"
+        }
+      },
+      "measurement": {
+        "domain": "glucose",
+        "code": {
+          "system": "http://loinc.org",
+          "code": "99504-3",
+          "display": "Glucose [Mass/volume] in Interstitial fluid"
+        },
+        "value_type": "quantity",
+        "value": 6.3,
+        "unit": "mmol/L"
+      },
+      "missingness": {
+        "status": "present"
+      },
+      "uncertainty": {
+        "status": "unknown"
+      },
+      "quality": {
+        "status": "acceptable",
+        "flags": []
+      },
+      "consent": {
+        "consent_ref": "urn:invivo:consent:wp-0001:wearables",
+        "authority_ref": "urn:invivo:grant:wp-0001:wearables",
+        "purposes": [
+          "personal_state",
+          "encounter_context",
+          "research_simulation"
+        ],
+        "granted_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2027-01-01T00:00:00Z"
+      },
+      "derivation": {
+        "transform_id": "urn:openbody:transform:cgm-gap-fill",
+        "transform_version": "0.4.1",
+        "parents": [
+          {
+            "observation_id": "wp-cgm-001",
+            "envelope_digest": "sha256:5200d2297ff5da1ee77b0d22a4ba08eb3c178c16dd16887618e3fdf820fa550c"
+          },
+          {
+            "observation_id": "wp-cgm-002",
+            "envelope_digest": "sha256:0b33f9f2d0fd3ebaaca7fb8f53cde038d9e4c0586acc2942959bfb5fe9fee289"
+          }
+        ]
+      }
+    }
+  ]
+}

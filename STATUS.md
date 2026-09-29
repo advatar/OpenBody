@@ -190,7 +190,7 @@ G3/G4 consumption and model qualification are tracked by Metabolog#1129.
 GitHub issue: #30
 Branch: `feat/30-whole-person-state` (worktree `worktrees/OpenBody-30`).
 
-- [ ] Inventory existing canonical contracts and baselines before implementation; do not duplicate authority, provenance, state, or evaluation primitives.
+- [x] Inventory existing canonical contracts and baselines before implementation; do not duplicate authority, provenance, state, or evaluation primitives.
 - [ ] Implement the bounded architecture and adversarial/negative-control plan recorded in issue #30.
 - [ ] Add machine-readable evidence and non-vacuous qualification gates; distinguish implementation, local qualification, CI qualification, and any remaining research/clinical limits.
 - [ ] Preserve existing privacy, consent, authority, provenance and release boundaries; do not promote experimental results without preregistered/explicit gates.
@@ -198,17 +198,25 @@ Branch: `feat/30-whole-person-state` (worktree `worktrees/OpenBody-30`).
 Work package in this repository (portfolio plan 2026-09-24): freeze the neutral
 contract and conformance vectors. Planned tasks:
 
-- [ ] Reuse/gap matrix against admitted-observation, intervention-observation,
+- [x] Reuse/gap matrix against admitted-observation, intervention-observation,
   BodyState and PersonalAdaptiveState; mapping for CGM, sleep, HRV, symptoms,
   meals, labs, device and clinical-record provenance.
-- [ ] `openbody.whole-person-observation/1.0` envelope schema and validator
+- [x] `openbody.whole-person-observation/1.0` envelope schema and validator
   (origin orthogonal to epistemic status; derivation parents; missingness;
   unknown uncertainty; consent/authority refs; clinical links by reference).
-- [ ] `openbody.whole-person-state/1.0` deterministic snapshot assembler: no
+- [x] `openbody.whole-person-state/1.0` deterministic snapshot assembler: no
   source-priority inference, conflicts stay unresolved, stale/revoked/imputed
   inputs block clinical use, snapshot is not a clinical assertion.
-- [ ] Shared conformance corpus (golden inputs + snapshot, adversarial vectors)
+- [x] Shared conformance corpus (golden inputs + snapshot, adversarial vectors)
   and a checker wired into conformance CI; unit tests.
 
 Out of scope here (other repositories): Metabolog #1129/#1144 native consumer,
 TwinSuite #144 conversational adapter, ProvidEHR #600 encounter integration.
+
+Implemented on `feat/30-whole-person-state`: `docs/WHOLE_PERSON_STATE.md`
+(boundary, assembly rules, source mapping, reuse/gap matrix), both schemas,
+`openbody_ref/whole_person.py`, `fixtures/whole-person-state/v1` (golden
+snapshot + 52 vectors), `tools/check_whole_person_state.py`, corpus wired into
+`tools/validate_openbody.py`, `tests/test_whole_person_state.py`. Remaining open
+items above: downstream consumer qualification (other repositories) and any
+real-cohort evidence; the corpus is synthetic software conformance only.

@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "reference" / "python"))
 
 from openbody_ref.clinical_reference import FIXTURE_BUNDLE_PATH, validate_fixture_bundle
 from openbody_ref.intervention_observation import validate_intervention_observation
+from openbody_ref.whole_person import evaluate_conformance_corpus as evaluate_whole_person_corpus
 
 SCHEMA = ROOT / "schemas" / "openbody.schema.json"
 REGISTRY = ROOT / "registry" / "coordinates.json"
@@ -346,6 +347,15 @@ def main(paths):
                 f"expected {result.expected}/{result.expected_error_code}, "
                 f"got {result.actual}/{result.actual_error_code}"
             )
+
+    for result in evaluate_whole_person_corpus():
+        if result.passed:
+            print(f"PASS whole-person-state vector {result.name}: {result.detail}")
+        else:
+            failed = True
+            print(f"FAIL whole-person-state vector {result.name}: {result.detail}")
+            for failure in result.failures:
+                print(f"  {failure}")
 
     return 1 if failed else 0
 

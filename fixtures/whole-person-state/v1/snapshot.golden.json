@@ -1,0 +1,841 @@
+{
+  "schema_version": "openbody.whole-person-state/1.0",
+  "subject": "subject:openbody:wp-0001",
+  "as_of": "2026-09-20T08:00:00Z",
+  "purpose": "encounter_context",
+  "policy": {
+    "policy_version": "openbody.whole-person-assembly-policy/1.0",
+    "clock_skew_tolerance_seconds": 300,
+    "max_age_seconds": {
+      "activity": 172800,
+      "body_temperature": 86400,
+      "environment": 86400,
+      "glucose": 3600,
+      "heart_rate": 3600,
+      "heart_rate_variability": 172800,
+      "laboratory": 7776000,
+      "meal": 86400,
+      "sleep": 172800,
+      "symptom": 604800
+    }
+  },
+  "contract": {
+    "observation_schema_digest": "sha256:7071eb621e02d1df9cd5599ba19b6a5604a87f4b299f8a01a37cb4694b99881d",
+    "registry_version": "0.2"
+  },
+  "revocations_applied": [],
+  "subject_bindings": [
+    "urn:openbody:binding:wp-0001:v1"
+  ],
+  "inputs": [
+    {
+      "observation_id": "wp-cgm-001",
+      "envelope_digest": "sha256:5200d2297ff5da1ee77b0d22a4ba08eb3c178c16dd16887618e3fdf820fa550c"
+    },
+    {
+      "observation_id": "wp-cgm-002",
+      "envelope_digest": "sha256:0b33f9f2d0fd3ebaaca7fb8f53cde038d9e4c0586acc2942959bfb5fe9fee289"
+    },
+    {
+      "observation_id": "wp-cgm-imputed-001",
+      "envelope_digest": "sha256:cef8404b4ba9d59fcc556c3eab3f9d194a1cee0da6bb1bef92bdddf89833e75f"
+    },
+    {
+      "observation_id": "wp-env-001",
+      "envelope_digest": "sha256:2fba43d335f6a9d0d49f9f3761058cb25d8666da784e49bcecc3f5aca4126ad4"
+    },
+    {
+      "observation_id": "wp-hr-a-001",
+      "envelope_digest": "sha256:c219fa2af4fff1030d9311a88a609f2a4ef07568f77ef1f881fa8623ee9b0555"
+    },
+    {
+      "observation_id": "wp-hr-a-002",
+      "envelope_digest": "sha256:a530824ff7b47c80d9869185e7aa92914e931f5db68445b3c8322ff7a41e2210"
+    },
+    {
+      "observation_id": "wp-hr-b-001",
+      "envelope_digest": "sha256:27b38a3a41c8a561cf23db43b7b6f43d4a03b450ab530ca6038112051d832861"
+    },
+    {
+      "observation_id": "wp-hrv-001",
+      "envelope_digest": "sha256:032f87882b888d8a30b9f5c281fcf65c1f631fc91e5a530cc1495eb0ac5b4aa9"
+    },
+    {
+      "observation_id": "wp-hrv-baseline-001",
+      "envelope_digest": "sha256:2075274ba8ccf885bbbcc0809c245079043cb27e55907ab66471b401249b3ea6"
+    },
+    {
+      "observation_id": "wp-lab-glucose-001",
+      "envelope_digest": "sha256:6ada3c49d24c656323f22b863a38a8336c279836010a186be3b012ab5e0803ff"
+    },
+    {
+      "observation_id": "wp-lab-hba1c-001",
+      "envelope_digest": "sha256:dac9a8ab3507cbfcc3c4a3a49a9c5d4df965b9f1a5a0de2aea42540fbba50c69"
+    },
+    {
+      "observation_id": "wp-meal-001",
+      "envelope_digest": "sha256:71ad1800aa690e5d7535047e86f78673f6cf16414fd6390080120ab2797bec6f"
+    },
+    {
+      "observation_id": "wp-sleep-001",
+      "envelope_digest": "sha256:633e2802408d55bd2467900dd94e0f483654149197d1978847bcaf9322947d23"
+    },
+    {
+      "observation_id": "wp-symptom-001",
+      "envelope_digest": "sha256:577b7fa4b2bb845e2f1f57626967204760fcd1ea7811572f2d4e22ad1d52438f"
+    }
+  ],
+  "entries": [
+    {
+      "key": {
+        "domain": "environment",
+        "system": "https://openbody.dev/codes/environment",
+        "code": "pm2_5"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-env-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-env-001",
+          "envelope_digest": "sha256:2fba43d335f6a9d0d49f9f3761058cb25d8666da784e49bcecc3f5aca4126ad4",
+          "source": {
+            "source_id": "urn:openbody:source:env:aq-feed-se-sto",
+            "source_kind": "environmental_service",
+            "source_version": "aq-feed/2026.09",
+            "record_ref": "urn:openbody:record:aq:sto:2026-09-20T07",
+            "record_digest": "sha256:eb0f59e9df5749376f495eb0cd2282411a60506f645a6b44c4cb9b679bdfb440"
+          },
+          "origin": "environmental_feed",
+          "epistemic_status": "observed",
+          "context_level": "community",
+          "effective_start": "2026-09-20T07:00:00Z",
+          "effective_end": "2026-09-20T08:00:00Z",
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 12.3,
+          "unit": "ug/m3",
+          "source_value": 12.3,
+          "source_unit": "ug/m3",
+          "uncertainty": {
+            "status": "quantified",
+            "standard_deviation": 2.1,
+            "method": "regulatory station reference uncertainty"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": false,
+        "blockers": [
+          "not_individual_measurement"
+        ],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "glucose",
+        "system": "http://loinc.org",
+        "code": "99504-3"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-cgm-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-cgm-002",
+          "envelope_digest": "sha256:0b33f9f2d0fd3ebaaca7fb8f53cde038d9e4c0586acc2942959bfb5fe9fee289",
+          "source": {
+            "source_id": "urn:invivo:source:cgm:sensor-7731",
+            "source_kind": "cgm_device",
+            "source_version": "cgm-app/4.2.0",
+            "record_ref": "urn:invivo:record:cgm:7731:002",
+            "record_digest": "sha256:f01fec4c4ef997153e068b1165600cbf2238c3eb7b3c0923684a217648afd059",
+            "device": {
+              "model": "CGM-G7",
+              "firmware": "2.1.4"
+            }
+          },
+          "origin": "device_sensor",
+          "epistemic_status": "observed",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T06:40:00Z",
+          "effective_end": null,
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 5.4,
+          "unit": "mmol/L",
+          "source_value": 5.4,
+          "source_unit": "mmol/L",
+          "uncertainty": {
+            "status": "quantified",
+            "standard_deviation": 0.45,
+            "method": "manufacturer MARD 8.2% applied to reading"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "stale"
+        },
+        {
+          "observation_id": "wp-cgm-001",
+          "envelope_digest": "sha256:5200d2297ff5da1ee77b0d22a4ba08eb3c178c16dd16887618e3fdf820fa550c",
+          "source": {
+            "source_id": "urn:invivo:source:cgm:sensor-7731",
+            "source_kind": "cgm_device",
+            "source_version": "cgm-app/4.2.0",
+            "record_ref": "urn:invivo:record:cgm:7731:001",
+            "record_digest": "sha256:e8c1dae414e9079595b06ee88c6b03c019dd1624c0b3f0166a5e2336b2687170",
+            "device": {
+              "model": "CGM-G7",
+              "firmware": "2.1.4"
+            }
+          },
+          "origin": "device_sensor",
+          "epistemic_status": "observed",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T07:55:00Z",
+          "effective_end": null,
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 6.1,
+          "unit": "mmol/L",
+          "source_value": 6.1,
+          "source_unit": "mmol/L",
+          "uncertainty": {
+            "status": "quantified",
+            "standard_deviation": 0.5,
+            "method": "manufacturer MARD 8.2% applied to reading"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        },
+        {
+          "observation_id": "wp-cgm-imputed-001",
+          "envelope_digest": "sha256:cef8404b4ba9d59fcc556c3eab3f9d194a1cee0da6bb1bef92bdddf89833e75f",
+          "source": {
+            "source_id": "urn:openbody:source:model-host:ref",
+            "source_kind": "model_host",
+            "source_version": "openbody-ref/0.2.0",
+            "record_ref": "urn:openbody:run:cgm-gapfill:0001",
+            "record_digest": "sha256:fe2f8bf1c9dbb14c4e3e4a5b25bdbebd48f30d9b647cf5b1c20dd07a8d1cbcb0"
+          },
+          "origin": "model_transform",
+          "epistemic_status": "imputed",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T07:58:00Z",
+          "effective_end": null,
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 6.3,
+          "unit": "mmol/L",
+          "source_value": 6.3,
+          "source_unit": "mmol/L",
+          "uncertainty": {
+            "status": "unknown"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": {
+            "transform_id": "urn:openbody:transform:cgm-gap-fill",
+            "transform_version": "0.4.1",
+            "parents": [
+              {
+                "observation_id": "wp-cgm-001",
+                "envelope_digest": "sha256:5200d2297ff5da1ee77b0d22a4ba08eb3c178c16dd16887618e3fdf820fa550c"
+              },
+              {
+                "observation_id": "wp-cgm-002",
+                "envelope_digest": "sha256:0b33f9f2d0fd3ebaaca7fb8f53cde038d9e4c0586acc2942959bfb5fe9fee289"
+              }
+            ]
+          },
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": true,
+        "blockers": [],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "heart_rate",
+        "system": "http://loinc.org",
+        "code": "8867-4"
+      },
+      "resolution": "unresolved_conflict",
+      "basis": [
+        "wp-hr-a-001",
+        "wp-hr-b-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-hr-a-001",
+          "envelope_digest": "sha256:c219fa2af4fff1030d9311a88a609f2a4ef07568f77ef1f881fa8623ee9b0555",
+          "source": {
+            "source_id": "urn:invivo:source:wearable:ring-a",
+            "source_kind": "wearable",
+            "source_version": "ring-app/3.8.1",
+            "record_ref": "urn:invivo:record:ring-a:hr-001",
+            "record_digest": "sha256:1a674c851032fa5723179d9a916e92df6142de3bcf559410d4faf5ed786121e4",
+            "device": {
+              "model": "Ring-A Gen4",
+              "firmware": "4.9.0"
+            }
+          },
+          "origin": "device_sensor",
+          "epistemic_status": "observed",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T07:40:00Z",
+          "effective_end": "2026-09-20T07:45:00Z",
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 72.0,
+          "unit": "/min",
+          "source_value": 72,
+          "source_unit": "/min",
+          "uncertainty": {
+            "status": "quantified",
+            "interval": {
+              "lower": 69,
+              "upper": 75,
+              "level": 0.95
+            },
+            "method": "PPG beat-detection error model v2"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        },
+        {
+          "observation_id": "wp-hr-b-001",
+          "envelope_digest": "sha256:27b38a3a41c8a561cf23db43b7b6f43d4a03b450ab530ca6038112051d832861",
+          "source": {
+            "source_id": "urn:invivo:source:wearable:watch-b",
+            "source_kind": "wearable",
+            "source_version": "watch-os/11.2",
+            "record_ref": "urn:invivo:record:watch-b:hr-001",
+            "record_digest": "sha256:5d78096e717d502bfa5cca31f0c0ca9f47c2b67baadcd9f6b45de9f30a5465b1",
+            "device": {
+              "model": "Watch-B S10",
+              "firmware": "11.2.1"
+            }
+          },
+          "origin": "device_sensor",
+          "epistemic_status": "observed",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T07:41:00Z",
+          "effective_end": "2026-09-20T07:46:00Z",
+          "clock_status": "corrected",
+          "missingness": "present",
+          "value": 80.0,
+          "unit": "/min",
+          "source_value": 80,
+          "source_unit": "/min",
+          "uncertainty": {
+            "status": "unknown"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        },
+        {
+          "observation_id": "wp-hr-a-002",
+          "envelope_digest": "sha256:a530824ff7b47c80d9869185e7aa92914e931f5db68445b3c8322ff7a41e2210",
+          "source": {
+            "source_id": "urn:invivo:source:wearable:ring-a",
+            "source_kind": "wearable",
+            "source_version": "ring-app/3.8.1",
+            "record_ref": "urn:invivo:record:ring-a:hr-002",
+            "record_digest": "sha256:648ce10446407d6460d853c0b0b32916be476500c715320108fa5652af29d08e",
+            "device": {
+              "model": "Ring-A Gen4",
+              "firmware": "4.9.0"
+            }
+          },
+          "origin": "device_sensor",
+          "epistemic_status": "observed",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T07:50:00Z",
+          "effective_end": "2026-09-20T07:55:00Z",
+          "clock_status": "synchronized",
+          "missingness": "non_wear",
+          "value": null,
+          "unit": null,
+          "source_value": null,
+          "source_unit": null,
+          "uncertainty": {
+            "status": "not_applicable"
+          },
+          "quality": {
+            "status": "unknown",
+            "flags": [
+              "no_skin_contact"
+            ]
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": false,
+        "blockers": [
+          "resolution_unresolved_conflict",
+          "uncertainty_unknown"
+        ],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "heart_rate_variability",
+        "system": "http://loinc.org",
+        "code": "80404-7"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-hrv-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-hrv-001",
+          "envelope_digest": "sha256:032f87882b888d8a30b9f5c281fcf65c1f631fc91e5a530cc1495eb0ac5b4aa9",
+          "source": {
+            "source_id": "urn:invivo:source:wearable:ring-a",
+            "source_kind": "wearable",
+            "source_version": "ring-app/3.8.1",
+            "record_ref": "urn:invivo:record:ring-a:hrv-2026-09-19",
+            "record_digest": "sha256:6a8484c5a1e3ff09ac82bb4eda590279917512dd08b8eb5de70683452cf5f5be",
+            "device": {
+              "model": "Ring-A Gen4",
+              "firmware": "4.9.0"
+            }
+          },
+          "origin": "device_sensor",
+          "epistemic_status": "observed",
+          "context_level": "individual",
+          "effective_start": "2026-09-19T22:50:00Z",
+          "effective_end": "2026-09-20T06:20:00Z",
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 42.0,
+          "unit": "ms",
+          "source_value": 42,
+          "source_unit": "ms",
+          "uncertainty": {
+            "status": "quantified",
+            "standard_deviation": 4.0,
+            "method": "nocturnal RMSSD/SDNN sampling error estimate v1"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": true,
+        "blockers": [],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "heart_rate_variability",
+        "system": "https://openbody.dev/codes/whole-person",
+        "code": "hrv-sdnn-nocturnal-baseline"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-hrv-baseline-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-hrv-baseline-001",
+          "envelope_digest": "sha256:2075274ba8ccf885bbbcc0809c245079043cb27e55907ab66471b401249b3ea6",
+          "source": {
+            "source_id": "urn:openbody:source:model-host:ref",
+            "source_kind": "model_host",
+            "source_version": "openbody-ref/0.2.0",
+            "record_ref": "urn:openbody:run:hrv-baseline:0001",
+            "record_digest": "sha256:cd2b9f7693717fe6207daad81a2cf9806ac119add71cd693a10a40d996ecd47f"
+          },
+          "origin": "model_transform",
+          "epistemic_status": "derived",
+          "context_level": "individual",
+          "effective_start": "2026-09-19T22:50:00Z",
+          "effective_end": "2026-09-20T06:20:00Z",
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 44.5,
+          "unit": "ms",
+          "source_value": 44.5,
+          "source_unit": "ms",
+          "uncertainty": {
+            "status": "quantified",
+            "interval": {
+              "lower": 40.1,
+              "upper": 48.9,
+              "level": 0.9
+            },
+            "method": "bootstrap over 7 nights"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": {
+            "transform_id": "urn:openbody:transform:hrv-baseline",
+            "transform_version": "1.0.0",
+            "parents": [
+              {
+                "observation_id": "wp-hrv-001",
+                "envelope_digest": "sha256:032f87882b888d8a30b9f5c281fcf65c1f631fc91e5a530cc1495eb0ac5b4aa9"
+              }
+            ]
+          },
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": false,
+        "blockers": [
+          "model_output_requires_receipt"
+        ],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "laboratory",
+        "system": "http://loinc.org",
+        "code": "2339-0"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-lab-glucose-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-lab-glucose-001",
+          "envelope_digest": "sha256:6ada3c49d24c656323f22b863a38a8336c279836010a186be3b012ab5e0803ff",
+          "source": {
+            "source_id": "urn:openbody:source:lab:central-lab",
+            "source_kind": "laboratory_system",
+            "source_version": "lis/9.4",
+            "record_ref": "urn:lab:central:accession:A-5531",
+            "record_digest": "sha256:3bf75a95f3902cf2d678cb79e210f269953e4f0b1772a9744e1301b25d31ed3c"
+          },
+          "origin": "laboratory",
+          "epistemic_status": "clinician_validated",
+          "context_level": "individual",
+          "effective_start": "2026-09-18T08:15:00Z",
+          "effective_end": null,
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 5.6061,
+          "unit": "mmol/L",
+          "source_value": 101,
+          "source_unit": "mg/dL",
+          "uncertainty": {
+            "status": "quantified",
+            "standard_deviation": 2.5,
+            "method": "laboratory CV 2.5% at 100 mg/dL"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": {
+            "validator_ref": "urn:providehr:practitioner:p-12",
+            "validated_at": "2026-09-18T16:00:00Z",
+            "receipt_ref": "urn:providehr:receipt:review:r-881",
+            "receipt_digest": "sha256:0ab73e3609d6784f681d04b3da9d94f1a81e091400074940e149e2cf41f30302"
+          },
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": true,
+        "blockers": [],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "laboratory",
+        "system": "http://loinc.org",
+        "code": "4548-4"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-lab-hba1c-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-lab-hba1c-001",
+          "envelope_digest": "sha256:dac9a8ab3507cbfcc3c4a3a49a9c5d4df965b9f1a5a0de2aea42540fbba50c69",
+          "source": {
+            "source_id": "urn:providehr:source:ehr:tenant-1",
+            "source_kind": "ehr",
+            "source_version": "providehr-cosmic/1.18.2",
+            "record_ref": "urn:providehr:ehr:ehr-9f1:composition:c-77::v2",
+            "record_digest": "sha256:d1ff1359e4606e47847ca7a009983e694c62b1b5b1ddb7605308228310bb4a10"
+          },
+          "origin": "clinical_record",
+          "epistemic_status": "imported",
+          "context_level": "individual",
+          "effective_start": "2026-08-01T09:00:00Z",
+          "effective_end": null,
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 5.6,
+          "unit": "%",
+          "source_value": 5.6,
+          "source_unit": "%",
+          "uncertainty": {
+            "status": "unknown"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": {
+            "profile": "openbody.admitted-observation.v1",
+            "admitted_observation_id": "providehr:ehr-9f1:c-77:v2:obs-1",
+            "clinical_version_ref": "urn:providehr:ehr:ehr-9f1:composition:c-77::v2",
+            "content_digest": "sha256:309d9199cd5adf0bd9073521475d8129c35e95bda50cfada016987b8b7ca633b"
+          },
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": false,
+        "blockers": [
+          "uncertainty_unknown"
+        ],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "meal",
+        "system": "https://openbody.dev/codes/whole-person",
+        "code": "meal-description"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-meal-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-meal-001",
+          "envelope_digest": "sha256:71ad1800aa690e5d7535047e86f78673f6cf16414fd6390080120ab2797bec6f",
+          "source": {
+            "source_id": "urn:twinsuite:source:conversation:agent-1",
+            "source_kind": "conversational_agent",
+            "source_version": "twinsuite-adapter/0.3.0",
+            "record_ref": "urn:twinsuite:record:utterance:0042",
+            "record_digest": "sha256:0fabdb1a62184d00b96db368c49d337e0f1c91881ac69539812ef08d164c4bc2"
+          },
+          "origin": "conversation",
+          "epistemic_status": "reported",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T07:10:00Z",
+          "effective_end": null,
+          "clock_status": "unknown",
+          "missingness": "present",
+          "value": "oatmeal with berries",
+          "unit": null,
+          "source_value": "oatmeal with berries",
+          "source_unit": null,
+          "uncertainty": {
+            "status": "unknown"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": false,
+        "blockers": [
+          "clock_unknown",
+          "uncertainty_unknown"
+        ],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "sleep",
+        "system": "http://loinc.org",
+        "code": "93832-4"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-sleep-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-sleep-001",
+          "envelope_digest": "sha256:633e2802408d55bd2467900dd94e0f483654149197d1978847bcaf9322947d23",
+          "source": {
+            "source_id": "urn:invivo:source:wearable:ring-a",
+            "source_kind": "wearable",
+            "source_version": "ring-app/3.8.1",
+            "record_ref": "urn:invivo:record:ring-a:sleep-2026-09-19",
+            "record_digest": "sha256:192e89898d0895948fab85fba87712d1490adb97cf166a9413850642221754bd",
+            "device": {
+              "model": "Ring-A Gen4",
+              "firmware": "4.9.0"
+            }
+          },
+          "origin": "device_sensor",
+          "epistemic_status": "observed",
+          "context_level": "individual",
+          "effective_start": "2026-09-19T22:50:00Z",
+          "effective_end": "2026-09-20T06:20:00Z",
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": 450.0,
+          "unit": "min",
+          "source_value": 7.5,
+          "source_unit": "h",
+          "uncertainty": {
+            "status": "unknown"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": false,
+        "blockers": [
+          "uncertainty_unknown"
+        ],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    },
+    {
+      "key": {
+        "domain": "symptom",
+        "system": "http://snomed.info/sct",
+        "code": "84229001"
+      },
+      "resolution": "single_source",
+      "basis": [
+        "wp-symptom-001"
+      ],
+      "candidates": [
+        {
+          "observation_id": "wp-symptom-001",
+          "envelope_digest": "sha256:577b7fa4b2bb845e2f1f57626967204760fcd1ea7811572f2d4e22ad1d52438f",
+          "source": {
+            "source_id": "urn:invivo:source:app:symptom-diary",
+            "source_kind": "phone_app",
+            "source_version": "invivo-ios/2.14.0",
+            "record_ref": "urn:invivo:record:diary:symptom-0917",
+            "record_digest": "sha256:6c6ca9ed701fd6d2506bfdcf281836c142553d11eca3c3241c716b6ed65dc322"
+          },
+          "origin": "self_report",
+          "epistemic_status": "reported",
+          "context_level": "individual",
+          "effective_start": "2026-09-20T07:30:00Z",
+          "effective_end": null,
+          "clock_status": "synchronized",
+          "missingness": "present",
+          "value": "moderate",
+          "unit": null,
+          "source_value": "moderate",
+          "source_unit": null,
+          "uncertainty": {
+            "status": "unknown"
+          },
+          "quality": {
+            "status": "acceptable",
+            "flags": []
+          },
+          "derivation": null,
+          "clinical_link": null,
+          "validation": null,
+          "freshness": "current"
+        }
+      ],
+      "clinical_use": {
+        "admission_candidate": false,
+        "blockers": [
+          "uncertainty_unknown"
+        ],
+        "requires": "openbody.clinical-assertion-reference/1.0"
+      }
+    }
+  ],
+  "exclusions": [],
+  "claim_boundary": {
+    "projection_class": "state_projection",
+    "clinical_assertion": false,
+    "authority_granted": false,
+    "source_priority": "none"
+  },
+  "snapshot_digest": "sha256:e756d5c197311c3cf06ce42350bc0fc8fd2023b8da542e6843d246bfd709ffcd"
+}

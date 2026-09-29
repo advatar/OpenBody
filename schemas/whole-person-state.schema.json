@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/whole-person-state/1.0",
+  "title": "OpenBody whole-person state snapshot",
+  "description": "A deterministic longitudinal projection over admitted whole-person observation envelopes. It never selects between disagreeing sources, never fills unknown uncertainty, never counts imputation as measurement, and is not a clinical assertion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "subject",
+    "as_of",
+    "purpose",
+    "policy",
+    "contract",
+    "revocations_applied",
+    "subject_bindings",
+    "inputs",
+    "entries",
+    "exclusions",
+    "claim_boundary",
+    "snapshot_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "openbody.whole-person-state/1.0"
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "purpose": {
+      "enum": ["personal_state", "encounter_context", "research_simulation"]
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_version", "clock_skew_tolerance_seconds", "max_age_seconds"],
+      "properties": {
+        "policy_version": {
+          "const": "openbody.whole-person-assembly-policy/1.0"
+        },
+        "clock_skew_tolerance_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_age_seconds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_schema_digest", "registry_version"],
+      "properties": {
+        "observation_schema_digest": {
+          "$ref": "#/$defs/Digest"
+        },
+        "registry_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "revocations_applied": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "subject_bindings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/InputRef"
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Entry"
+      }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Exclusion"
+      }
+    },
+    "claim_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projection_class", "clinical_assertion", "authority_granted", "source_priority"],
+      "properties": {
+        "projection_class": {
+          "const": "state_projection"
+        },
+        "clinical_assertion": {
+          "const": false
+        },
+        "authority_granted": {
+          "const": false
+        },
+        "source_priority": {
+          "const": "none"
+        }
+      }
+    },
+    "snapshot_digest": {
+      "$ref": "#/$defs/Digest"
+    }
+  },
+  "$defs": {
+    "Digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "InputRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_id", "envelope_digest"],
+      "properties": {
+        "observation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "envelope_digest": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "Exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_id", "envelope_digest", "code"],
+      "properties": {
+        "observation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "envelope_digest": {
+          "$ref": "#/$defs/Digest"
+        },
+        "code": {
+          "enum": [
+            "source_revoked",
+            "consent_revoked",
+            "binding_revoked",
+            "consent_not_yet_granted",
+            "consent_expired",
+            "purpose_not_permitted",
+            "not_yet_ingested",
+            "effective_after_as_of",
+            "unit_unrecognized",
+            "derivation_parent_missing",
+            "derivation_parent_digest_mismatch",
+            "derivation_parent_subject_mismatch",
+            "derivation_parent_excluded"
+          ]
+        }
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "resolution", "basis", "candidates", "clinical_use"],
+      "properties": {
+        "key": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["domain", "system", "code"],
+          "properties": {
+            "domain": {
+              "type": "string",
+              "minLength": 1
+            },
+            "system": {
+              "type": "string",
+              "minLength": 1
+            },
+            "code": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "resolution": {
+          "enum": [
+            "single_source",
+            "concordant",
+            "unresolved_conflict",
+            "imputed_only",
+            "stale_only",
+            "missing_only"
+          ]
+        },
+        "basis": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Candidate"
+          }
+        },
+        "clinical_use": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["admission_candidate", "blockers", "requires"],
+          "properties": {
+            "admission_candidate": {
+              "type": "boolean"
+            },
+            "blockers": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "requires": {
+              "const": "openbody.clinical-assertion-reference/1.0"
+            }
+          }
+        }
+      }
+    },
+    "Candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation_id",
+        "envelope_digest",
+        "source",
+        "origin",
+        "epistemic_status",
+        "context_level",
+        "effective_start",
+        "effective_end",
+        "clock_status",
+        "missingness",
+        "value",
+        "unit",
+        "source_value",
+        "source_unit",
+        "uncertainty",
+        "quality",
+        "derivation",
+        "clinical_link",
+        "validation",
+        "freshness"
+      ],
+      "properties": {
+        "observation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "envelope_digest": {
+          "$ref": "#/$defs/Digest"
+        },
+        "source": {
+          "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/$defs/Source"
+        },
+        "origin": {
+          "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/properties/origin"
+        },
+        "epistemic_status": {
+          "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/properties/epistemic_status"
+        },
+        "context_level": {
+          "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/properties/context_level"
+        },
+        "effective_start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "effective_end": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "clock_status": {
+          "enum": ["synchronized", "corrected", "unknown"]
+        },
+        "missingness": {
+          "enum": ["present", "missing", "non_wear", "not_measured", "withheld"]
+        },
+        "value": {
+          "type": ["number", "string", "null"]
+        },
+        "unit": {
+          "type": ["string", "null"]
+        },
+        "source_value": {
+          "type": ["number", "string", "null"]
+        },
+        "source_unit": {
+          "type": ["string", "null"]
+        },
+        "uncertainty": {
+          "description": "Copied unchanged from the envelope, so any standard_deviation or interval is expressed in source_unit, not in the normalized unit.",
+          "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/$defs/Uncertainty"
+        },
+        "quality": {
+          "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/$defs/Quality"
+        },
+        "derivation": {
+          "oneOf": [
+            {
+              "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/$defs/Derivation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "clinical_link": {
+          "oneOf": [
+            {
+              "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/$defs/ClinicalLink"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validation": {
+          "oneOf": [
+            {
+              "$ref": "https://openbody.dev/schemas/whole-person-observation/1.0#/$defs/Validation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "enum": ["current", "stale"]
+        }
+      }
+    }
+  }
+}
