@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/mechanistic-pathway/v1",
+  "title": "OpenBody MechanisticPathwayV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile",
+    "id",
+    "revision",
+    "nodes",
+    "edges",
+    "generated_at"
+  ],
+  "properties": {
+    "profile": {
+      "const": "openbody.mechanistic-pathway.v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "intervention",
+              "exposure",
+              "molecule",
+              "rna",
+              "gene",
+              "protein",
+              "cell_state",
+              "tissue_state",
+              "organism_state",
+              "phenotype",
+              "unknown"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "target",
+          "claim_type",
+          "context",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_type": {
+            "enum": [
+              "association",
+              "intervention_response",
+              "mechanistic_hypothesis",
+              "perturbation_supported_causal",
+              "validated_causal_effect",
+              "activates",
+              "inhibits",
+              "regulates",
+              "transports",
+              "surrogate"
+            ]
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "species",
+              "biological_scope"
+            ],
+            "properties": {
+              "species": {
+                "type": "string",
+                "minLength": 1
+              },
+              "biological_scope": {
+                "type": "string",
+                "minLength": 1
+              },
+              "population_ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "maturity",
+              "provenance_refs"
+            ],
+            "properties": {
+              "maturity": {
+                "enum": [
+                  "synthetic",
+                  "in_vitro_ex_vivo",
+                  "animal_in_vivo",
+                  "observational_human",
+                  "interventional_human",
+                  "replicated_human",
+                  "clinically_validated"
+                ]
+              },
+              "provenance_refs": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "contradicts": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
