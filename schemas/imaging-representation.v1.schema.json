@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/imaging-representation/v1",
+  "title": "OpenBody ImagingRepresentationV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile",
+    "id",
+    "subject",
+    "source",
+    "modality",
+    "anatomy",
+    "acquired_at",
+    "representation_model",
+    "preprocessing",
+    "payload",
+    "execution_evidence",
+    "evidence_maturity",
+    "domain_applicability",
+    "derived_at",
+    "provenance",
+    "privacy"
+  ],
+  "properties": {
+    "profile": {
+      "const": "openbody.imaging-representation.v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "study_ref",
+        "series_refs"
+      ],
+      "properties": {
+        "study_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "series_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "instance_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "modality": {
+      "type": "string",
+      "minLength": 1
+    },
+    "anatomy": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "acquired_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "representation_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "model_version",
+        "model_commitment"
+      ],
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_commitment": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "preprocessing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pipeline_id",
+        "pipeline_version",
+        "commitment"
+      ],
+      "properties": {
+        "pipeline_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pipeline_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commitment": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "dimensions",
+        "content_digest",
+        "object_ref"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "embedding",
+            "feature_map",
+            "latent_volume"
+          ]
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "object_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "execution_evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_maturity": {
+      "enum": [
+        "synthetic",
+        "bench",
+        "animal_in_vivo",
+        "exploratory_human",
+        "validated_human"
+      ]
+    },
+    "domain_applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "population_refs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "in_domain",
+            "out_of_domain",
+            "unknown"
+          ]
+        },
+        "population_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "derived_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "provenance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "export_policy"
+      ],
+      "properties": {
+        "export_policy": {
+          "enum": [
+            "local_only",
+            "explicit_projection",
+            "exportable"
+          ]
+        }
+      }
+    }
+  }
+}
