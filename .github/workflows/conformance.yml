@@ -10,7 +10,10 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # Self-hosted only: this repository does not run protocol conformance on
+    # shared GitHub infrastructure. A runner with these labels must be
+    # registered to advatar/OpenBody or the job queues forever.
+    runs-on: [self-hosted, Linux, ARM64, openbody-local]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
