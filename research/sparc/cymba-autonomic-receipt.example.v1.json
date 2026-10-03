@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "resource_id": "sckan",
+  "resource_version": "sckan-2026-06-23",
+  "evidence_class": "anatomical_connectivity",
+  "qualification_state": "bounded_reproduction",
+  "scope": {
+    "species": "multi-species knowledge base",
+    "modality": "anatomy_only",
+    "site": "autonomic connectivity"
+  },
+  "provenance_digest": "d6cf12f5a1daada792c6329771d9cd1160e15df5072b6d3657b791cb438b64f7",
+  "limitations": [
+    "Connectivity knowledge is not electrical recruitment.",
+    "Connectivity knowledge is not measured target engagement or clinical benefit.",
+    "This prerelease does not establish consumer auricular-taVNS applicability."
+  ],
+  "usable": true,
+  "usable_for_claims": true,
+  "checked_at": "2026-10-02"
+}

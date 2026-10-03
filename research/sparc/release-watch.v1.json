@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-02",
+  "resources": [
+    {
+      "id": "sckan",
+      "name": "SPARC Connectivity Knowledge Base (SCKAN)",
+      "version": "sckan-2026-06-23",
+      "release_status": "prerelease",
+      "evidence_class": "anatomical_connectivity",
+      "qualification_state": "bounded_reproduction",
+      "material_update_since": "2026-09-25",
+      "material_update": false,
+      "limitations": ["Connectivity knowledge is not electrical recruitment, measured target engagement, or clinical benefit."]
+    },
+    {
+      "id": "reva",
+      "name": "REVA human vagus anatomy",
+      "version": "2",
+      "persistent_id": "10.26275/2VVA-QMJW",
+      "evidence_class": "anatomical_variability",
+      "qualification_state": "identified",
+      "material_update_since": "2026-09-25",
+      "material_update": false,
+      "limitations": ["Anatomical reconstruction is not functional recruitment or treatment response."]
+    },
+    {
+      "id": "vespa",
+      "name": "VESPA",
+      "version": null,
+      "evidence_class": "measured_implanted_vns_response",
+      "qualification_state": "not_publicly_released",
+      "material_update_since": "2026-09-25",
+      "material_update": false,
+      "limitations": ["Implanted VNS evidence must not be transferred to consumer auricular stimulation without separately qualified evidence."]
+    },
+    {
+      "id": "ascent",
+      "name": "ASCENT",
+      "version": "1.5.0",
+      "persistent_id": "10.5281/zenodo.15825841",
+      "evidence_class": "simulated_recruitment",
+      "qualification_state": "reproduction_blocked",
+      "material_update_since": "2026-09-25",
+      "material_update": false,
+      "limitations": ["Executable simulation is not measured target engagement, biological validation, or clinical benefit."]
+    }
+  ]
+}

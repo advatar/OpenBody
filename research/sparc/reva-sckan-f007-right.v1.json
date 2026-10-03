@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "status": "contracted_not_reproduced",
+  "evidence_class": "anatomical_correspondence",
+  "reva": {
+    "collection_doi": "10.26275/2VVA-QMJW",
+    "source_dataset_doi": "10.26275/DP8R-BB7W",
+    "source_dataset_version": 1,
+    "subject": "f007",
+    "side": "right",
+    "license": "CC-BY-4.0",
+    "scaffold_dataset_doi": "10.26275/TJZI-MUQM",
+    "scaffold_dataset_version": 7,
+    "artifact_digest": null
+  },
+  "sckan": {
+    "version": "sckan-2026-06-23",
+    "release_status": "prerelease",
+    "graph_sha256": "d6cf12f5a1daada792c6329771d9cd1160e15df5072b6d3657b791cb438b64f7"
+  },
+  "mapping": {
+    "branch_identifier": null,
+    "sckan_identifier": null,
+    "query": null,
+    "canonical_result_sha256": null
+  },
+  "allowed_claims": [
+    "anatomical_correspondence",
+    "anatomical_connectivity"
+  ],
+  "forbidden_claims": [
+    "electrical_recruitment",
+    "physiological_target_engagement",
+    "hrv_response",
+    "resting_heart_rate_response",
+    "respiratory_response",
+    "clinical_benefit",
+    "consumer_auricular_tavns_applicability"
+  ],
+  "limitations": [
+    "The selected f007-right scaffold is human cadaver anatomy and does not establish functional recruitment.",
+    "The SCKAN release is a prerelease connectivity knowledge source.",
+    "The reproduction remains blocked until the exact reusable scaffold derivative is retrieved, hashed, and a literal anatomical branch mapping is executed."
+  ]
+}
