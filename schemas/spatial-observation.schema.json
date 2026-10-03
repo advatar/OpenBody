@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/spatial-observation.v1.schema.json",
+  "title": "OpenBody Spatial Observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "observation_id",
+    "sensor_capability_ref",
+    "body_site",
+    "time",
+    "signal",
+    "epistemic_status",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openbody.spatial-observation/1.0"
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sensor_capability_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "body_site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate_system",
+        "coordinate",
+        "placement_quality"
+      ],
+      "properties": {
+        "coordinate_system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coordinate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "placement_quality": {
+          "enum": [
+            "qualified",
+            "degraded",
+            "unknown"
+          ]
+        },
+        "orientation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "spatial_uncertainty_mm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "time": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "synchronized"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "synchronized": {
+          "type": "boolean"
+        }
+      }
+    },
+    "signal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "waveform_ref",
+        "quality"
+      ],
+      "properties": {
+        "waveform_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quality": {
+          "enum": [
+            "acceptable",
+            "degraded",
+            "unknown"
+          ]
+        },
+        "derived_feature_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "epistemic_status": {
+      "enum": [
+        "observed",
+        "derived",
+        "inferred"
+      ]
+    },
+    "claim_boundary": {
+      "enum": [
+        "research_feature",
+        "validated_measurement",
+        "clinical_assertion_reference"
+      ]
+    },
+    "model_receipt_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "openbody.sensor-capability-fixtures/1.0",
+  "cases": [
+    {
+      "name": "cgm",
+      "capability": {
+        "schema": "openbody.sensor-capability/1.0",
+        "capability_id": "sensor:cgm:1",
+        "observable": {
+          "id": "glucose",
+          "kind": "analyte",
+          "medium": "interstitial_fluid",
+          "unit": "mg/dL"
+        },
+        "modality": {
+          "name": "electrochemical",
+          "spatial": false,
+          "coordinate_system": null
+        },
+        "sampling": {
+          "cadence_hz": 0.0033333333,
+          "latency_ms": null,
+          "resolution": 1
+        },
+        "calibration": {
+          "status": "current",
+          "method_ref": "factory",
+          "valid_until": null
+        },
+        "provenance": {
+          "device_ref": "device:cgm",
+          "module_refs": [
+            "module:sensor"
+          ],
+          "firmware_ref": "fw:1",
+          "processing_stage": "raw"
+        },
+        "security": {
+          "attestation_ref": null,
+          "crypto_profile_ref": "crypto:vendor",
+          "post_quantum_profile_ref": null
+        },
+        "consent_purposes": [
+          "personal_insight"
+        ]
+      }
+    },
+    {
+      "name": "fibre-acoustic-array",
+      "capability": {
+        "schema": "openbody.sensor-capability/1.0",
+        "capability_id": "sensor:acoustic-array:1",
+        "observable": {
+          "id": "cardiopulmonary_acoustics",
+          "kind": "acoustic",
+          "medium": "body_surface",
+          "unit": null
+        },
+        "modality": {
+          "name": "fibre_microphone_array",
+          "spatial": true,
+          "coordinate_system": "openbody.body-map/1"
+        },
+        "sampling": {
+          "cadence_hz": 4000,
+          "latency_ms": 20,
+          "resolution": null
+        },
+        "calibration": {
+          "status": "unknown",
+          "method_ref": null,
+          "valid_until": null
+        },
+        "provenance": {
+          "device_ref": "device:garment",
+          "module_refs": [
+            "module:fibre-mic",
+            "module:fibre-compute"
+          ],
+          "firmware_ref": "fw:research",
+          "processing_stage": "raw"
+        },
+        "security": {
+          "attestation_ref": null,
+          "crypto_profile_ref": "crypto:research",
+          "post_quantum_profile_ref": null
+        },
+        "consent_purposes": [
+          "research"
+        ]
+      }
+    }
+  ]
+}
