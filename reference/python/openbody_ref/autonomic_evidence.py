@@ -49,3 +49,41 @@ def may_promote(source_class: str, target_class: str) -> bool:
     if source_class in ANATOMICAL_CLASSES and target_class in FORBIDDEN_ANATOMY_PROMOTIONS:
         return False
     return source_class == target_class
+
+
+EVIDENCE_LAYERS = (
+    "anatomical_connectivity",
+    "simulated_recruitment",
+    "measured_target_engagement",
+    "clinical_benefit",
+)
+
+def validate_evidence_claim(record: dict, target_class: str, *, target_species: str | None = None,
+                            target_modality: str | None = None) -> list[str]:
+    """Fail closed across evidence layers, species, and stimulation modalities.
+
+    This validator does not assert that adjacent layers may be promoted. A
+    stronger class requires an independently qualified record of that class.
+    """
+    errors: list[str] = []
+    source_class = record.get("evidence_class")
+    if source_class not in EVIDENCE_LAYERS:
+        errors.append("unknown_evidence_class")
+        return errors
+    if target_class not in EVIDENCE_LAYERS:
+        errors.append("unknown_target_class")
+        return errors
+    if source_class != target_class:
+        errors.append("evidence_class_promotion")
+
+    source_species = record.get("species")
+    if target_species is not None and source_species != target_species:
+        errors.append("species_transfer")
+
+    source_modality = record.get("modality")
+    if target_modality is not None and source_modality != target_modality:
+        errors.append("modality_transfer")
+
+    if not record.get("provenance"):
+        errors.append("missing_provenance")
+    return errors
