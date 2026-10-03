@@ -1,0 +1,89 @@
+{
+  "clinical_qualified": false,
+  "evidence": "synthetic_only",
+  "result_digest": "4320d3a03743db9cb81b85ed4d043e71448a8668811a5b6bc4ac2bf0c8e54671",
+  "results": [
+    {
+      "answered": 21,
+      "coverage": 1.0,
+      "evaluation_mode": "online",
+      "mae": 0.10604523570289207,
+      "method": "causal_hold",
+      "rmse": 0.11637464655748941,
+      "scenario": "random_missing",
+      "target_count": 21
+    },
+    {
+      "answered": 21,
+      "coverage": 1.0,
+      "evaluation_mode": "offline",
+      "mae": 0.008421532806768505,
+      "method": "offline_linear",
+      "rmse": 0.011462975871350506,
+      "scenario": "random_missing",
+      "target_count": 21
+    },
+    {
+      "answered": 8,
+      "coverage": 0.5333333333333333,
+      "evaluation_mode": "online",
+      "mae": 0.49921973426741206,
+      "method": "causal_hold",
+      "rmse": 0.5694094488918865,
+      "scenario": "block_missing",
+      "target_count": 15
+    },
+    {
+      "answered": 0,
+      "coverage": 0.0,
+      "evaluation_mode": "offline",
+      "mae": null,
+      "method": "offline_linear",
+      "rmse": null,
+      "scenario": "block_missing",
+      "target_count": 15
+    },
+    {
+      "answered": 8,
+      "coverage": 0.5333333333333333,
+      "evaluation_mode": "online",
+      "mae": 0.49921973426741206,
+      "method": "causal_hold",
+      "rmse": 0.5694094488918865,
+      "scenario": "non_wear",
+      "target_count": 15
+    },
+    {
+      "answered": 0,
+      "coverage": 0.0,
+      "evaluation_mode": "offline",
+      "mae": null,
+      "method": "offline_linear",
+      "rmse": null,
+      "scenario": "non_wear",
+      "target_count": 15
+    },
+    {
+      "answered": 8,
+      "coverage": 0.5333333333333333,
+      "evaluation_mode": "online",
+      "mae": 2.4992197342674123,
+      "method": "causal_hold",
+      "rmse": 2.51418099140794,
+      "scenario": "device_shift",
+      "target_count": 15
+    },
+    {
+      "answered": 0,
+      "coverage": 0.0,
+      "evaluation_mode": "offline",
+      "mae": null,
+      "method": "offline_linear",
+      "rmse": null,
+      "scenario": "device_shift",
+      "target_count": 15
+    }
+  ],
+  "schema": "openbody.research-robustness/0.1",
+  "seed": 7
+}

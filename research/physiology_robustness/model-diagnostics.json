@@ -1,0 +1,24 @@
+{
+  "assimilation": {
+    "mae": 0.10854997022478097,
+    "nominal_interval_coverage": 0.99,
+    "note": "Coverage diagnostic only; missing-gap drift violates random-walk assumptions."
+  },
+  "clinical_qualified": false,
+  "ecg": {
+    "accuracy_on_answered": 0.9875,
+    "brier": 0.049624999999999996,
+    "clinical_qualified": false,
+    "coverage": 0.8,
+    "evidence": "synthetic_only",
+    "false_alerts_per_person_day": 0.1,
+    "unusable": 20
+  },
+  "evidence": "synthetic_only",
+  "fusion": {
+    "gated_mae": 0.039307462647112136,
+    "note": "Quality flags are known from the synthetic corruption generator.",
+    "ungated_mae": 2.00278462947726
+  },
+  "seed": 17
+}
