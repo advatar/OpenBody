@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbody.dev/schemas/sensor-capability.v1.schema.json",
+  "title": "OpenBody Sensor Capability",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "capability_id",
+    "observable",
+    "modality",
+    "sampling",
+    "calibration",
+    "provenance",
+    "security"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openbody.sensor-capability/1.0"
+    },
+    "capability_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "analyte",
+            "electrical",
+            "acoustic",
+            "optical",
+            "mechanical",
+            "environmental",
+            "other"
+          ]
+        },
+        "medium": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "modality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "spatial"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spatial": {
+          "type": "boolean"
+        },
+        "coordinate_system": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cadence_hz"
+      ],
+      "properties": {
+        "cadence_hz": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "latency_ms": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "resolution": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "current",
+            "expired",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "method_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "valid_until": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device_ref",
+        "firmware_ref",
+        "processing_stage"
+      ],
+      "properties": {
+        "device_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "firmware_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "processing_stage": {
+          "enum": [
+            "raw",
+            "edge_derived",
+            "model_derived"
+          ]
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attestation_ref",
+        "crypto_profile_ref"
+      ],
+      "properties": {
+        "attestation_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "crypto_profile_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "post_quantum_profile_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "consent_purposes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}
