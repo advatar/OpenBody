@@ -87,3 +87,33 @@ def validate_evidence_claim(record: dict, target_class: str, *, target_species: 
     if not record.get("provenance"):
         errors.append("missing_provenance")
     return errors
+
+
+QUALIFICATION_STATES = frozenset({
+    "identified", "prerelease", "bounded_reproduction", "reproduced",
+    "reproduction_blocked", "qualified", "not_publicly_released", "revoked", "stale",
+})
+
+def validate_autonomic_qualification_receipt(receipt: dict) -> list[str]:
+    """Validate the compact read-only receipt exposed to downstream consumers."""
+    errors: list[str] = []
+    if receipt.get("schema_version") != 1:
+        errors.append("unsupported_schema_version")
+    if not receipt.get("resource_id") or not receipt.get("resource_version"):
+        errors.append("resource_identity_incomplete")
+    if receipt.get("evidence_class") not in EVIDENCE_LAYERS | {"anatomical_variability", "measured_implanted_vns_response"}:
+        errors.append("unknown_evidence_class")
+    if receipt.get("qualification_state") not in QUALIFICATION_STATES:
+        errors.append("unknown_qualification_state")
+    scope = receipt.get("scope") or {}
+    if not scope.get("species") or not scope.get("modality"):
+        errors.append("scope_incomplete")
+    if not receipt.get("provenance_digest"):
+        errors.append("missing_provenance_digest")
+    if not isinstance(receipt.get("limitations"), list) or not receipt.get("limitations"):
+        errors.append("limitations_missing")
+    if receipt.get("qualification_state") in {"revoked", "stale"} and receipt.get("usable") is True:
+        errors.append("revoked_or_stale_marked_usable")
+    if receipt.get("qualification_state") in {"reproduction_blocked", "not_publicly_released"} and receipt.get("usable_for_claims") is True:
+        errors.append("blocked_marked_usable_for_claims")
+    return errors
