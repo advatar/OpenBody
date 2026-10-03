@@ -101,7 +101,7 @@ def validate_autonomic_qualification_receipt(receipt: dict) -> list[str]:
         errors.append("unsupported_schema_version")
     if not receipt.get("resource_id") or not receipt.get("resource_version"):
         errors.append("resource_identity_incomplete")
-    if receipt.get("evidence_class") not in EVIDENCE_LAYERS | {"anatomical_variability", "measured_implanted_vns_response"}:
+    if receipt.get("evidence_class") not in set(EVIDENCE_LAYERS) | {"anatomical_variability", "measured_implanted_vns_response"}:
         errors.append("unknown_evidence_class")
     if receipt.get("qualification_state") not in QUALIFICATION_STATES:
         errors.append("unknown_qualification_state")
