@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {
+      "id": "reva-sckan-anatomy",
+      "evidence_class": "anatomical_connectivity",
+      "species": "human",
+      "modality": "anatomy_only",
+      "provenance": "research/sparc/reva-sckan-f007-right.v1.json"
+    },
+    {
+      "id": "ascent-simulated-recruitment",
+      "evidence_class": "simulated_recruitment",
+      "species": "human",
+      "modality": "implanted_cervical_vns_model",
+      "provenance": "ASCENT model identity; reproduction qualification remains separate"
+    },
+    {
+      "id": "rat-implanted-vns-adenosine",
+      "evidence_class": "measured_target_engagement",
+      "species": "rat",
+      "modality": "implanted_vns",
+      "provenance": "2026-09-18 epilepsy-model research fixture"
+    },
+    {
+      "id": "human-clinical-benefit-placeholder",
+      "evidence_class": "clinical_benefit",
+      "species": "human",
+      "modality": "implanted_vns",
+      "provenance": "synthetic conformance fixture; not a scientific assertion"
+    }
+  ]
+}
